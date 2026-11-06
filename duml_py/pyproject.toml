@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "duml"
+version = "0.1.0"
+description = "DUML v1 (DJI Universal Markup Language) protocol: frame codec, command registry, and send/receive transports"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GPL-3.0-or-later"}
+dependencies = []
+
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+dev = ["pyserial>=3.5"]
+
+[project.scripts]
+duml = "duml.cli:main"
+
+[tool.setuptools]
+packages = ["duml", "duml.transport"]
+
+[tool.setuptools.package-data]
+duml = ["commands.json"]
