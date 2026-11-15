@@ -8155,11 +8155,11 @@
     "label": "Latitude",
     "offset": 5,
     "size": 4,
-    "type": "uint8",
+    "type": "int32",
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": null,
+    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to int32 (angular degrees * 1e6, signed) -- matches the historical FlycNoFlyZone C struct (dji_flyc_nofly_ed.py, c_int latitude) seen on earlier firmware generations. Verified by round-tripping a synthetic payload.",
     "branch": null
    },
    {
@@ -8167,11 +8167,11 @@
     "label": "Longitude",
     "offset": 9,
     "size": 4,
-    "type": "uint8",
+    "type": "int32",
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": null,
+    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to int32, same basis as latitude.",
     "branch": null
    },
    {
@@ -8179,11 +8179,11 @@
     "label": "Radius",
     "offset": 13,
     "size": 2,
-    "type": "uint8",
+    "type": "uint16",
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": null,
+    "comment": "Size is 2 bytes; source dissector mislabeled this uint8. Corrected to uint16 (meters).",
     "branch": null
    },
    {
@@ -8191,11 +8191,11 @@
     "label": "Contry Code",
     "offset": 15,
     "size": 2,
-    "type": "uint8",
+    "type": "uint16",
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": null,
+    "comment": "Size is 2 bytes; source dissector mislabeled this uint8. Corrected to uint16.",
     "branch": null
    },
    {
@@ -8215,11 +8215,11 @@
     "label": "Id",
     "offset": 18,
     "size": 4,
-    "type": "uint8",
+    "type": "uint32",
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": null,
+    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to uint32.",
     "branch": null
    }
   ]
