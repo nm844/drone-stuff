@@ -51,11 +51,11 @@ TCP transport + `RTCPMessageManager`) places it at Fast-DDS ~2.x.
 
 | Finding | Impact category | Confidence | Status |
 |---|---|---|---|
-| `ParameterList::read_guid_from_cdr_msg` / `readInstanceHandleFromCDRMsg`, on RTPS parameter `PID_KEY_HASH` (0x70) or a caller-chosen target PID, unconditionally read a fixed 16 bytes (12-byte GuidPrefix + 4-byte EntityId) without ever checking the wire-supplied parameter's own declared length is actually ≥16 — confirmed on both the E1E (ARM32) and E2 (aarch64) builds, byte-for-byte | memory_corruption (bounded) / data-integrity | medium-high | **confirmed on reverify** |
-| The same gap is wired into the ordinary per-DATA-submessage inline-QoS path (`ParameterList::updateCacheChangeFromInlineQos`), not only one-time discovery traffic — so it recurs on every received DATA submessage carrying inline QoS | architecture_note | medium | **confirmed on reverify** |
-| The library performs genuine raw UDP/TCP socket networking itself (real `socket`/`bind`/`connect`/`listen`/`accept`, multicast-join code with its own `'UDPTransport Error binding '`/`'Error joining multicast group on '` strings) — it is not a pure local-IPC shim riding on another transport | architecture_note | high | **confirmed on reverify** |
-| A small string cluster (`rndis0`, `192.168.100.4`, `192.0.2.0`, `getIPs failed`, `All whitelist interfaces where filtered out`) sits beside confirmed-live `UDPv4Transport.cpp` code, but no reachable function referencing any of the five strings could be found | architecture_note | low | **REFUTED on reverify** — all five strings ARE referenced, from a local (non-exported) function `get_ipv4s`, itself called from 4 exported `UDPv4Transport` methods **including the constructor**. `rndis0`/`192.168.100.4` is a hardcoded (interface, IP) fallback pair used when interface enumeration fails; `All whitelist interfaces where filtered out` and `192.0.2.0` are referenced directly inside the transport constructor. The original pass's exidx-based function-start recovery evidently missed these local functions. |
-| DJI's vendored tree is essentially unmodified upstream eProsima source wrapped by DJI-authored glue, not a from-scratch reimplementation | architecture_note | medium-high | **confirmed on reverify** |
+| `ParameterList::read_guid_from_cdr_msg` / `readInstanceHandleFromCDRMsg`, on RTPS parameter `PID_KEY_HASH` (0x70) or a caller-chosen target PID, unconditionally read a fixed 16 bytes (12-byte GuidPrefix + 4-byte EntityId) without ever checking the wire-supplied parameter's own declared length is actually ≥16 — confirmed independently on both the E1E (ARM32) and E2 (aarch64) builds via separate disassembly, showing the identical logical pattern on each | memory_corruption (bounded) / info_disclosure | medium-high | **confirmed on reverify** |
+| The same gap is wired into the ordinary per-DATA-submessage inline-QoS path (`ParameterList::updateCacheChangeFromInlineQos`), not only one-time discovery traffic — so it recurs, **if the bus is network-reachable at all (still unresolved, see below)**, on every received DATA submessage carrying inline QoS | architecture_note | medium | **confirmed on reverify** |
+| The library performs genuine raw UDP/TCP socket networking itself (real `socket`/`bind`/`connect`/`listen`/`accept`, multicast-join code with its own `'UDPTransport Error binding '`/`'Error joining multicast group on '` strings) — it is not a pure local-IPC shim riding on another transport | architecture_note | high (socket-I/O only; reachability scope unresolved — see below) | **confirmed on reverify** |
+| A small string cluster (`rndis0`, `192.168.100.4`, `192.0.2.0`, `getIPs failed`, `All whitelist interfaces where filtered out`) sits beside confirmed-live `UDPv4Transport.cpp` code, but no reachable function referencing any of the five strings could be found | architecture_note | low | **REFUTED on reverify** — all five strings ARE referenced, from a local (non-exported) function `get_ipv4s`, itself called from 4 exported `UDPv4Transport` methods **including the constructor**. `rndis0`/`192.168.100.4` is a hardcoded (interface, IP) fallback pair used when interface enumeration fails; `All whitelist interfaces where filtered out` and `192.0.2.0` are referenced directly inside the transport constructor. The original pass's exidx-based function-start recovery evidently missed the three strings living inside this un-exported local function, and — separately — a bug in that pass's own idiom-matching script also missed the two string references sitting inside the already-exported `UDPv4Transport` constructor itself, where local-function recovery isn't even relevant. |
+| DJI's vendored tree is essentially unmodified upstream eProsima source wrapped by DJI-authored glue, not a from-scratch reimplementation | architecture_note | medium-high (for "mostly stock + DJI glue"); low (for whether a deeper, undiscovered DJI patch exists inside the vendored code itself — Finding 4 above is the one concrete unresolved lead in that direction) | **confirmed on reverify** |
 
 **Biggest open question, explicitly unresolved:** whether DJI's
 `duss_ps_fastdds.cpp` wrapper restricts this transport to loopback or to
@@ -121,7 +121,7 @@ SSD, or USB-attached SSD via a Realtek RTL9210 bridge), `mmcblk`
 | `nvme_get_vendor_sn`/`nvme_get_vendor_mn` `strncpy()` the raw NVMe Identify-Controller Serial-/Model-Number fields — both spec-defined as ASCII, space-padded, **not required to be NUL-terminated** — straight from whatever physical device answers Identify into a caller buffer, with no termination/length-capping beyond the fixed `strncpy` count | info_disclosure | medium-high | **confirmed on reverify** (whether any real caller then treats the result as a NUL-terminated C string without independently bounding it was not traced beyond this library) |
 | `exfat_get_sb()` accepts any `read()` that returns exactly 512 bytes as a valid exFAT superblock — **no boot-sector signature/magic check anywhere in the function** | integrity | medium-high | **confirmed on reverify** (whether a caller elsewhere validates the signature before/after was not confirmed) |
 | The DJI-proprietary "DJI partition" attribute block (cached sector/cluster size, write-tracking state; auto-reset when "abnormal") is integrity-checked only by a trivial additive rotate-hash seeded with the fixed constant `0xBEEF` — not CRC16-CCITT, not a cryptographic MAC. Mirrors the project's existing `dji_sdrs_agent` CRC16-only-NVRAM finding | weak_crypto | high | **confirmed on reverify** |
-| A non-exported exFAT directory-entry-set parser has two length bound-checks whose own real max "could not be shown to ever actually fail" | architecture_note | medium | **REFUTED (corrected toward more exposed, not less)** — both checks are in fact live: one trivially fires for any byte whose nibble-sum exceeds 15; the other's true max is 46 (not the claimed 30) once a conditional OR'd bit from the same cited dispatch table is accounted for, exceeding its 0x1f bound on a path the original evidence itself feeds into. The function's real caller (reached only by indirect/function-pointer dispatch, not a direct branch) and the true origin of its outer entry-count bound remain genuinely unresolved. |
+| A non-exported exFAT directory-entry-set parser has two length bound-checks whose own real max "could not be shown to ever actually fail" | architecture_note | medium | **REFUTED (corrected toward more exposed, not less)** — both checks are in fact live: one trivially fires for any byte whose nibble-sum exceeds 15; the other's true max is 46 (not the claimed 30) once a conditional OR'd bit from the same cited dispatch table is accounted for, exceeding its 0x1f bound on a path the original evidence itself feeds into. The function's real caller (reached only by indirect/function-pointer dispatch, not a direct branch), the true origin of its outer entry-count bound, and the true allocated size of the backing buffer it parses into all remain genuinely unresolved. |
 | `shine_disk_get_type_by_name`'s NVMe/`mmcblk`/USB dispatch is "generic across backing-store types, explicitly including removable/external media" | architecture_note | high | **REFUTED on reverify** — in the two gated operations actually traced (`shine_disk_do_format`, `sh_disk_flash_plate`), `mmcblk` (SD-card) is **explicitly rejected** (`return -EINVAL`); only NVMe (and partially the generic `"sd"` class) proceeds. Also corrected: the two "`scsi_nvme_*_RTL9210`" names cited as exported symbols are not in `.dynsym` at all — the real exports are `scsi_nvme_get_identify`/`scsi_nvme_smart_get_log`; the `_RTL9210` strings are internal debug-log tags, not symbol names. No call chain from this dispatcher to the NVMe-Identify parsing functions was found either. |
 
 **Not determined:** which upstream daemon(s) actually invoke this library
@@ -129,23 +129,28 @@ with a user-facing SD-card path vs. an internal-SSD-only path (would need a
 cross-binary consumer survey, out of this single-library pass); whether the
 "DJI partition" lives on the same removable medium as the user exFAT
 volume or a separate internal-only area; whether the RTL9210 USB-bridge
-path is actually exercised on this airframe in practice.
+path is actually exercised on this airframe in practice; the exported
+`nvme_submit_passthru`/`nvme_submit_admin_passthru`/`nvme_submit_io_passthru`
+functions' own ioctl-structure construction was not disassembled in depth
+in this pass.
 
 ---
 
 ## Track D — `duss_event_shell` dispatch table: the APS2 tooling gap, finally closed
 
-This closes a tooling gap `09_DJI_AUTOTEST_EXPLOITABILITY_DEEPDIVE.md` and
-two earlier passes had flagged: `libduml_frwk.so`'s Android "packed"
+This closes a tooling gap `09_DJI_AUTOTEST_EXPLOITABILITY_DEEPDIVE.md`
+flagged, and that this project's own tooling notes had separately called
+out as a recurring blocker: `libduml_frwk.so`'s Android "packed"
 relocation section (`SHT_ANDROID_REL`/`DT_ANDROID_REL`, `"APS2"` magic,
 sleb128-encoded delta groups) couldn't be decoded by this project's
 standard tooling (`pyelftools`/`readelf`), which blocked reading
 `duss_event_shell`'s real dispatch table. A working, independently
 validated sleb128/group decoder for this format was built this pass (three
 cross-checks: byte accounting, `R_ARM_RELATIVE` count matching
-`DT_RELCOUNT` exactly, and three decoded `GLOB_DAT`/relocation targets
-matching known `.dynsym` addresses) and is reusable for any future ARM32
-Android binary in this firmware that carries this section.
+`DT_RELCOUNT` exactly, and one decoded `GLOB_DAT` target plus three decoded
+`RELATIVE` targets — four in total — matching known `.dynsym` addresses)
+and is reusable for any future ARM32 Android binary in this firmware that
+carries this section.
 
 **The real, independently re-derived dispatch table** (vaddr `0x107ee8`,
 `.data.rel.ro.local`, 10×8-byte `{key string, handler fn}` entries, every
@@ -165,35 +170,42 @@ slot carrying a real `R_ARM_RELATIVE` relocation):
 | `msg_send` | `0x89108` |
 
 (The first pass's own claimed "dispatch table" — three GOT slots it said
-*were* the table — was **refuted**: those slots are ordinary per-reference
-GOT entries used when the `asym_ping`/`trans_heartbeat`/`async_ping`
-handlers spawn their worker threads, not the dispatch table itself. The
-table above was independently located and confirmed by a second pass.)
+*were* the table — was **refuted**: those slots are, almost certainly,
+ordinary per-reference GOT entries used when the `asym_ping`/
+`trans_heartbeat`/`async_ping` handlers spawn their worker threads (this
+specific causal attribution was not traced to each exact use site), not
+the dispatch table itself. The table above was independently located and
+confirmed by a second pass.)
 
 | Finding | Impact category | Confidence | Status |
 |---|---|---|---|
 | The `dump` sub-handler contains a length-check-then-`exit(-1)` path: on a length mismatch it logs a backtrace and **unconditionally terminates the whole host process**, rather than returning an error | crash_dos | medium-high | **confirmed on reverify** (the exact wire fields that drive the length past the bound were deliberately not traced, per this project's no-attack-recipe scope — only the internal control-flow-to-`exit()` is confirmed) |
 | The `route_control` sub-handler can enable/disable an **arbitrary named internal message-bus route item** with no authentication beyond what `duss_event_shell` already lacks entirely — a capability well beyond ping/heartbeat diagnostics | missing_authz | medium-high | **confirmed on reverify** |
 | The `log` sub-handler exposes unauthenticated enable/disable/get/set of internal logging-module state | missing_authz | medium-high | **confirmed on reverify** (minor severity — log-tampering/anti-forensics only, not data or control-plane) |
-| **No file-write, file-create, or process-exec primitive exists anywhere in `duss_event_shell`'s reachable code** — directly resolving `09_...DEEPDIVE.md` §1's open question about setting `/data/dji/autotest_on` through this path | architecture_note | high | **REFUTED** — a real, reachable file-create+write primitive *does* exist: `route_control` → `duss_mb_control_route_item` → `mb_dump_rt` → `fopen("/data/dji/dump/host_0x%x","a")` + `fprintf`×2 + `fputc`+`fclose`. **However, this does not hand the original question an exploitable answer**: the path is a fixed, generic debug-dump location (`/data/dji/dump/host_0x<route-item-id>`), not `/data/dji/autotest_on`, and `<route-item-id>` is not raw attacker-controlled bytes — it comes from the targeted route item, not a free-form string. The categorical "no file I/O at all" claim was simply wrong; the specific "can this set `autotest_on`" question is still answered **no** via this path. |
+| **No file-write, file-create, or process-exec primitive exists anywhere in `duss_event_shell`'s reachable code** — directly resolving `09_...DEEPDIVE.md` §1's open question about setting `/data/dji/autotest_on` through this path | architecture_note | high | **REFUTED** — a real, reachable file-create+write primitive *does* exist: `route_control` → `duss_mb_control_route_item` → `mb_dump_rt` → `fopen("/data/dji/dump/host_0x%x","a")` + `fprintf`×2 + `fputc`+`fclose`. **However, this does not hand the original question an exploitable answer**: the path is a fixed, generic debug-dump location (`/data/dji/dump/host_0x<route-item-id>`), not `/data/dji/autotest_on`; whether `<route-item-id>` itself is attacker-influenced (e.g. via `route_control`'s own client-supplied `item_index` field) was not traced. The categorical "no file I/O at all" claim was simply wrong; the specific "can this set `autotest_on`" question is still answered **no** via this path. |
 | `capture` is a shared/tail-merged code block with `dump`/`log`, not its own distinct function | architecture_note | medium | **REFUTED** — `capture` is a genuinely separate function with its own 428-byte stack frame and its own clean epilogue; `dump` ends cleanly well before `capture`'s address with an unrelated helper in between. The three handlers share a similar *shape* (parse a flag via `argoat_graze`, log it) because they look hand-duplicated from a common source pattern, not because of compiler code-folding — and their boundaries are fully resolvable from static analysis, contrary to the original claim. |
 | `msg_send`'s send path calls into "the same message-bus-adjacent function family used for `route_control`", suggesting (not confirmed) a message-injection primitive | integrity | medium | **REFUTED** — the shared call target (`0x3d988`) is the trivial, 4-instruction, exported `duss_mb_get_current_machine_id` (a cached-global-halfword getter), not a route/forwarding function; it is called from many mundane, unrelated contexts. The specific evidentiary claim doesn't hold, though the surrounding facts (handler addresses, task-spawn chain, a length-capacity check) are accurate. |
 | `asym_ping`/`trans_heartbeat`/`async_ping` are confirmed pure parameter-parsing-and-logging diagnostics with no file/exec/socket calls anywhere in their bodies | architecture_note | high | **REFUTED (partially)** — the core mechanism (dispatch → task-spawn with the correct entry pointer, no *direct* exec/socket primitive) is real, but the "no file calls anywhere" claim is incomplete: one level deeper, all three bodies call `duss_event_send`/`_v2`/`_sync_v2`, which themselves reach `duss_mb_send_v2` → `fopen`/`fclose`/`fprintf` — a generic message-bus debug-dump feature, not ping/heartbeat-specific logic, but real file I/O is reachable from the call graph these handlers kick off. Cited call-counts for `duss_shell_parse_value_for_key` were also found inaccurate on recount (claimed 9–11×, actual 9/11/18×). |
 
-**Net resolution of the original question:** `duss_event_shell` genuinely
-cannot set `/data/dji/autotest_on` or write to any attacker-chosen path —
-but it is not file-I/O-free either; it reaches a generic, fixed-location
-debug-dump file-write primitive via two different sub-handlers. Two new,
-real, unauthenticated capabilities (`route_control`'s arbitrary route
-toggle, `dump`'s remote process-abort) were found that neither doc 09 nor
-doc 12 previously knew existed.
+**Net resolution of the original question:** no code path traced to
+completion lets `duss_event_shell` set `/data/dji/autotest_on` or write to
+an attacker-chosen path — but it is not file-I/O-free either; it reaches a
+generic, fixed-location debug-dump file-write primitive via two different
+sub-handlers. Two new, real, unauthenticated capabilities (`route_control`'s
+arbitrary route toggle, `dump`'s remote process-abort) were found that
+neither doc 09 nor doc 12 previously knew existed.
 
 **Not determined:** whether disabling an arbitrary route item via
 `route_control` can itself crash or disrupt another subsystem (would
-elevate that finding to `crash_dos`); the full semantics of `0x3d988`'s
-sibling function family and of the message-bus packet `msg_send`
-constructs (delivery scope — local vs. cross-component — unresolved); the
-exact wire-level fields that drive `dump`'s length check past its bound.
+elevate that finding to `crash_dos`), and the full set of route-item names
+it can actually target (not enumerated); the real delivery scope of the
+message-bus packet `msg_send` constructs via `duss_event_send`/
+`duss_mb_send_v2` — local-only vs. genuinely cross-process/cross-daemon —
+which is still unresolved (`0x3d988`, considered a possible lead toward
+answering this in an earlier draft of this finding, turned out to be an
+unrelated, trivial 4-instruction getter — a dead end, not a path forward
+on this specific question); and the exact wire-level fields that drive
+`dump`'s length check past its bound.
 
 ---
 
@@ -202,7 +214,10 @@ exact wire-level fields that drive `dump`'s length check past its bound.
 **Loader/update (`0x07`–`0x0A`) and fw-update-push (`0x40`/`0x41`/`0x43`)
 remain genuinely unresolved** — reported honestly, not guessed. Neither
 `libduml_frwk.so`'s one built-in 6-entry dynamic-command table nor
-`dji_sys`'s 11 direct `duss_event_register_dynamic_command` calls cover any
+`dji_sys`'s 11 direct `duss_event_register_dynamic_command` calls (two of
+which were initially misclassified as unrelated backward-disassembly
+artifacts and corrected to real `cmd_set 0x22`/Demo-Mode registrations on
+reverify, without changing this conclusion) cover any
 of these 15 target cmd_ids, and a full disassembly of the firmware-upgrade
 daemon's entire 4-library plugin chain (`libupgrade_register.so` →
 `libupgrade_communication.so` → `libupgrade_commu_demo.so` →
@@ -231,7 +246,7 @@ field-for-field match.
 | Finding | Impact category | Confidence | Status |
 |---|---|---|---|
 | `duss_file_trans_req` (the "start transfer" handler, phase=1) builds its destination path from a per-daemon fixed base directory plus a wire-supplied filename via `strncpy`+`strncat`, with **no authentication/authorization check of any kind** — any client able to deliver a cmd_set `0x00` message into a daemon's file-trans session reaches this, unauthenticated | missing_authz | high | **confirmed on reverify** |
-| A strict `[A-Za-z0-9._-]` filename allow-list (rejects `/`) fully blocks traversal, confining the primitive "strictly inside" the daemon's fixed base directory | integrity | high | **REFUTED** — the allow-list has no whole-string check: a filename of exactly `".."` passes (each byte individually legal), and gets concatenated with **no separator logic** onto the base directory (confirmed default for `dji_sys`: `/blackbox/upgrade/`), producing the literal path `/blackbox/upgrade/..`, handed straight to `open(O_CREAT\|O_RDWR)` with no `realpath()`/canonicalization anywhere in the chain (confirmed: `realpath` is imported only by `dji_ftpd`/`dji_perception`, not by this code path). Because `/` itself is still rejected, a single filename value can only move **exactly one directory level up** — multi-component `"../../.."` traversal within one field is still blocked, so this is a confined, single-hop weakness, not arbitrary-path traversal. In the one concrete case checked (`dji_sys`'s `/blackbox/upgrade/..` → `/blackbox`, an existing directory), `open(O_CREAT\|O_RDWR)` on an existing directory fails with `EISDIR`, limiting the practical write impact of *that specific* instance — but that's incidental to the one target happening to be a directory, not a protection the validator or call chain provides, and the categorical "cannot escape via `..`" claim is false as stated. |
+| A strict `[A-Za-z0-9._-]` filename allow-list (rejects `/`) fully blocks traversal, confining the primitive "strictly inside" the daemon's fixed base directory | integrity | high (as originally stated) | **REFUTED** — the allow-list has no whole-string check: a filename of exactly `".."` passes (each byte individually legal), and gets concatenated with **no separator logic** onto the base directory (confirmed default for `dji_sys`: `/blackbox/upgrade/`), producing the literal path `/blackbox/upgrade/..`, handed straight to `open(O_CREAT\|O_RDWR)` with no `realpath()`/canonicalization anywhere in the chain (confirmed: `realpath` is imported only by `dji_ftpd`/`dji_perception`, not by this code path). Because `/` itself is still rejected, a single filename value can only move **exactly one directory level up** — multi-component `"../../.."` traversal within one field is still blocked, so this is a confined, single-hop weakness, not arbitrary-path traversal. In the one concrete case checked (`dji_sys`'s `/blackbox/upgrade/..` → `/blackbox`, an existing directory), `open(O_CREAT\|O_RDWR)` on an existing directory fails with `EISDIR`, limiting the practical write impact of *that specific* instance — but that's incidental to the one target happening to be a directory, not a protection the validator or call chain provides, and the categorical "cannot escape via `..`" claim is false as stated. |
 | `dji_sys`'s accepted-filename path flows into `open()`+`fallocate()` with an attacker-controlled, unbounded wire-supplied `datalen` — a remote disk-exhaustion DoS primitive | crash_dos | medium-high (as originally stated) | **REFUTED** — the low-level primitive (`duss_mmap_file_open`'s mode-2 branch really does `open()`+`fallocate()` with an unbounded caller-supplied size) is real, but the specific citation tying `duss_file_trans_req`'s wire `datalen` field to that call does not exist in the real function (the cited address resolves to `.rodata`, not code, in every candidate binary checked). No confirmed wire-reachable path to the unbounded `fallocate()` was established in this pass — remains an open question, not a demonstrated DoS. |
 
 **Not determined:** the exact cmd_id(s) bound to `duss_file_trans_event`
@@ -286,7 +301,7 @@ text match] hits respectively). This is architectural, not a search miss:
 | Finding | Impact category | Confidence | Status |
 |---|---|---|---|
 | `/vendor/nfz/nfz.bin` (`06_NFZ_DATABASE_FINDINGS.md`'s file, mounted from `vendor.img`'s `/nfz/nfz.bin`) and `/nfz_data/NFZ/nfz.bin` are **two physically distinct files**, not the same file via symlink/bind-mount alias — related by a version-gated copy/upgrade routine in `dji_perception`: the vendor copy is the read-only "golden" source; the `/nfz_data` copy is a separate writable runtime working copy, refreshed from the vendor copy only when its own stored version is older, validated by MD5 + an embedded `tz_sec_header` check, with a maintained backup file | integrity | high | **confirmed on reverify** |
-| Two apparent anti-rollback-disable sentinel files are named directly adjacent to that upgrade logic: `/nfz_data/NFZ/disable_ota_anti_rollback`, `/nfz_data/NFZ/disable_anti_rollback` — naming strongly suggests presence-checked flags that would suppress the version-gate's anti-rollback check | integrity | medium-high | **confirmed present** (not disassembled further — which function reads them, what privilege creating them requires, and whether they're reachable without root/debug access are flagged as leads only, not resolved, per this project's no-attack-recipe scope) |
+| Two apparent anti-rollback-disable sentinel files are named directly adjacent to that upgrade logic: `/nfz_data/NFZ/disable_ota_anti_rollback`, `/nfz_data/NFZ/disable_anti_rollback` — naming strongly suggests presence-checked flags that would suppress the version-gate's anti-rollback check | integrity | medium-high | **confirmed on reverify** (not disassembled further — which function reads them, what privilege creating them requires, and whether they're reachable without root/debug access are flagged as leads only, not resolved, per this project's no-attack-recipe scope) |
 | `/nfz_data/nfz_tfr.bin` is architecturally TFR (Temporary Flight Restriction) data pushed at **runtime from the DJI Fly companion app** via a sequence-numbered packet-transfer protocol, MD5-validated against an app-supplied hash — never shipped as a firmware file at all, independently explaining its absence from `vendor.img` | architecture_note | high | **confirmed on reverify** |
 | A separate code module's symbol/log names (`parseTfrFileHead`/`readTfrItemCircle`/`getTfrItemPolygonBuf`/`parseTfrItemData`/`parseTfrFileTail`) imply `nfz_tfr.bin`'s record format is a HEAD / typed-ITEM(circle or polygon) / TAIL layout | architecture_note | low | not independently reverified — explicitly inferred only from the *consuming* C++ code's naming, since the file itself could not be located to inspect its actual bytes |
 | `dji_perception` links all four OP-TEE CA client libraries (including `libnfz_util_ca.so`) and imports two of its functions by name | architecture_note | medium-high | **REFUTED as a general statement, confirmed for one build** — this firmware package contains *two* distinct ELF files both named `dji_perception` (E1E 32-bit ARM, E2 aarch64). The claim is true, and independently re-confirmed down to the relocation table, for the **E1E build only**. The **E2 (aarch64) `dji_perception` does not link `libnfz_util_ca.so`** — and that library doesn't exist anywhere under the E2 extraction tree at all, so the E2 binary cannot call into it by any mechanism. Any future reference to "`dji_perception`" in this project should state which chip/build, the same convention `11_DJI_NN_SERVER_FINDINGS.md` already uses. |
@@ -296,9 +311,15 @@ state on an actual running device's writable partition (no userdata-class
 image exists in this extraction to check); the byte-level container
 format of `nfz_tfr.bin` (impossible without the file itself); whether
 `dji_perception`'s `TEEC_InvokeCommand` calls into `libnfz_util_ca.so` pass
-attacker-reachable input (not disassembled, consistent with this project's
-TA-command-dispatch scope boundary — separate from, and not overlapping
-with, the explicitly-excluded activation TA).
+attacker-reachable input, or what command IDs those calls use (neither
+disassembled, consistent with this project's TA-command-dispatch scope
+boundary — separate from, and not overlapping with, the explicitly-excluded
+activation TA); whether other tfr/nfz-adjacent filename strings also seen
+in `dji_perception` (`nfz_sil_tfr.bin`, `nfz_sil.bin`,
+`nfz_query_construct.bin`) are simulator/self-test artifact names distinct
+from the real on-device path, or are ever used on real hardware — plausible
+from the naming convention (`SIL` = software/simulator-in-the-loop) but not
+confirmed.
 
 ---
 
@@ -322,23 +343,36 @@ functions and should be used for any future pass on this binary.
 | Cmd_set `0x10` ("Automation") itself was **not located anywhere** in `dji_flight` — not in any recovered table's tag bytes, not in any string, not as a literal immediate before any registration-style call | architecture_note | medium | **confirmed on reverify** — genuinely not found, resolving the question in the negative rather than leaving it open on a technicality |
 | A specific 19-entry static dispatch table at file offset `0xad0b0`–`0xad168`, cleanly mapping 9 of the named `api_wp2_*` functions to tag bytes (including a plausible `0x22` cluster) | architecture_note | high (as originally stated) | **REFUTED, substantially** — independently re-reading the actual relocations and raw bytes at the cited offsets does not reproduce the claim at all: 3 of the 19 cited slots carry no relocation whatsoever, and the "decoded" function-pointer values don't match any address in the file (one supposedly-distinct pair of entries decodes to the identical, unrelated word `0x0000ee7d`). The region is actually a mix of real `R_ARM_RELATIVE` relocations and `R_ARM_ABS32` relocations to C++ `_ZTVN10__cxxabiv1` typeinfo — consistent with RTTI/vtable data, not a hand-built DUML dispatch table. **This specific table and its claimed wp2-to-tag mapping should not be treated as established and should not be copied into other documents.** |
 | `api_wp2_waypoints_upload_handle` is called once externally (from `api_wp2_waypoints_upload`) and recurses into itself once | architecture_note | high | **REFUTED on one sub-claim** — the single external caller is real and confirmed (`bl #0x1ab80` at `0x1ace6`), but the claimed "recursive self-call" at `0x1ac26` is not a branch instruction at all (it decodes as `strb r7,[r4]`, a store, whose opcode bits don't even match the Thumb-2 BL/BLX prefix). An exhaustive scan of every `bl`/`blx` target in the whole binary finds exactly **one** call to this function, not two. |
-| `api_wp2_break_restore_waypoint_fly`/`set_global_cruise_vel`/`get_global_cruise_vel` are not in any table and are never called or address-taken from anywhere else in the binary; two of their shared GOT slots hold literal zero | architecture_note | medium (as originally stated) | **REFUTED** — the cited GOT-slot values are wrong (the real values are 4 distinct non-null `.bss` pointers, none matching the claimed `0x20010000`/`0`/`0`/`0x35925`), and — more importantly — all four stub addresses ARE address-taken, each exactly once, inside a **different**, genuinely real `.data` array (`R_ARM_RELATIVE`-backed 8-byte `{function pointer, cmd word}` rows starting around file offset `0xae0f8`). In that array, `pause_recovery`/`set_global_cruise_vel`/`get_global_cruise_vel` appear as three consecutive rows tagged cmd_set `0x22`/cmd_id `0x06`/`0x07`/`0x08`, and `break_restore_waypoint_fly` appears later in the same array tagged cmd_set `0x22`/cmd_id `0x44`. |
+| `api_wp2_break_restore_waypoint_fly`/`set_global_cruise_vel`/`get_global_cruise_vel` are not in any table and are never called or address-taken from anywhere else in the binary; two of their shared GOT slots hold literal zero | architecture_note | medium (as originally stated) | **REFUTED** — the cited GOT-slot values are wrong (the real values are 4 distinct non-null `.bss` pointers, none matching the claimed `0x20010000`/`0`/`0`/`0x35925`), and — more importantly — all four stub addresses ARE address-taken, each exactly once, inside a **different**, genuinely real `.data` array (`R_ARM_RELATIVE`-backed 8-byte `{function pointer, cmd word}` rows starting at vaddr `0xae0f8`). |
 
-**On that last correction:** this `0x22`/`0x06`-`0x08`/`0x44` mapping
-surfaced as a byproduct of refuting a different, narrower claim — it was
-not itself put through a second, independent adversarial-verify pass the
-way the rest of this project's findings are. It is evidenced directly
-(`readelf -r` + a raw hex dump at the cited file offset), so it's a
-genuinely promising lead, but it should be treated as **an unconfirmed
-lead for a future pass to re-verify independently**, not as settled fact
-on the level of the other findings in this document. If it holds up, the
-practical implication is notable: `dji_flight`'s `api_wp2_*` waypoint-
-mission handlers would be registered under cmd_set `0x22` ("Demo Mode",
-per `04_WM260_DAEMON_FINDINGS.md`'s existing name for that cmd_set), not
-cmd_set `0x10` — meaning the long-standing "who registers cmd_set `0x10`"
-mystery may not have an answer in `dji_flight` at all, consistent with
-this track's direct, confirmed negative finding that `0x10` doesn't appear
-anywhere in this binary.
+**Update — the `0x22` cmd_id mapping is now independently confirmed, with a
+corrected ordering:** the paragraph below originally reported this as an
+unconfirmed, single-sourced lead. A dedicated, from-scratch third pass (no
+access to either the original claim or its first correction) independently
+relocated the same array, decoded the same four tag words, and reports:
+every detail of the array's existence, its relocation backing, its
+starting address, and the `0x22`/`0x44` pairing for
+`api_wp2_break_restore_waypoint_fly` is confirmed exactly as described —
+**except the three-function ordering was transposed**. The real mapping,
+read directly off the bytes, is `api_wp2_set_global_cruise_vel`→cmd_id
+`0x06`, `api_wp2_get_global_cruise_vel`→cmd_id `0x07`,
+`api_wp2_pause_recovery`→cmd_id `0x08` (not `pause_recovery` first, as the
+original correction stated), and `api_wp2_break_restore_waypoint_fly`→
+cmd_id `0x44` — all under cmd_set `0x22`. This third pass also found the
+array is considerably bigger than the 4 entries mapped so far: the same
+8-byte-stride `{function pointer, tag}` layout, with real `R_ARM_RELATIVE`
+relocations on every pointer slot, continues for at least 43 records
+spanning vaddr `0xae040`–`0xae190` — meaning there's a whole further family
+of `dji_flight` command registrations in this array that haven't been
+decoded yet (a concrete lead for a future pass, see "Not determined"
+below). The practical implication of the 4 now-confirmed entries stands as
+originally described: `dji_flight`'s `api_wp2_*` waypoint-mission handlers
+are registered under cmd_set `0x22` ("Demo Mode", per
+`04_WM260_DAEMON_FINDINGS.md`'s existing name for that cmd_set), not cmd_set
+`0x10` — meaning the long-standing "who registers cmd_set `0x10`" mystery
+does not have its answer in `dji_flight`, consistent with this track's
+direct, confirmed negative finding that `0x10` doesn't appear anywhere in
+this binary.
 
 Also re-verified and confirmed: `dji_flight` has no `.gnu_debugdata`
 section (31 section headers enumerated, none so named); its
@@ -346,17 +380,25 @@ section (31 section headers enumerated, none so named); its
 no path) that doesn't exist anywhere else in this firmware extraction —
 a dead end, not a lead.
 
-**Not determined:** whether the recovered table's tag byte really encodes
-a DUML wire-level cmd_set/cmd_id pair at all, as opposed to some other
-internal pair of small values (inferred by analogy only); who/what calls
+**Not determined:** the remaining ~39 unmapped records in the confirmed
+`0xae0f8`-rooted array (only 4 of 43+ entries have been tied to named
+functions so far — a concrete, bounded next step: decode the rest and
+cross-reference their tags against known cmd_sets, now that the
+low-byte=cmd_set/high-byte=cmd_id reading is corroborated, not just
+inferred by analogy, by 4 real entries whose cmd_set byte (`0x22`) matches
+this project's own already-documented Demo Mode cmd_set); who/what calls
 or otherwise reaches the `break_restore`/`cruise_vel` stub cluster or its
 sibling cluster at `0x1b040`-`0x1b140` (exhaustive scans found no
-reference to either from anywhere else in the binary); what writes the
-four GOT slots at runtime, if anything; the identity of the function
-reached via the generic indirect call that consumes
-`api_wp2_get_wp_index_in_list`'s table-record address (the one table entry
-with a confirmed concrete consumer) — whether it ultimately resolves to
-`duss_event_register_dynamic_command` or something else was not confirmed.
+reference to either from anywhere else in the binary — so even though
+their registration-table entries are now confirmed, how a client's DUML
+message actually reaches these specific handler functions at runtime
+remains unresolved); what writes the four GOT slots at runtime, if
+anything; the identity of the function reached via the generic indirect
+call that `api_wp2_get_wp_index_in_list`'s investigator-reported "concrete
+consumer" is said to use — this specific claim rests on the now-refuted
+19-entry table (finding 2 above) and was never itself independently
+verified, so it should be treated as unconfirmed, not settled, pending a
+dedicated re-check.
 
 ---
 

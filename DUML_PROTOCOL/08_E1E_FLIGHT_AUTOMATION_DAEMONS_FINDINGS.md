@@ -76,13 +76,18 @@ from that negative result:
   independent re-verification, to be misread C++ RTTI/vtable data, not a
   real DUML table — don't trust that specific claim if it resurfaces. A
   separate, genuinely-evidenced `.data` array elsewhere in the binary
-  tags `api_wp2_pause_recovery`/`set_global_cruise_vel`/
-  `get_global_cruise_vel` under cmd_set `0x22`/cmd_id `0x06`-`0x08` and
-  `api_wp2_break_restore_waypoint_fly` under `0x22`/`0x44` — i.e. these
-  specific WP2 functions may belong to cmd_set `0x22` ("Demo Mode," see
-  this document's own entry above), not `0x10` at all. That mapping
-  wasn't independently re-verified a second time, so treat it as a
-  promising lead, not settled fact.
+  (rooted at vaddr `0xae0f8`, confirmed `R_ARM_RELATIVE`-backed, and shown
+  by a later independent pass to continue for 43+ records total, not just
+  these 4) tags `api_wp2_set_global_cruise_vel`→cmd_id `0x06`,
+  `api_wp2_get_global_cruise_vel`→cmd_id `0x07`,
+  `api_wp2_pause_recovery`→cmd_id `0x08`, and
+  `api_wp2_break_restore_waypoint_fly`→cmd_id `0x44`, all under cmd_set
+  `0x22` — i.e. these specific WP2 functions belong to cmd_set `0x22`
+  ("Demo Mode," see this document's own entry above), not `0x10` at all.
+  This mapping, including the exact per-function ordering above, is now
+  **independently confirmed** by a dedicated third pass done entirely
+  from scratch (the first correction had the three-function order
+  transposed — `pause_recovery` is last, `0x08`, not first).
 - **A plausible, but statically unconfirmed, lead on cmd_set `0x10`
   (Automation), as originally found (see the Update above for the
   follow-up):** four fully-spelled internal API strings —

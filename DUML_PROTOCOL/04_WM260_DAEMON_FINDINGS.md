@@ -116,14 +116,19 @@ open on a technicality. A specific 19-entry dispatch table the follow-up
 pass initially thought it had recovered turned out, on independent
 re-verification, to be misread C++ RTTI/vtable data, not a real table —
 that specific claim should not be trusted. A different, separately-found
-`.data` array (confirmed via real `R_ARM_RELATIVE` relocations) tags three
-of the `api_wp2_*` cruise-velocity/pause-recovery functions under cmd_set
-`0x22`/cmd_id `0x06`-`0x08` and a fourth under `0x22`/`0x44` — i.e. cmd_set
-`0x10` may not be registered in `dji_flight` at all, and these specific
-waypoint functions may actually belong to `0x22` ("Demo Mode") instead.
-That mapping surfaced as a byproduct of a different correction and hasn't
-been independently re-verified a second time, so treat it as a lead for a
-future pass, not settled fact.
+`.data` array (confirmed via real `R_ARM_RELATIVE` relocations, rooted at
+vaddr `0xae0f8` and now known to continue for 43+ records total) tags
+three of the `api_wp2_*` cruise-velocity/pause-recovery functions under
+cmd_set `0x22` — `set_global_cruise_vel`→cmd_id `0x06`,
+`get_global_cruise_vel`→cmd_id `0x07`, `pause_recovery`→cmd_id `0x08` —
+and a fourth (`break_restore_waypoint_fly`) under `0x22`/`0x44`: cmd_set
+`0x10` is not registered in `dji_flight` at all, and these specific
+waypoint functions belong to `0x22` ("Demo Mode") instead. This mapping,
+including the exact per-function ordering, is now **independently
+confirmed** by a dedicated third pass done entirely from scratch (an
+earlier correction had the three-function order transposed —
+`pause_recovery` is last, `0x08`, not first). The other ~39 records in
+that same array remain unmapped — a concrete lead for a future pass.
 
 **Update, see `08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md` for the full
 follow-up pass:** the "Binder-exposed command agent" framing further below
