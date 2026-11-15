@@ -1,5 +1,21 @@
 # `/nfz/nfz.bin` — the on-aircraft No-Fly-Zone/restricted-area database, located and format-sketched
 
+**Update, see `13_OPTEE_TA_FINDINGS.md` for a direct follow-up:** a later
+pass decrypted the four `/ta/*.ta` OP-TEE Trusted Applications on this
+same vendor partition and found one (UUID `789463d1-...`, mapped via
+`/lib/libnfz_util_ca.so`) is a TEE-backed "NFZ UTIL TA" — it reads/manages
+this exact database file (confirmed by the literal string
+`/nfz_data/NFZ/nfz.bin`), tracks per-license unlock state, does
+country-based restriction logic, and pushes signed NFZ status/data to DJI
+FPV goggles over a dedicated secure channel. It also references a
+**second, previously-undocumented file**, `/nfz_data/nfz_tfr.bin`, whose
+format was not examined in that pass or this one. None of this changes
+the container-level finding below (`nfz.bin` itself is unencrypted on the
+vendor partition) — it adds a TEE-backed consumer/licensing layer on top
+of the same plaintext file. See `13_...` for the full mapping and its
+scope boundary (no attempt to verify/break the TA's own signature or
+extract any RPMB-backed key material).
+
 Found while walking the E1E module's `vendor.img` (the same partition that holds
 the `ta/` TEE Trusted Applications referenced in `05_DJI_SEC_FINDINGS.md`) — a
 previously-undocumented-in-this-repo file at `/nfz/nfz.bin`, 14,266,972 bytes.

@@ -1,5 +1,23 @@
 # `dji_sec` — the security/activation daemon, examined directly
 
+**Update, see `13_OPTEE_TA_FINDINGS.md` for a direct follow-up:** a later
+pass decrypted the four `/ta/*.ta` OP-TEE Trusted Applications on the E1E
+vendor partition and mapped each one's UUID to a concrete purpose via the
+small CA (TEE Client API) wrapper library that embeds it. This adds one
+concrete layer to the architecture below: `dji_sec` and this document's
+`libdji_secure.so` do not open TEE sessions directly — they go through
+`libamt_util.so`, which in turn calls the GlobalPlatform `TEEC_*` API into
+a dedicated Trusted Application (UUID `e91c9402-...`). That TA is
+confirmed to back *all* of this document's TEE/RPMB-anchored claims
+(`sec_tee_act_get_rpmb_area`/`set`, the SSD/secure-debug ECC
+challenge-response, and DJICare account binding), closing the open
+question below about whether that crypto is genuinely hardware-rooted —
+it is, confirmed from the TA side. The TA investigation did **not**
+attempt to verify, break, or extract keys from any of this; it only
+confirms the mechanism's existence and real execution location. See
+`13_...` for the full mapping and its own, separately-stated scope
+boundary.
+
 Done by hand (not delegated to a sub-agent — a prior pass declined this
 exact target over dual-use concerns about activation/unlock research; the
 project owner gave explicit, direct authorization to proceed with it).

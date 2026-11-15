@@ -43,6 +43,20 @@ these three next, in that order.
 
 ## `dji_flight` — the actual flight-control-adjacent daemon, finally located; still no numeric cmd_set `0x03` registration
 
+**Update, see `12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md` §1 addenda
+for a direct follow-up:** a later pass fully disassembled this binary and
+traced all six `system()`/`popen()` call sites to their actual arguments,
+resolving the open "worth checking whether any `%s` is externally
+influenced, inconclusive" question below about
+`dji_verify -n geofense -H %s %s` and
+`dji_fw_verify -n 1105 -c 1105 -o %s %s`. **Resolution: no** — every
+argument at every one of the six call sites is a compile-time string
+literal or a securely `mkstemp()`-generated temp path; none is built from
+DUML/network-received data, through any call site that pass could locate.
+See `12_...` for the full trace (including a latent, not-currently-
+exploitable missing-defense-in-depth note about the command-building
+wrapper's own lack of shell-metacharacter sanitization).
+
 Confirms the device-type identity (`enums.py`'s `DeviceType.FLIGHT_
 CONTROLLER=3`, firmware string `"flight"`) but is architecturally a generic
 bus client, not a registrar — see table above. Two things worth separating
@@ -78,6 +92,18 @@ from that negative result:
   existing, not characterized.
 
 ## `dji_navigation` — OpenCV-heavy waypoint/vision-tracking service, not a cmd_set endpoint
+
+**Update, see `12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md` §1 addenda
+for a direct follow-up:** a later pass fully disassembled the NFZ-height-
+limit backstop handler this section describes architecturally and
+confirmed it concretely, down to the exact vaddr (`0x5c89c` for the
+handler, `0x16b408` for the setter it calls): it reads a 16-bit field
+directly from the incoming message-bus event payload (`[event+6]`) and
+passes it straight into the height-limit setter with no additional
+cryptographic or application-layer integrity check performed at this
+layer. This confirms, rather than changes, the framing already below —
+whether the underlying route-table/event-client layer authenticates the
+sender before delivery remains unresolved either way.
 
 2.25 MB, stripped, no `.gnu_debugdata`. Imports dozens of OpenCV symbols
 (`solvePnPRansac`, `undistortPoints`, `Rodrigues`, `perspectiveTransform`) —
