@@ -17,7 +17,7 @@ unpacked (`dji_imah_fwsig.py`-style AES+scramble removal) into
 | Module | Type | Role (inferred) | Plaintext after decrypt? |
 |---|---|---|---|
 | `00_cfg` | CNFG | Firmware package config/manifest | yes (small) |
-| `0105_LCPU` | LCPU | A flight-side MCU ("Logic CPU") | **yes** — ARM/Thumb code, `0xAA55AA55` boot magic + build-date string visible |
+| `0105_LCPU` | LCPU | **Correction (see `04_WM260_DAEMON_FINDINGS.md`): the lens/mount actuator controller ("Lens CPU"), not a flight-side MCU.** Confirmed by a later pass: embedded source paths (`lens_ulf`/`WM260_Fixed`/`HC32F460JE`), hundreds of lens-motor strings (`DjiStepMotor_Init`, `FOCUS ABS POS DRIVE CMD`), zero flight/gyro/ESC-related strings, and its own internal non-DUML "BLComm" lens-bus protocol (`CmdID`/`CmdChan`/`CmdLength`, distinct from the DUML cmd_set/cmd_id space documented in this repo). It does still speak DUML framing (see row below), just not DUML cmd_sets at its command layer — it's a subordinate device addressed over DUML, not the flight controller. | **yes** — ARM/Thumb code, `0xAA55AA55` boot magic + build-date string visible |
 | `0500_PD_MCU` | BAT2 | Power-distribution MCU | **yes** — clean Cortex-M vector table (`SP=0x20001200`) |
 | `0802_WM260_E2` | — | Camera/gimbal payload computer, Android-derived Linux (aarch64) | yes (ext4 `system.img`/`vendor.img`, 512 MiB / 64 MiB) |
 | `1100_Battery` | BAT1 | Smart battery MCU | **no** — entropy 7.45/8, no recognizable header; still encrypted or uses a differently-keyed container not handled by the open-source unsigner |
@@ -48,7 +48,7 @@ a full `.dynsym`) exports the actual frame codec:
 | `CalCrc8` | `0x2559c` | Table-driven CRC-8, confirmed algorithm (see frame doc) |
 | `CalCrc16` | `0x255b8` | Table-driven CRC-16, confirmed algorithm |
 | `DjiCrc8Table` | `0xfe800` (256 B) | Verified byte-identical to `comm_dat2pcap.py`'s `arr_2A103` |
-| CRC16 table | file offset `0xd3100` (found by byte search, not a named symbol) | Verified byte-identical to `comm_dat2pcap.py`'s `crc[]` (standard reflected CRC-16/CCITT) |
+| CRC16 table | file offset `0xd3100` in this `libduml_frwk.so` (found by byte search, not a named symbol) | Verified byte-identical to `comm_dat2pcap.py`'s `crc[]` (standard reflected CRC-16/CCITT). A later pass found this table *does* have a real name — `wCRC_Table` — as an exported symbol in the E2 aarch64 build's `libduml_hal.so` (vaddr `0x7b6e0`, sitting at the same `+0x100` offset from `DjiCrc8Table` as here); see `04_WM260_DAEMON_FINDINGS.md`. |
 | `DJI_Frame_Cap` | `0x25a9e` | The actual byte-stream state machine: finds `0x55`, validates header CRC8, extracts the 10-bit length, validates CRC16 over the whole frame, with seed **`0x3692`** as an inline literal |
 | `Frame_Capture` / `Frame_CapByHeadAndLen` | `0x25740`/`0x257de` | Generic delimiter-pair framer (configurable start/end bytes) — a different, more generic framing helper also present in the library, used by other (non-DUML) link types; **not** the DUML v1 parser |
 
@@ -69,7 +69,7 @@ MCU dumps:
 Both tables sit at the same +0x100 relative spacing as in `libduml_frwk.so`,
 strongly suggesting a shared source file (`dji_frame.c`/equivalent) compiled
 into every target in this product line, Linux and bare-metal MCU alike. This
-means the flight-side MCU (LCPU) and the power-distribution MCU both speak
+means the lens/mount MCU (LCPU, see correction above) and the power-distribution MCU both speak
 native DUML v1 framing directly on their wire, not just the Linux computers.
 
 The same table search found **no hit** in `1100_Battery`/`1200_ESC_0`/

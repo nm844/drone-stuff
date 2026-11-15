@@ -37,6 +37,12 @@ CMD_SET_NAMES = {
     '0x08': 'DM36x', '0x09': 'HD Link', '0x0a': 'Mono/Binocular (Vision)',
     '0x0b': 'Simulator', '0x0c': 'ESC', '0x0d': 'Battery', '0x0e': 'Data Logger',
     '0x0f': 'RTK', '0x10': 'Automation', '0x11': 'ADSB',
+    # Outside the 0x00-0x11 range this project documented from the public
+    # Wireshark dissector's own structure -- these two were found only by
+    # static binary disassembly of a WM260 (Mavic 3) image, not from any
+    # known capture or prior public dissector source. See
+    # DUML_PROTOCOL/04_WM260_DAEMON_FINDINGS.md.
+    '0x22': 'Demo Mode', '0x51': 'Route Switch',
 }
 
 FIXED_TYPE_SIZES = {
@@ -261,7 +267,7 @@ def main():
 
     commands = []
     stats = {'full': 0, 'partial': 0, 'none': 0}
-    for cmd_set_hex in [f'0x{i:02x}' for i in range(0x12)]:
+    for cmd_set_hex in sorted(CMD_SET_NAMES, key=lambda h: int(h, 16)):
         src, text_tbl, dissect_tbl = get_source(db, proto, cmd_set_hex)
         for cmd_id_hex, name in text_tbl.items():
             cmd_id = int(cmd_id_hex, 16)

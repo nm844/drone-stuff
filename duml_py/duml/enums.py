@@ -9,39 +9,50 @@ from enum import IntEnum
 
 
 class DeviceType(IntEnum):
-    """5-bit sender/receiver device-type field (frame byte 4 bits0-4, byte 5 bits0-4)."""
-    ANY = 0
+    """5-bit sender/receiver device-type field (frame byte 4 bits0-4, byte 5 bits0-4).
+
+    Confirmed by direct disassembly of the canonical 32-slot name table
+    compiled into libduml_frwk.so (duss_parse_host_id/_v2), WM260 (Mavic 3)
+    E2 image -- see DUML_PROTOCOL/02_DEVICE_ADDRESSING_EXTENDED.md and
+    04_WM260_DAEMON_FINDINGS.md. This confirms every name below by value
+    and mostly by semantics, but this firmware generation has renamed
+    several slots from the identifiers originally chosen for this enum
+    (kept as-is to avoid an API break) -- the firmware's own string for
+    each slot is given in the trailing comment where it differs from a
+    literal lowercasing of the member name.
+    """
+    ANY = 0              # firmware string: "whoami" (self-query sentinel in this lookup context)
     CAMERA = 1
-    APP = 2
-    FLIGHT_CONTROLLER = 3
+    APP = 2              # "mobile"
+    FLIGHT_CONTROLLER = 3  # "flight"
     GIMBAL = 4
-    CENTER_BOARD = 5
-    REMOTE_CONTROL = 6
-    WIFI_AIR = 7
-    DM36X_AIR = 8
-    HD_MCU_AIR = 9
+    CENTER_BOARD = 5     # "cboard"
+    REMOTE_CONTROL = 6   # "rc"
+    WIFI_AIR = 7         # "network" -- this board has an LTE/4G modem (bin/QFirehose); slot may now be a generic network node rather than specifically wifi-air
+    DM36X_AIR = 8        # "ve_air" -- DM36x chip retired this generation; generic video-encoder-air naming
+    HD_MCU_AIR = 9       # "vt_air" -- generic video-transmission-air naming
     PC = 10
     BATTERY = 11
     ESC = 12
-    DM36X_GROUND = 13
-    HD_MCU_GROUND = 14
-    S2P_USB_AIR = 15
-    S2P_USB_GROUND = 16
-    MONOCULAR = 17
-    BINOCULAR = 18
-    FPGA_AIR = 19
-    FPGA_GROUND = 20
+    DM36X_GROUND = 13    # "ve_gnd"
+    HD_MCU_GROUND = 14   # "vt_gnd"
+    S2P_USB_AIR = 15     # "s_to_p_air"
+    S2P_USB_GROUND = 16  # "s_to_p_gnd"
+    MONOCULAR = 17       # "mvision"
+    BINOCULAR = 18       # "bvision"
+    FPGA_AIR = 19        # "fpga_air"
+    FPGA_GROUND = 20     # "fpga_gnd"
     SIMULATOR = 21
-    BASE_STATION = 22
-    AIRBORNE_COMPUTING = 23
-    RC_BATTERY = 24
+    BASE_STATION = 22    # "bstation"
+    AIRBORNE_COMPUTING = 23  # "misc"
+    RC_BATTERY = 24      # "rcpmu"
     IMU = 25
-    GPS_RTK = 26
-    WIFI_GROUND = 27
-    SIG_CVT = 28
-    PMU = 29
-    UNKNOWN30 = 30
-    LAST = 31
+    GPS_RTK = 26         # "gps"
+    WIFI_GROUND = 27     # "wifi_gnd"
+    SIG_CVT = 28         # "glass" -- repurposed for DJI FPV Goggles this generation
+    PMU = 29             # "blackbox" -- repurposed for the flight-data-recorder service this generation
+    UNKNOWN30 = 30       # "test"
+    LAST = 31            # "all"
 
 
 class AckType(IntEnum):
@@ -90,6 +101,12 @@ class CmdSet(IntEnum):
     RTK = 0x0f
     AUTOMATION = 0x10
     ADSB = 0x11
+    # Outside the 0x00-0x11 range documented from the public Wireshark
+    # dissector -- found only by static disassembly of a WM260 (Mavic 3)
+    # image's daemons/libraries, not from any known capture or prior
+    # public dissector source. See DUML_PROTOCOL/04_WM260_DAEMON_FINDINGS.md.
+    DEMO_MODE = 0x22
+    ROUTE_SWITCH = 0x51
 
 
 CMD_SET_NAMES = {
@@ -98,6 +115,7 @@ CMD_SET_NAMES = {
     0x08: 'DM36x', 0x09: 'HD Link', 0x0a: 'Mono/Binocular (Vision)',
     0x0b: 'Simulator', 0x0c: 'ESC', 0x0d: 'Battery', 0x0e: 'Data Logger',
     0x0f: 'RTK', 0x10: 'Automation', 0x11: 'ADSB',
+    0x22: 'Demo Mode', 0x51: 'Route Switch',
 }
 
 DEVICE_TYPE_NAMES = {d.value: d.name for d in DeviceType}
@@ -126,4 +144,6 @@ CMD_SET_TYPICAL_RECEIVER = {
     0x0f: DeviceType.GPS_RTK,
     0x10: DeviceType.ANY,
     0x11: DeviceType.ANY,
+    0x22: DeviceType.ANY,  # registered by dji_sys across multiple board variants, not one fixed device role
+    0x51: DeviceType.ANY,  # registered as a framework-universal built-in (libduml_frwk.so), like the cmd_set 0x00 built-ins
 }

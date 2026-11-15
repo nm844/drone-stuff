@@ -15,7 +15,7 @@ known command/payload, built for the firmware in this project
    protocol natively, what the real camera-control daemon's parameters look
    like, and an honest list of what remains unverified (Battery/ESC firmware
    contents; per-daemon runtime command-registration tables).
-3. **`INDEX.md`** — table of all 18 command sets with command counts.
+3. **`INDEX.md`** — table of all 20 command sets with command counts.
 4. **`cmdset_XX_Name.md`** — one file per command set (General, Camera,
    Flight Control, Gimbal, Center Board, Remote Control, Wi-Fi, DM36x,
    HD Link, Mono/Binocular, Simulator, ESC, Battery, Data Logger, RTK,
@@ -25,10 +25,15 @@ known command/payload, built for the firmware in this project
 
 ## Totals
 
-- **877** known `(cmd_set, cmd_id)` pairs documented by name across 18 command
-  sets (884 reported in an earlier pass of this doc was inflated by a
-  handful of hex-case duplicate keys — e.g. `0x0A` and `0x0a` both present
-  in the source tables — now deduplicated by integer value).
+- **884** known `(cmd_set, cmd_id)` pairs documented by name across 20 command
+  sets. (An earlier pass of this doc reported 884 for a different reason —
+  a handful of hex-case duplicate keys, e.g. `0x0A` and `0x0a` both present
+  in the source tables, inflating what was really 877 at the time; that was
+  deduplicated by integer value. The current 884 is genuinely larger again:
+  7 commands across 2 entirely new cmd_sets — `0x22` and `0x51`, both
+  outside the public dissector's 0x00-0x11 range — found by binary
+  disassembly of a WM260/Mavic 3 image rather than from any known capture;
+  see `04_WM260_DAEMON_FINDINGS.md`.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -51,8 +56,8 @@ known command/payload, built for the firmware in this project
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 877 commands is
-  registered by name and sendable/receivable there; the other 720 (no known
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 884 commands is
+  registered by name and sendable/receivable there; the other 727 (no known
   payload layout) send/receive as raw bytes.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"

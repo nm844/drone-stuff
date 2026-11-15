@@ -1383,7 +1383,7 @@ const Field kAllFields[1370] = {
 
 } // namespace
 
-extern const CommandSpec kCommandTable[877] = {
+extern const CommandSpec kCommandTable[884] = {
     {0, 0, "Ping", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 1, "Version Inquiry", "full", FieldSpan{&kAllFields[0], 1}, "dissector", "general_version_inquiry_dissector", ""},
     {0, 2, "Push Param Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -1411,6 +1411,7 @@ extern const CommandSpec kCommandTable[877] = {
     {0, 39, "FileTrans Camera 2 App", "none", FieldSpan{nullptr, 0}, "dissector", "general_camera_file_dissector", ""},
     {0, 40, "FileTrans Delete", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 42, "FileTrans General Trans", "full", FieldSpan{&kAllFields[20], 7}, "dissector", "general_filetrans_general_trans_dissector", ""},
+    {0, 47, "Trans Diag Event", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 48, "Encrypt Config", "full", FieldSpan{&kAllFields[27], 9}, "dissector", "general_encrypt_config_dissector", ""},
     {0, 50, "Activate Config", "full", FieldSpan{&kAllFields[36], 4}, "dissector", "general_activation_actn_dissector", ""},
     {0, 51, "MFi Cert", "full", FieldSpan{&kAllFields[40], 2}, "dissector", "general_mfi_cert_dissector", ""},
@@ -1444,6 +1445,9 @@ extern const CommandSpec kCommandTable[877] = {
     {0, 96, "Auto Test Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 97, "Set Product Newest Ver", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 98, "Get Product Newest Ver", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 137, "Shell Command", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 163, "USB State Report", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 170, "Node Sniffer Request", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 239, "Send Reserved Key", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 240, "Log Push", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 241, "Component Self Test State", "full", FieldSpan{&kAllFields[54], 9}, "dissector", "general_compn_state_dissector", ""},
@@ -1914,6 +1918,7 @@ extern const CommandSpec kCommandTable[877] = {
     {4, 86, "Gimbal NotiFy Camera Id", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_notify_camera_id_dissector", ""},
     {4, 87, "Handheld Stick State Get/Push", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_state_get_dissector", ""},
     {4, 88, "Handheld Stick Control Set", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_control_set_dissector", ""},
+    {4, 105, "Event Input Report", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {5, 0, "Center Open/Close Virtual RC", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {5, 1, "Center Virtual RC Data", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {5, 2, "Center Push Batt Dynamic Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -2261,8 +2266,10 @@ extern const CommandSpec kCommandTable[877] = {
     {17, 21, "User Id Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 22, "Key Version Get", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 23, "Push Avoidance Action Get ", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {34, 96, "Demo Mode Handle", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {81, 5, "Route Switch", "none", FieldSpan{nullptr, 0}, "", "", ""},
 };
 
-extern const size_t kCommandTableSize = 877;
+extern const size_t kCommandTableSize = 884;
 
 } // namespace duml

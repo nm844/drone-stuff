@@ -604,6 +604,16 @@
  {
   "cmd_set": 0,
   "cmd_set_name": "General",
+  "cmd_id": 47,
+  "name": "Trans Diag Event",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
   "cmd_id": 48,
   "name": "Encrypt Config",
   "decode_status": "full",
@@ -1256,6 +1266,36 @@
   "cmd_set_name": "General",
   "cmd_id": 98,
   "name": "Get Product Newest Ver",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 137,
+  "name": "Shell Command",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 163,
+  "name": "USB State Report",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 170,
+  "name": "Node Sniffer Request",
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
@@ -15981,6 +16021,16 @@
   "fields": null
  },
  {
+  "cmd_set": 4,
+  "cmd_set_name": "Gimbal",
+  "cmd_id": 105,
+  "name": "Event Input Report",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
   "cmd_set": 5,
   "cmd_set_name": "Center Board",
   "cmd_id": 0,
@@ -25363,6 +25413,26 @@
   "cmd_set_name": "ADSB",
   "cmd_id": 23,
   "name": "Push Avoidance Action Get ",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 34,
+  "cmd_set_name": "Demo Mode",
+  "cmd_id": 96,
+  "name": "Demo Mode Handle",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 81,
+  "cmd_set_name": "Route Switch",
+  "cmd_id": 5,
+  "name": "Route Switch",
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,

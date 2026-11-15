@@ -73,6 +73,64 @@ documentation and a couple of small new facts:
   command set (cmd_set 0x02) documents, consistent with the `dji_camera3`
   parameter strings already noted in `01_BINARY_ANALYSIS_FINDINGS.md` §4.
 
+## The canonical 32-slot table, now confirmed by disassembly (not just JSON)
+
+A later pass disassembled `libduml_frwk.so` directly (`duss_parse_host_id`/
+`duss_parse_host_id_v2`, a linear `strcmp` against a hardcoded
+`const char* table[32]` at vaddr `0x18d5d8`) and dumped all 32 pointers.
+This is the actual compiled source of the names the JSON route tables
+above use, not a second independent guess — and it fills in every slot
+the JSON-derived table above didn't cover:
+
+| # | Firmware string | Classic `DeviceType` | Note |
+|---|---|---|---|
+| 0 | `whoami` | ANY | self-query sentinel in this lookup context |
+| 1 | `camera` | CAMERA | |
+| 2 | `mobile` | APP | |
+| 3 | `flight` | FLIGHT_CONTROLLER | |
+| 4 | `gimbal` | GIMBAL | |
+| 5 | `cboard` | CENTER_BOARD | |
+| 6 | `rc` | REMOTE_CONTROL | |
+| 7 | `network` | WIFI_AIR | this board has an LTE/4G modem (`bin/QFirehose`) — likely a generic network node now, not specifically wifi-air |
+| 8 | `ve_air` | DM36X_AIR | DM36x chip retired this generation; corrects this doc's earlier guess that `ve_air` was slot 9 |
+| 9 | `vt_air` | HD_MCU_AIR | generic video-transmission-air naming; this doc's earlier table had `ve_air`/`vt_air` one slot off from each other |
+| 10 | `pc` | PC | |
+| 11 | `battery` | BATTERY | |
+| 12 | `esc` | ESC | |
+| 13 | `ve_gnd` | DM36X_GROUND | |
+| 14 | `vt_gnd` | HD_MCU_GROUND | |
+| 15 | `s_to_p_air` | S2P_USB_AIR | |
+| 16 | `s_to_p_gnd` | S2P_USB_GROUND | not covered by this doc's earlier JSON-derived table at all |
+| 17 | `mvision` | MONOCULAR | |
+| 18 | `bvision` | BINOCULAR | |
+| 19 | `fpga_air` | FPGA_AIR | not covered by the JSON-derived table |
+| 20 | `fpga_gnd` | FPGA_GROUND | not covered |
+| 21 | `simulator` | SIMULATOR | not covered |
+| 22 | `bstation` | BASE_STATION | not covered |
+| 23 | `misc` | AIRBORNE_COMPUTING | this doc's earlier table had `misc`→`174` from one service's local route table; this is its real global slot |
+| 24 | `rcpmu` | RC_BATTERY | not covered |
+| 25 | `imu` | IMU | not covered |
+| 26 | `gps` | GPS_RTK | not covered |
+| 27 | `wifi_gnd` | WIFI_GROUND | not covered |
+| 28 | `glass` | SIG_CVT | repurposed for DJI FPV Goggles this generation |
+| 29 | `blackbox` | PMU | repurposed for the flight-data-recorder service this generation |
+| 30 | `test` | UNKNOWN30 | factory test harness, as this doc already guessed |
+| 31 | `all` | LAST | `duss_parse_host_id_v2` also recognizes a 33rd literal, `v2_all`, as a distinct sentinel (`0xFE`) from a true no-match (`0xFF`) |
+
+This is a per-board, not per-daemon, mechanism: device/host identity on a
+given board is centralized in `dji_sys`, sourced from one Android property
+per board image (`ro.boot.device`, itself mirrored 1:1 from the kernel
+`androidboot.device` cmdline arg — confirmed used elsewhere in this
+firmware, e.g. a literal `androidboot.secure_debug=1` cmdline check in
+several daemons) — not something each application daemon reads or picks
+independently via its own CLI flag. `dji_sys` and the debug tool
+`duss_shell` are the only binaries on this image that import any of
+`duss_get_device_type_from_cmdline`/`duss_parse_host_id`/
+`duss_parse_host_id_by_tag`; `dji_camera3`, `dji_sec`, `dji_hms`, `dji_dcs`,
+`dji_mb_ctrl` import none of them and talk through `dji_sys`'s internal
+pub-sub bus instead. See `04_WM260_DAEMON_FINDINGS.md` for the full
+disassembly trail.
+
 No new byte-level payload decodes came out of this pass — these are
 architecture/addressing confirmations, not new field layouts. The
 `fly_action_*.json` / `test_action.json` files on the aircraft's filesystem

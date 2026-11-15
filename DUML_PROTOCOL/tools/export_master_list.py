@@ -38,6 +38,8 @@ TYPICAL_RECEIVER_NAME = {
     0x0c: 'ESC (proxied via Center Board -- see note)', 0x0d: 'Battery',
     0x0e: 'Any', 0x0f: 'GPS/RTK', 0x10: 'Any (no public commands catalogued yet)',
     0x11: 'Any',
+    0x22: 'Any (dji_sys, multiple board variants -- binary-confirmed, not from a public dissector)',
+    0x51: 'Any (framework built-in, libduml_frwk.so -- binary-confirmed, not from a public dissector)',
 }
 
 # Typical REQUEST-side sender for each cmd_set: the controlling host that
@@ -52,6 +54,7 @@ TYPICAL_REQUEST_SENDER_NAME = {
     0x0a: 'Flight Controller', 0x0b: 'PC (DJI Assistant simulator mode)',
     0x0c: 'Center Board (proxy)', 0x0d: 'Flight Controller / PC', 0x0e: 'APP / PC',
     0x0f: 'Flight Controller', 0x10: 'APP (unknown -- no public commands)', 0x11: 'Flight Controller',
+    0x22: 'internal (dji_sys, factory/demo-unit use suspected)', 0x51: 'internal (framework/system)',
 }
 
 

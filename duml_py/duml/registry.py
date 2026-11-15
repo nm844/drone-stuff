@@ -9,7 +9,7 @@ dji-firmware-tools dissector across DJI's whole DUML-speaking product line.
 Not every one of these is necessarily reachable on this specific WM260
 aircraft/firmware revision -- see DUML_PROTOCOL/01_BINARY_ANALYSIS_FINDINGS.md.
 `decode_status` is 'full' only where the payload byte layout is actually
-known (156 of 877 at the time this was generated); all others decode to
+known (157 of 884 at the time this was generated); all others decode to
 {'raw': <bytes>} via codecs.decode_payload, which you can still send/receive
 and inspect -- you just won't get named fields without further research.
 """
