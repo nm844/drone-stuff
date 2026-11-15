@@ -111,6 +111,19 @@ binary, so it couldn't even be confirmed reachable.
 
 ## `dji_autotest` — the factory/engineering daemon, and a real, concrete finding
 
+**Update, see `09_DJI_AUTOTEST_EXPLOITABILITY_DEEPDIVE.md` for a much more
+precise follow-up:** that pass found a second, previously-missed dispatch
+layer (`router_thread` → `common_process`) reached over this same TCP
+service, with a real, directly-confirmed `system()` command-injection
+primitive and an ungated arbitrary-path directory-listing bug — but also
+found the most dangerous capability (`system()`, and unrestricted file read)
+is gated behind the device's own kernel boot command line already carrying
+an engineering/factory/secure-debug flag, which meaningfully narrows the
+threat model from "any Mavic 3 with `autotest_on` touched." The directory-
+listing bug, by contrast, has no such gate and works on stock production
+firmware. Read that document for the full precondition tree; the summary
+below is the original, less precise pass.
+
 This one has a genuine, confirmed security finding, not just an
 architectural correction. `dji_autotest` is the WM260 factory calibration
 daemon (confirmed via embedded source paths under `hardware/dji/service/
