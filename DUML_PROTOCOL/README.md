@@ -19,21 +19,38 @@ known command/payload, built for the firmware in this project
 4. **`cmdset_XX_Name.md`** — one file per command set (General, Camera,
    Flight Control, Gimbal, Center Board, Remote Control, Wi-Fi, DM36x,
    HD Link, Mono/Binocular, Simulator, ESC, Battery, Data Logger, RTK,
-   Automation, ADSB, Special). Each lists every known `cmd_id`, its name,
-   and — where the source dissector decodes it — a byte-exact table of
-   offset / size / field name / type / enum / bitmask / description.
+   Automation, ADSB, Special, plus `0x22` Demo Mode and `0x51` Route
+   Switch — the latter two found by this project's own binary RE, not the
+   public dissector). Each lists every known `cmd_id`, its name, and —
+   where the source dissector decodes it, or this project's own binary
+   disassembly established it — a byte-exact table of offset / size /
+   field name / type / enum / bitmask / description, or a purpose /
+   evidence / confidence writeup for binary-RE'd entries.
 
 ## Totals
 
-- **884** known `(cmd_set, cmd_id)` pairs documented by name across 20 command
-  sets. (An earlier pass of this doc reported 884 for a different reason —
-  a handful of hex-case duplicate keys, e.g. `0x0A` and `0x0a` both present
-  in the source tables, inflating what was really 877 at the time; that was
-  deduplicated by integer value. The current 884 is genuinely larger again:
-  7 commands across 2 entirely new cmd_sets — `0x22` and `0x51`, both
-  outside the public dissector's 0x00-0x11 range — found by binary
-  disassembly of a WM260/Mavic 3 image rather than from any known capture;
-  see `04_WM260_DAEMON_FINDINGS.md`.)
+- **888** known `(cmd_set, cmd_id)` pairs documented by name across 18
+  non-empty command sets (of 20 catalogued in total; the other 2,
+  `0x0c`/ESC and `0x10`/Automation, are confirmed-empty with an
+  architectural explanation rather than unexamined — see
+  `cmdset_0c_ESC.md`/`cmdset_10_Automation.md`). (An earlier pass of
+  this doc reported 884 for a different reason — a handful of hex-case
+  duplicate keys, e.g. `0x0A` and `0x0a` both present in the source tables,
+  inflating what was really 877 at the time; that was deduplicated by
+  integer value. The 884 that followed was genuinely larger: 7 commands
+  across 2 entirely new cmd_sets — `0x22` and `0x51`, both outside the
+  public dissector's 0x00-0x11 range — found by binary disassembly of a
+  WM260/Mavic 3 image rather than from any known capture; see
+  `04_WM260_DAEMON_FINDINGS.md`. The current **888** adds 4 more cmd_ids
+  under `0x22` specifically — `0x06`/`0x07`/`0x08`/`0x44`, all 4 found
+  inside `dji_flight` rather than `dji_sys` — recovered by a later,
+  independently-verified follow-up pass; see
+  `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track H and `cmdset_22_Demo_Mode.md`.
+  Also fixed this pass: 5 cmd_ids that were already present in
+  `commands.json`/`ALL_COMMANDS.csv` but had never been rendered into
+  their per-cmd_set `.md` file — `0x00`'s `0x2F`/`0x89`/`0xA3`/`0xAA` and
+  `0x04`'s `0x69` — now added to `cmdset_00_General.md`/
+  `cmdset_04_Gimbal.md` with full purpose/evidence/confidence writeups.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -51,13 +68,15 @@ known command/payload, built for the firmware in this project
   Control/0x0A). Both are marked `source: flyrec_crossref` wherever they
   appear and flagged as a *candidate* mapping (by cmd_id name match, not
   independently confirmed against live WM260 traffic) rather than
-  ground-truth.
+  ground-truth. None of the 4 newly-added `0x22` cmd_ids or the 5
+  gap-fix entries above have a byte-level payload decode — all 9 are
+  name/handler-confirmed only, so this 157 figure is unchanged.
 - Frame header: **100% byte-level confirmed** against this exact firmware's
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 884 commands is
-  registered by name and sendable/receivable there; the other 727 (no known
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 888 commands is
+  registered by name and sendable/receivable there; the other 731 (no known
   payload layout) send/receive as raw bytes.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"
@@ -119,7 +138,7 @@ the documented Camera command set.
   require full decompilation of several stripped PIE executables, which
   was out of scope for this pass. The command *names and payload layouts*
   documented here are accurate as a protocol reference; whether every one
-  of the 884 is actually *reachable* on this specific airframe/firmware
+  of the 888 is actually *reachable* on this specific airframe/firmware
   revision (vs. being a command another DJI product in the dissector's
   multi-product history supports) was not individually confirmed.
 - Some payload fields are named `unknownN` / have no enum decode in the

@@ -1,6 +1,18 @@
 # Cmd Set 0x04 — Gimbal
 
-Total known command IDs: 54
+Total known command IDs: 46 (47 as of this pass, with `0x69` added below —
+confirmed independently by this project's own binary disassembly, not the
+public dissector).
+
+**Pre-existing data-quality note, not introduced by this pass:** 9 cmd_ids
+below (`0x0A`, `0x0B`, `0x0C`, `0x0D`, `0x0E`, `0x0F`, `0x1C`, `0x1E`,
+`0x3A`) each have **two** `## 0xNN` headings — one from an earlier
+"(name unknown)" placeholder pass and one with a real name — left
+un-deduplicated by this project's documentation renderer. Both headings
+for each such cmd_id describe the *same* command, not two different ones;
+treat them as one entry when counting. This is flagged here rather than
+silently fixed, since de-duplicating 9 sections without disturbing any
+already-decoded payload tables was out of scope for this specific pass.
 
 ## 0x00 — Gimbal Reserved
 
@@ -526,3 +538,25 @@ Payload decoder: `gimbal_handheld_stick_state_get_dissector`
 ## 0x58 — Handheld Stick Control Set
 
 Payload decoder: `gimbal_handheld_stick_control_set_dissector`
+
+## 0x69 — Event Input Report
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `sys_event_input_report`
+- **Purpose:** reports some form of input event. **Confidence caveat:**
+  the numeric `(cmd_set, cmd_id)` pair is as solidly confirmed as every
+  other binary-confirmed entry in this document, but the "Gimbal" semantic
+  label comes only from `enums.py`'s generic cmd_set-level convention
+  (every command under cmd_set `0x04` is labeled "Gimbal") — this specific
+  handler's name doesn't obviously fit gimbal control, and its actual
+  logic was not disassembled. Flagged as medium confidence on the category
+  fit, not asserted.
+- **Evidence:** literal `cmd_set`/`cmd_id` immediates before a `bl` to
+  `duss_event_register_dynamic_command`, found directly in binary
+  disassembly of this firmware (not from the public dissector, which
+  already lists this cmd_id by name with no payload decode).
+- **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping;
+  medium on whether "Gimbal" correctly describes what this handler
+  actually does. See `04_WM260_DAEMON_FINDINGS.md`.

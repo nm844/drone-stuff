@@ -1,6 +1,6 @@
 # Cmd Set 0x00 — General
 
-Total known command IDs: 76
+Total known command IDs: 80
 
 ## 0x00 — Ping
 
@@ -126,6 +126,27 @@ Payload decoder: `general_upgrade_self_request_dissector`
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+> **Binary investigation note (`0x07`-`0x0A`, `0x40`/`0x41`/`0x43`):** this
+> project specifically searched the real WM260/Mavic 3 firmware for these
+> 7 commands' dispatch logic — `Enter Loader`/`Update Confirm`/
+> `Update Transmit`/`Update Finish` (`0x07`-`0x0A`) and
+> `Fw Update Desc Push`/`Fw Update Push Control`/`Fw Upgrade Finish`
+> (`0x40`/`0x41`/`0x43`) — and could not resolve it. Neither
+> `libduml_frwk.so`'s one built-in dynamic-command table nor `dji_sys`'s 11
+> direct command registrations cover any of these cmd_ids, and a full
+> disassembly of the firmware-upgrade daemon's entire 4-library plugin
+> chain (`libupgrade_register.so` → `libupgrade_communication.so` →
+> `libupgrade_commu_demo.so` → `libupgrade_upgrade.so`) found no
+> cmd_id-matching dispatch logic with confidence — its event callback
+> parses fixed struct-offset fields that don't look like a raw DUML cmd_id
+> switch. This may be because the real handler lives in a `dlopen()`'d
+> per-product plugin not present in this extraction, or because this is
+> dead/legacy protocol surface the upgrade subsystem has moved away from
+> (the upstream community Lua dissector's stubs for these same cmd_ids are
+> also empty `TODO` placeholders, with no payload-format knowledge to
+> borrow either). Reported as a genuine, unresolved gap, not guessed.
+> See `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E.
+
 ## 0x20 — File List
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
@@ -197,6 +218,46 @@ Payload decoder: `general_filetrans_general_trans_dissector`
   | Off | Size | Field | Type | Notes |
   |---|---|---|---|---|
   | 1 | 16 | `general_filetrans_general_trans_unknown1` (Unknown1) | bytes | After file transfer |
+
+> **Binary investigation note (`0x20`-`0x28`/`0x2A` file-transfer range):**
+> this project confirmed the real underlying mechanism these commands'
+> names describe: a shared `duss_file_trans_event`/`_req`/`_data`/
+> `_checksum`/`_data_lost_list` module inside `libduml_frwk.so`, reused by
+> 6 consumer daemons (`dji_sys`, `dji_perception`, `dji_blackbox`,
+> `dji_config_store`, `dji_sec`, `libupgrade_commu_demo.so`). It's
+> dispatched internally by a payload "phase" byte (matching the
+> `phase == 1/2/3` branches decoded above for `0x2A`) rather than by a
+> separate literal cmd_id per phase — so which exact cmd_id(s) in this
+> range route into it *per daemon* could not be read off a literal
+> register table (none exists; it's wired via a bus-client callback-struct
+> field, an `R_ARM_ABS32` relocation, not the literal-immediate pattern
+> used elsewhere in this firmware). The `0x24`/`0x2A` names/payloads above
+> are independently confirmed by a field-for-field match against this
+> real handler. The confirmed `duss_file_trans_req` "start transfer" path
+> (phase=1) builds its destination path from a per-daemon fixed base
+> directory plus a wire-supplied filename, with **no authentication/
+> authorization check of any kind** on who may initiate a transfer — see
+> `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E for the full security-relevant
+> findings (including a corrected, bounded single-hop `".."` path-traversal
+> primitive, and a refuted unbounded-`fallocate()` DoS claim).
+
+## 0x2F — Trans Diag Event
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `duss_trans_diag_event`
+- **Purpose:** a transport/transfer diagnostics event — most plausibly
+  reports or queries status/error information about an in-progress bus
+  transfer (consistent with the "Trans Diag" name and its numeric
+  adjacency to the `0x20`-`0x2A` file-transfer range above), though the
+  handler's own logic was not disassembled, only its registration.
+- **Evidence:** found via the literal-cmd_set-then-cmd_id-immediate
+  pattern immediately preceding a `bl` to
+  `duss_event_register_dynamic_command`, confirmed in `libduml_frwk.so`'s
+  built-in dynamic-command table.
+- **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping.
+  See `04_WM260_DAEMON_FINDINGS.md`.
 
 ## 0x30 — Encrypt Config
 
@@ -413,6 +474,71 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0x62 — Get Product Newest Ver
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0x89 — Shell Command
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware, with
+notable security relevance._
+
+- **Handler:** `duss_event_shell`
+- **Purpose:** lets a DUML message invoke a shell command on the device.
+  Confirmed by this handler's own embedded debug string, logged verbatim:
+  `"SHELL: duss shell_command %s"` — i.e. the payload (or a field within
+  it) is passed through to a shell-command execution path, not merely
+  logged as text.
+- **Evidence:** found via the literal-cmd_set-then-cmd_id-immediate
+  pattern immediately preceding a `bl` to
+  `duss_event_register_dynamic_command`, confirmed in `libduml_frwk.so`'s
+  built-in dynamic-command table (shared by every daemon that links this
+  library, not opted into per-daemon).
+- **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping and
+  on the debug-string evidence that it reaches a shell-command path.
+  **Not determined / explicitly out of scope for this project:** whether
+  this command is reachable from outside the device without prior root/
+  ADB access, what authentication (if any) gates it, and the exact
+  argument-passing/escaping mechanism — consistent with this project's
+  standing no-exploit-recipe boundary, this is reported as an architectural
+  fact (the command exists and is wired to a shell-exec path), not
+  investigated or demonstrated as a usable attack. See
+  `04_WM260_DAEMON_FINDINGS.md`.
+
+## 0xA3 — USB State Report
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `sys_wm260_usb_state_handle` (plus platform-variant siblings,
+  the same registration convention as cmd_set `0x22`/`0x60`'s "Demo Mode
+  Handle")
+- **Purpose:** reports the device's USB connection/mode state (e.g.
+  connected/disconnected, host vs. device/OTG mode) into the DUML bus —
+  consistent with the "USB State Report" name and this project's separate
+  confirmation of a real `sys_ac103_usb_otg`/`sys_wm162_usb_otg`-style USB
+  OTG mode-set handler under cmd_set `0x06`/`0x3A`.
+- **Evidence:** literal `cmd_set`/`cmd_id` immediates before
+  `duss_event_register_dynamic_command`, inside `dji_sys`'s platform-init
+  functions.
+- **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping. See
+  `04_WM260_DAEMON_FINDINGS.md`.
+
+## 0xAA — Node Sniffer Request
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `duss_event_node_sniffer_req`
+- **Purpose:** requests some form of DUML bus "node sniffer" — most
+  plausibly a diagnostic/discovery query enumerating the devices/nodes
+  currently present on the bus (consistent with the "Node Sniffer" name),
+  though the handler's own logic was not disassembled, only its
+  registration.
+- **Evidence:** found in `libduml_frwk.so`'s built-in dynamic-command
+  table (the same table that supplies cmd_set `0x51`/`0x05` "Route
+  Switch" and this cmd_set's `0x2F`/`0x89` above) — registered
+  automatically for every message-bus client, not opted into per-daemon.
+- **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping. See
+  `04_WM260_DAEMON_FINDINGS.md`.
 
 ## 0xEF — Send Reserved Key
 

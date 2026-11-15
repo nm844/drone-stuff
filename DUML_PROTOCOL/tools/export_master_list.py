@@ -42,6 +42,25 @@ TYPICAL_RECEIVER_NAME = {
     0x51: 'Any (framework built-in, libduml_frwk.so -- binary-confirmed, not from a public dissector)',
 }
 
+# Per-(cmd_set, cmd_id) overrides of the two tables above, for cases where a
+# single cmd_set-level receiver/sender label is wrong for one specific
+# command within that cmd_set (e.g. cmd_set 0x22 "Demo Mode" is mostly a
+# dji_sys feature, but 4 of its 5 known cmd_ids were binary-confirmed inside
+# dji_flight instead -- see 04_WM260_DAEMON_FINDINGS.md and
+# 14_FOLLOWUP_DEEPDIVE_FINDINGS.md Track H).
+TYPICAL_RECEIVER_OVERRIDE = {
+    (0x22, 0x06): 'dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)',
+    (0x22, 0x07): 'dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)',
+    (0x22, 0x08): 'dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)',
+    (0x22, 0x44): 'dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)',
+}
+TYPICAL_REQUEST_SENDER_OVERRIDE = {
+    (0x22, 0x06): 'internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced)',
+    (0x22, 0x07): 'internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced)',
+    (0x22, 0x08): 'internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced)',
+    (0x22, 0x44): 'internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced)',
+}
+
 # Typical REQUEST-side sender for each cmd_set: the controlling host that
 # would plausibly issue it. This is inference from what each cmd_set's
 # commands *do* (e.g. "Gimbal Control" is issued by whatever is flying the
@@ -82,8 +101,10 @@ def main():
         writer.writerow([
             f"0x{e['cmd_set']:02x}", e['cmd_set_name'],
             f"0x{e['cmd_id']:02x}", e['cmd_id'], e['name'], e['decode_status'],
-            TYPICAL_RECEIVER_NAME.get(e['cmd_set'], 'unknown'),
-            TYPICAL_REQUEST_SENDER_NAME.get(e['cmd_set'], 'unknown'),
+            TYPICAL_RECEIVER_OVERRIDE.get((e['cmd_set'], e['cmd_id']),
+                TYPICAL_RECEIVER_NAME.get(e['cmd_set'], 'unknown')),
+            TYPICAL_REQUEST_SENDER_OVERRIDE.get((e['cmd_set'], e['cmd_id']),
+                TYPICAL_REQUEST_SENDER_NAME.get(e['cmd_set'], 'unknown')),
             e.get('dissector_fn') or '',
             len(e['fields']) if e['fields'] else 0,
             field_summary(e['fields']),

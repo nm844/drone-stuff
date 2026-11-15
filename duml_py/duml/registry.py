@@ -5,11 +5,16 @@ additions -- see ../../DUML_PROTOCOL/README.md) and gives lookup by
 (cmd_set, cmd_id) or by name.
 
 commands.json covers every (cmd_set, cmd_id) pair known from the public
-dji-firmware-tools dissector across DJI's whole DUML-speaking product line.
+dji-firmware-tools dissector across DJI's whole DUML-speaking product line,
+plus a small number of cmd_sets/cmd_ids (0x22, 0x51, and a few additions
+under 0x00/0x04) found or confirmed by this project's own WM260/Mavic 3
+firmware disassembly rather than from the dissector -- see
+../../DUML_PROTOCOL/cmdset_22_Demo_Mode.md and
+../../DUML_PROTOCOL/cmdset_51_Route_Switch.md.
 Not every one of these is necessarily reachable on this specific WM260
 aircraft/firmware revision -- see DUML_PROTOCOL/01_BINARY_ANALYSIS_FINDINGS.md.
 `decode_status` is 'full' only where the payload byte layout is actually
-known (157 of 884 at the time this was generated); all others decode to
+known (157 of 888 at the time this was generated); all others decode to
 {'raw': <bytes>} via codecs.decode_payload, which you can still send/receive
 and inspect -- you just won't get named fields without further research.
 """

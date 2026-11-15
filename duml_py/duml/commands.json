@@ -25421,6 +25421,46 @@
  {
   "cmd_set": 34,
   "cmd_set_name": "Demo Mode",
+  "cmd_id": 6,
+  "name": "Set Global Cruise Vel",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 34,
+  "cmd_set_name": "Demo Mode",
+  "cmd_id": 7,
+  "name": "Get Global Cruise Vel",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 34,
+  "cmd_set_name": "Demo Mode",
+  "cmd_id": 8,
+  "name": "Pause Recovery",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 34,
+  "cmd_set_name": "Demo Mode",
+  "cmd_id": 68,
+  "name": "Break Restore Waypoint Fly",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 34,
+  "cmd_set_name": "Demo Mode",
   "cmd_id": 96,
   "name": "Demo Mode Handle",
   "decode_status": "none",
