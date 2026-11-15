@@ -88,9 +88,9 @@
   "cmd_id": 7,
   "name": "Enter Loader",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_enter_loader_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 0,
@@ -98,9 +98,9 @@
   "cmd_id": 8,
   "name": "Update Confirm",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_update_confirm_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 0,
@@ -108,9 +108,9 @@
   "cmd_id": 9,
   "name": "Update Transmit",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_update_transmit_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 0,
@@ -118,9 +118,9 @@
   "cmd_id": 10,
   "name": "Update Finish",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_update_finish_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 0,
@@ -492,9 +492,9 @@
   "cmd_id": 39,
   "name": "FileTrans Camera 2 App",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_camera_file_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 0,
@@ -654,7 +654,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "Type of the module; selects encryption key to use; Camera supports keys 1",
+    "desc": "Type of the module; selects encryption key to use; Camera supports keys 1, 4 and 8; gimbal accepts only 4 and DM3xx only 8.",
     "comment": null,
     "branch": "elseif cmd_type == 3 then"
    },
@@ -702,7 +702,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "Type of the module; selects encryption key to use; Camera supports keys 1",
+    "desc": "Type of the module; selects encryption key to use; Camera supports keys 1, 4 and 8; gimbal accepts only 4 and DM3xx only 8.",
     "comment": null,
     "branch": "elseif cmd_type == 4 then"
    },
@@ -1310,7 +1310,7 @@
     "type": "uint32",
     "enum": null,
     "mask": "0x01",
-    "desc": "Error in FPGA boot state",
+    "desc": "Error in FPGA boot state, final state not reached",
     "comment": null,
     "branch": "if sender == 0x09 then"
    },
@@ -1526,9 +1526,9 @@
   "cmd_id": 255,
   "name": "Query Device Info",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "general_query_device_info_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 1,
@@ -5549,10 +5549,10 @@
    },
    {
     "name": "camera_camera_tracking_status_status",
-    "label": null,
+    "label": "camera_camera_tracking_status_status",
     "offset": 0,
     "size": 1,
-    "type": null,
+    "type": "bytes",
     "enum": null,
     "mask": null,
     "desc": null,
@@ -8101,9 +8101,9 @@
   "cmd_id": 62,
   "name": "FlyC Request Limit Update",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "flyc_flyc_request_limit_update_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 3,
@@ -8134,7 +8134,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "Fragment index",
+    "desc": "Fragment index, incrementing during transfer; proper values are 0-19, where 0 starts a new transfer.",
     "comment": null,
     "branch": null
    },
@@ -8158,8 +8158,8 @@
     "type": "int32",
     "enum": null,
     "mask": null,
-    "desc": null,
-    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to int32 (angular degrees * 1e6, signed) -- matches the historical FlycNoFlyZone C struct (dji_flyc_nofly_ed.py, c_int latitude) seen on earlier firmware generations. Verified by round-tripping a synthetic payload.",
+    "desc": "angular value * 1000000",
+    "comment": null,
     "branch": null
    },
    {
@@ -8170,8 +8170,8 @@
     "type": "int32",
     "enum": null,
     "mask": null,
-    "desc": null,
-    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to int32, same basis as latitude.",
+    "desc": "angular value * 1000000",
+    "comment": null,
     "branch": null
    },
    {
@@ -8182,8 +8182,8 @@
     "type": "uint16",
     "enum": null,
     "mask": null,
-    "desc": null,
-    "comment": "Size is 2 bytes; source dissector mislabeled this uint8. Corrected to uint16 (meters).",
+    "desc": "meters",
+    "comment": null,
     "branch": null
    },
    {
@@ -8195,7 +8195,7 @@
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": "Size is 2 bytes; source dissector mislabeled this uint8. Corrected to uint16.",
+    "comment": null,
     "branch": null
    },
    {
@@ -8219,7 +8219,7 @@
     "enum": null,
     "mask": null,
     "desc": null,
-    "comment": "Size is 4 bytes; source dissector mislabeled this uint8. Corrected to uint32.",
+    "comment": null,
     "branch": null
    }
   ]
@@ -8454,7 +8454,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m",
+    "desc": "0.1m, altitude to ground",
     "comment": null,
     "branch": null
    },
@@ -8466,7 +8466,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": null,
     "branch": null
    },
@@ -8478,7 +8478,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": "offset = 20",
     "branch": null
    },
@@ -8490,7 +8490,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": null,
     "branch": null
    },
@@ -9221,7 +9221,7 @@
     "type": "float",
     "enum": null,
     "mask": null,
-    "desc": "0.1m",
+    "desc": "0.1m, altitude",
     "comment": null,
     "branch": null
    },
@@ -9665,9 +9665,9 @@
   "cmd_id": 69,
   "name": "FlyC GPS SNR Get",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "flyc_flyc_gps_snr_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 3,
@@ -9746,7 +9746,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "On P3",
+    "desc": "On P3, always 1",
     "comment": null,
     "branch": null
    },
@@ -9758,7 +9758,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "On P3",
+    "desc": "On P3, always 0",
     "comment": null,
     "branch": null
    }
@@ -10556,9 +10556,9 @@
   "cmd_id": 99,
   "name": "FlyC On Board Recv",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "flyc_flyc_board_recv_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 3,
@@ -12728,9 +12728,9 @@
   "cmd_id": 233,
   "name": "Config Command Table: Get or Exec",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "flyc_config_command_table_get_or_exec_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 3,
@@ -13491,9 +13491,9 @@
   "cmd_id": 2,
   "name": "Gimbal Get Position",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_get_position_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -13501,9 +13501,9 @@
   "cmd_id": 3,
   "name": "Gimbal Set Param",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_set_param_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -13511,9 +13511,9 @@
   "cmd_id": 4,
   "name": "Gimbal Get Param",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_get_param_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -13532,7 +13532,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1 degree",
+    "desc": "0.1 degree, gimbal angular position, zero is forward, max down..up is about -900..470",
     "comment": null,
     "branch": null
    },
@@ -13544,7 +13544,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1 degree",
+    "desc": "0.1 degree, gimbal angular position, zero is parallel to earth, max right..left is about -410..410",
     "comment": null,
     "branch": null
    },
@@ -13556,7 +13556,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1 degree",
+    "desc": "0.1 degree, gimbal angular position, -1000 is forward, max right..left is about -1460..-540",
     "comment": null,
     "branch": null
    },
@@ -13985,9 +13985,9 @@
   "cmd_id": 9,
   "name": "Gimbal Reserved2",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_reserved2_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -14006,7 +14006,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14018,7 +14018,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14030,7 +14030,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14066,7 +14066,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "unknown unit / 2000",
+    "desc": "unknown unit / 2000, range 1..10",
     "comment": null,
     "branch": null
    }
@@ -14101,7 +14101,7 @@
     "type": "uint8",
     "enum": null,
     "mask": null,
-    "desc": "Only the top bit is meaningful",
+    "desc": "Only the top bit is meaningful, the rest is garbage",
     "comment": null,
     "branch": "else"
    },
@@ -14136,7 +14136,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14148,7 +14148,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14160,7 +14160,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "angle in degrees * 10",
+    "desc": "angle in degrees * 10, range -1800..1800",
     "comment": null,
     "branch": null
    },
@@ -14371,7 +14371,7 @@
     "type": "int8",
     "enum": null,
     "mask": null,
-    "desc": "Unused value",
+    "desc": "Unused value, but must exist in order for gimbal to send back ACK.",
     "comment": null,
     "branch": "if pack_type == 0 then"
    },
@@ -14643,9 +14643,9 @@
   "cmd_id": 30,
   "name": "Gimbal Degree Info Subscription",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_degree_info_subscription_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -14711,7 +14711,7 @@
     "type": "int8",
     "enum": null,
     "mask": null,
-    "desc": "When not zero",
+    "desc": "When not zero, the packet will have no effect",
     "comment": null,
     "branch": null
    },
@@ -15728,9 +15728,9 @@
   "cmd_id": 44,
   "name": "Gimbal Tutorial Step Set",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_tutorial_step_set_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15773,9 +15773,9 @@
   "cmd_id": 49,
   "name": "Robin Params Set",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_robin_params_set_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15783,9 +15783,9 @@
   "cmd_id": 50,
   "name": "Robin Params Get",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_robin_params_get_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15816,9 +15816,9 @@
   "cmd_id": 52,
   "name": "Gimbal Handle Params Set",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_handle_params_set_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15826,9 +15826,9 @@
   "cmd_id": 54,
   "name": "Gimbal Handle Params Get",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_handle_params_get_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15836,9 +15836,9 @@
   "cmd_id": 55,
   "name": "Gimbal Timelapse Params Set",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_timelapse_params_set_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15881,9 +15881,9 @@
   "cmd_id": 57,
   "name": "Gimbal Lock",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_lock_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15891,9 +15891,9 @@
   "cmd_id": 58,
   "name": "Gimbal Rotate Camera X Axis",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_rotate_camera_x_axis_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15901,9 +15901,9 @@
   "cmd_id": 69,
   "name": "Gimbal Get Temp",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_get_temp_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15911,9 +15911,9 @@
   "cmd_id": 71,
   "name": "Gimbal TBD 47",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_tbd_47_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15956,9 +15956,9 @@
   "cmd_id": 86,
   "name": "Gimbal NotiFy Camera Id",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_notify_camera_id_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15966,9 +15966,9 @@
   "cmd_id": 87,
   "name": "Handheld Stick State Get/Push",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_handheld_stick_state_get_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 4,
@@ -15976,9 +15976,9 @@
   "cmd_id": 88,
   "name": "Handheld Stick Control Set",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "gimbal_handheld_stick_control_set_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 5,
@@ -18390,9 +18390,9 @@
   "cmd_id": 5,
   "name": "DM36x Gnd Stat Info Send",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "dm36x_send_gnd_stat_info_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 8,
@@ -18459,9 +18459,9 @@
   "cmd_id": 7,
   "name": "DM36x Gnd Stat Info Recv",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "dm36x_recv_gnd_stat_info_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 8,
@@ -18469,9 +18469,9 @@
   "cmd_id": 14,
   "name": "DM36x App Connect Stat Get",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "dm36x_get_app_conn_stat_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 8,
@@ -18574,7 +18574,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m",
+    "desc": "0.1m, altitude to ground",
     "comment": null,
     "branch": null
    },
@@ -18586,7 +18586,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": null,
     "branch": null
    },
@@ -18598,7 +18598,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": "offset = 20",
     "branch": null
    },
@@ -18610,7 +18610,7 @@
     "type": "int16",
     "enum": null,
     "mask": null,
-    "desc": "0.1m/s",
+    "desc": "0.1m/s, to ground",
     "comment": null,
     "branch": null
    },
@@ -19341,7 +19341,7 @@
     "type": "float",
     "enum": null,
     "mask": null,
-    "desc": "0.1m",
+    "desc": "0.1m, altitude",
     "comment": null,
     "branch": null
    },
@@ -19826,7 +19826,7 @@
     "type": "uint16",
     "enum": null,
     "mask": null,
-    "desc": "Address within AD9363",
+    "desc": "Address within AD9363, FPGA or special value recognized by Lightbridge MCU",
     "comment": null,
     "branch": "if pack_type == 0 then"
    },
@@ -19873,7 +19873,7 @@
     "type": "uint16",
     "enum": null,
     "mask": null,
-    "desc": "Address within AD9363",
+    "desc": "Address within AD9363, FPGA or special value recognized by Lightbridge MCU",
     "comment": null,
     "branch": "if pack_type == 0 then"
    },
@@ -20319,9 +20319,9 @@
   "cmd_id": 32,
   "name": "HDLnk SDR Downward Sweep Frequency",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "hd_link_push_sdr_dl_freq_energy_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 9,
@@ -20520,9 +20520,9 @@
   "cmd_id": 41,
   "name": "HDLnk SDR Upward Sweep Frequency",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "hd_link_push_sdr_ul_freq_energy_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 9,
@@ -21189,9 +21189,9 @@
   "cmd_id": 1,
   "name": "Eye Bino Info",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "mbino_bino_info_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 10,
@@ -24779,9 +24779,9 @@
   "cmd_id": 49,
   "name": "Battery Re-Arrangement Get/Push",
   "decode_status": "none",
-  "source": null,
+  "source": "dissector",
   "dissector_fn": "battery_re_arrangement_dissector",
-  "fields": []
+  "fields": null
  },
  {
   "cmd_set": 13,
