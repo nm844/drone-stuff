@@ -273,12 +273,24 @@ Payload decoder: `flyc_set_nofly_zone_data_dissector`
   | 0 | 1 | `flyc_set_nofly_zone_data_num_entries` (Number of entries) | uint8 | Amount of entries transfeered it this packet; value of 0 means end of transfer. |
   | 1 | 1 | `flyc_set_nofly_zone_data_frag_num` (Transfer fragment index) | uint8 | Fragment index |
   | 2 | 3 | `flyc_set_nofly_zone_data_reserved2` (Reserved2) | uint8 | Should be zeros |
-  | 5 | 4 | `flyc_nofly_zone_entry_latitude` (Latitude) | uint8 |  |
-  | 9 | 4 | `flyc_nofly_zone_entry_longitude` (Longitude) | uint8 |  |
-  | 13 | 2 | `flyc_nofly_zone_entry_radius` (Radius) | uint8 |  |
-  | 15 | 2 | `flyc_nofly_zone_entry_contry_code` (Contry Code) | uint8 |  |
+  | 5 | 4 | `flyc_nofly_zone_entry_latitude` (Latitude) | int32\* | angular value * 1000000 |
+  | 9 | 4 | `flyc_nofly_zone_entry_longitude` (Longitude) | int32\* | angular value * 1000000 |
+  | 13 | 2 | `flyc_nofly_zone_entry_radius` (Radius) | uint16\* | meters |
+  | 15 | 2 | `flyc_nofly_zone_entry_contry_code` (Contry Code) | uint16\* |  |
   | 17 | 1 | `flyc_nofly_zone_entry_type` (Type) | uint8 |  |
-  | 18 | 4 | `flyc_nofly_zone_entry_id` (Id) | uint8 |  |
+  | 18 | 4 | `flyc_nofly_zone_entry_id` (Id) | uint32\* |  |
+
+  \* The source dissector (`dji-dumlv1-flyc.lua` lines 380-385) declares all
+  five of these as `ProtoField.uint8()` regardless of their actual
+  `Size` above — harmless for Wireshark's hex display, but wrong for an
+  encoder/decoder that needs the real numeric value. Corrected here in
+  `commands.json`/`registry_data.cpp` (not in `duml_lua_db.json`, which stays
+  a faithful mirror of the upstream source) and verified against the
+  `FlycNoFlyZone` C struct (`c_int` lat/lon) that `dji_flyc_nofly_ed.py`
+  reads from raw flight-controller firmware on earlier DJI generations —
+  same field shapes, independently corroborated. See
+  `02_WM265_MAVIC3_NFZ_FINDINGS.md` and the `test_set_nofly_zone_data_roundtrip`
+  / `SetNoFlyZoneDataRoundTrip` regression tests.
 
 ## 0x41 — Upload Unlimit Areas
 

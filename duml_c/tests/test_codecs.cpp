@@ -66,5 +66,30 @@ TEST(BatteryPushCommonInfoRoundTrip) {
     auto d = DecodePayload(spec->fields, p);
     for (auto& [k, v] : m) EXPECT_EQ(GetInt(d, k), std::get<int64_t>(v));
 }
+TEST(SetNoFlyZoneDataRoundTrip) {
+    // Regression test: the source dissector mislabeled latitude/longitude
+    // (4 bytes), radius/country_code (2 bytes) and id (4 bytes) as all
+    // being type 'uint8', so the generated codec was truncating every one
+    // of them to its first byte. Fixed in commands.json / regenerated here;
+    // this pins the corrected int32/uint16/uint32 types so it can't
+    // silently regress.
+    auto* spec = LookupCommand(0x03, 0x3F);
+    FieldMap m = I({
+        {"flyc_set_nofly_zone_data_num_entries", 1},
+        {"flyc_set_nofly_zone_data_frag_num", 0},
+        {"flyc_set_nofly_zone_data_reserved2", 0},
+        {"flyc_nofly_zone_entry_latitude", 40712800},    // 40.7128 deg * 1e6
+        {"flyc_nofly_zone_entry_longitude", -74006000},  // -74.0060 deg * 1e6
+        {"flyc_nofly_zone_entry_radius", 8000},          // meters
+        {"flyc_nofly_zone_entry_contry_code", 840},      // ISO numeric: USA
+        {"flyc_nofly_zone_entry_type", 1},
+        {"flyc_nofly_zone_entry_id", 123456789},
+    });
+    auto d = DecodePayload(spec->fields, EncodePayload(spec->fields, m));
+    for (auto& [k, v] : m) EXPECT_EQ(GetInt(d, k), std::get<int64_t>(v));
+    // Longitude must come back negative -- exactly what the uint8
+    // truncation bug used to get wrong.
+    EXPECT_TRUE(GetInt(d, "flyc_nofly_zone_entry_longitude") < 0);
+}
 
 TEST_MAIN()
