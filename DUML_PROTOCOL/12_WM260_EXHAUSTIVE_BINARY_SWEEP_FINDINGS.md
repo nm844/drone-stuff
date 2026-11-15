@@ -941,6 +941,17 @@ DEEPDIVE.md`'s closing section:
   network-facing RTPS parser; `librtos.so`, reached via `rtos_debug`, for
   the flight-control RTOS core's own reboot/recover/ramdump mechanism;
   `libduml_shineIO.so` for its exFAT/NVMe-passthrough parsing surface).
+  **Update: all three were deep-dived in a follow-up pass, see
+  `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Tracks A-C.** Headline results: the
+  fastrtps library is a real, vendored eProsima Fast-DDS stack doing
+  genuine raw socket networking (reachability beyond a local/internal
+  peer still unresolved); `librtos.so`'s reboot/ramdump/recover are bare
+  `ioctl()`s on `/dev/rtos` with no DUML/auth gate at all (same
+  "local-access-is-the-only-gate" pattern as `duss_shell`/`dji_mb_ctrl`
+  above, now extended to the flight-control RTOS core itself); and
+  `libduml_shineIO.so`'s exFAT superblock parser accepts any 512-byte read
+  with no signature check, and its "DJI partition" integrity check is a
+  non-cryptographic checksum seeded with the constant `0xBEEF`.
 - **Several confirmed-real mechanisms were deliberately described, not
   attacked**, mirroring this project's existing treatment of `dji_sec`:
   `dji_verify`'s header-auth/digest checks (§9); `dji_lte`'s RSA/

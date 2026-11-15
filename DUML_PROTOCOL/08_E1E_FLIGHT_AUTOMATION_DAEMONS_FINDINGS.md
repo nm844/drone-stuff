@@ -62,8 +62,30 @@ CONTROLLER=3`, firmware string `"flight"`) but is architecturally a generic
 bus client, not a registrar — see table above. Two things worth separating
 from that negative result:
 
+- **Update, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track H for the direct
+  follow-up on this exact lead.** The indirection blocking the scan below
+  turned out to be a PIC addressing quirk specific to this binary (local
+  addresses are stored as a relative delta plus a separate `add rX, pc`
+  completion instruction, not as a bare pointer anywhere in the file) —
+  once corrected for, the real entry addresses of 13 named `api_wp2_*`
+  functions, including the three below, were recovered. But cmd_set `0x10`
+  itself was then confirmed **not present anywhere** in this binary — not
+  in any table, string, or literal immediate — ruling it out directly. A
+  specific 19-entry dispatch table that follow-up pass initially thought
+  it had found at this binary's `0xad0b0`-`0xad168` turned out, on
+  independent re-verification, to be misread C++ RTTI/vtable data, not a
+  real DUML table — don't trust that specific claim if it resurfaces. A
+  separate, genuinely-evidenced `.data` array elsewhere in the binary
+  tags `api_wp2_pause_recovery`/`set_global_cruise_vel`/
+  `get_global_cruise_vel` under cmd_set `0x22`/cmd_id `0x06`-`0x08` and
+  `api_wp2_break_restore_waypoint_fly` under `0x22`/`0x44` — i.e. these
+  specific WP2 functions may belong to cmd_set `0x22` ("Demo Mode," see
+  this document's own entry above), not `0x10` at all. That mapping
+  wasn't independently re-verified a second time, so treat it as a
+  promising lead, not settled fact.
 - **A plausible, but statically unconfirmed, lead on cmd_set `0x10`
-  (Automation):** four fully-spelled internal API strings —
+  (Automation), as originally found (see the Update above for the
+  follow-up):** four fully-spelled internal API strings —
   `api_wp2_waypoints_upload_handle`, `api_wp2_waypoints_upload`,
   `api_wp2_download_waypoint`, `api_wp2_break_restore_waypoint_fly`
   ("WP2" = Waypoint-Mission-2.0) — sit inside real handler functions with

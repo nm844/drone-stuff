@@ -46,7 +46,14 @@ repo's own derived files.
   exactly; confirmed by its own debug strings (`"RS: route switch
   configuration error!"`, `"RS: route switch host id = %#x"`). Likely an
   internal link-mode control (e.g. wired/wireless), not obviously
-  app/RC-facing.
+  app/RC-facing. **Precision note, from `14_FOLLOWUP_DEEPDIVE_FINDINGS.md`
+  Track E:** this table (and the 3 other `0x00` entries below from it) was
+  decoded from the **E2 (aarch64)** build of `libduml_frwk.so`. The
+  **E1E (32-bit ARM)** build's equivalent table, independently re-decoded,
+  has identical content at a different address (`0x1098fc`) — so this
+  finding holds for both chips, but future table dumps from this file
+  should state which build they came from, since this document previously
+  didn't.
 - **`0x22`/`0x60` "Demo Mode Handle"**: found via direct disassembly of
   `dji_sys`, registered from 4 separate platform-init functions
   (`sys_platform_{e1e,e2}_wm260[l]_post_init`), each with its own named
@@ -100,6 +107,23 @@ that both confirms and extends what that doc already had from the JSON
 route tables.
 
 ## Automation (`cmd_set 0x10`) — still undocumented; real mechanism located, not statically enumerable
+
+**Update, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track H:** the one
+still-open lead mentioned below (`dji_flight`'s `api_wp2_*` handlers) was
+chased further. Cmd_set `0x10` itself is now confirmed **not present
+anywhere** in `dji_flight` — ruling it out directly rather than leaving it
+open on a technicality. A specific 19-entry dispatch table the follow-up
+pass initially thought it had recovered turned out, on independent
+re-verification, to be misread C++ RTTI/vtable data, not a real table —
+that specific claim should not be trusted. A different, separately-found
+`.data` array (confirmed via real `R_ARM_RELATIVE` relocations) tags three
+of the `api_wp2_*` cruise-velocity/pause-recovery functions under cmd_set
+`0x22`/cmd_id `0x06`-`0x08` and a fourth under `0x22`/`0x44` — i.e. cmd_set
+`0x10` may not be registered in `dji_flight` at all, and these specific
+waypoint functions may actually belong to `0x22` ("Demo Mode") instead.
+That mapping surfaced as a byproduct of a different correction and hasn't
+been independently re-verified a second time, so treat it as a lead for a
+future pass, not settled fact.
 
 **Update, see `08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md` for the full
 follow-up pass:** the "Binder-exposed command agent" framing further below

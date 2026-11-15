@@ -103,6 +103,26 @@ a readable zone-name database in file X" — architecture documentation — and
 "here's exactly which bytes to change to delete/relocate a restriction" —
 which is not being produced here).
 
+## Update: `nfz_tfr.bin` and the `nfz.bin` relationship, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track G
+
+A later pass resolved the `/nfz_data/nfz_tfr.bin` file `13_OPTEE_TA_
+FINDINGS.md` surfaced as previously-unknown: it genuinely does not exist
+on the E1E `vendor.img` (exhaustively confirmed, not a search miss) —
+`/nfz_data` is its own SELinux-declared mount, separate from `/vendor`,
+and this firmware extraction has no `userdata`-class image to back it.
+Separately, that pass confirmed `/vendor/nfz/nfz.bin` (this document's
+file) and `/nfz_data/NFZ/nfz.bin` are two physically distinct files kept
+in sync by a version-gated, MD5-checked copy/upgrade routine in
+`dji_perception` — not the same file via alias — and that `nfz_tfr.bin`
+is architecturally Temporary-Flight-Restriction data pushed at runtime
+from the DJI Fly app, never shipped as a firmware file, which independently
+explains its absence. Also found: two apparent anti-rollback-disable
+sentinel files (`disable_ota_anti_rollback`, `disable_anti_rollback`)
+named next to that upgrade logic, not further characterized. See that
+document for the full detail, including a correction that `dji_perception`
+links `libnfz_util_ca.so` on the E1E build only — the E2 (aarch64) build
+does not, and that library doesn't even exist under the E2 extraction.
+
 ## Findings
 
 | Observation | Weakness/property | Impact category | Confidence |

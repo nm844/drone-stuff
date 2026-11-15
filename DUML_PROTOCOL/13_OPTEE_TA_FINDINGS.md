@@ -281,6 +281,23 @@ the activation/unlock state machine," which this project continues to
 treat as out of scope absent explicit, separate authorization (consistent
 with how `dji_sec` itself was handled in `05_DJI_SEC_FINDINGS.md`).
 
+## Update: 3 of the 4 CA libraries' command-ID tables now mapped, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track F
+
+A follow-up pass disassembled `libfw_util_ca.so`, `libnfz_util_ca.so`, and
+`libadsb_util.so`'s own `TEEC_InvokeCommand` call sites and recovered the
+literal command-ID each exported wrapper function passes to its TA — a
+clean sequential `0`-`5` map for the Firmware-Verify TA, a clean sequential
+`0x11`-`0x14` map for the ADS-B crypto TA, and (for the NFZ TA) confirmation
+that its two generic exported dispatcher functions forward their own
+caller's first argument directly into `TEEC_InvokeCommand` with no local
+range check (an architecture/missing-local-authz observation, not a
+demonstrated bypass — whether the TA itself validates server-side wasn't
+examined). **`libamt_util.so` (this document's `e91c9402...` activation/
+secure-debug/DJICare TA) was explicitly excluded from that follow-up pass
+and was never opened, disassembled, or searched for command IDs** — the
+exclusion stated below remains fully in force and was independently
+confirmed honored.
+
 ## Findings
 
 | Observation | Weakness/property | Impact category | Confidence |
