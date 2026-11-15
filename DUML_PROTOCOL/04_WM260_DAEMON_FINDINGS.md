@@ -101,6 +101,20 @@ route tables.
 
 ## Automation (`cmd_set 0x10`) — still undocumented; real mechanism located, not statically enumerable
 
+**Update, see `08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md` for the full
+follow-up pass:** the "Binder-exposed command agent" framing further below
+is **corrected** by that later pass — `sys_command_agent_*` turns out
+to have zero `.dynsym` exports, so nothing outside `dji_sys` can call it;
+the actual `cmd_set`/`cmd_id` values are populated from a local JSON config
+file read by `dji_sys` itself at startup (not injected by another daemon
+over Binder), and that file's path isn't captured in this firmware
+extraction. That same follow-up pass also checked and ruled out `dji_flight`,
+`dji_navigation`, and (more specifically than the one-line note below)
+`dji_autoflight` as the cmd_set `0x10` registrar — see that document for
+details, including one still-open, low-confidence lead (`dji_flight`'s
+`api_wp2_*` waypoint-mission handler functions, reachable through an
+indirection this project's tooling couldn't resolve).
+
 `dji_perception` looked like a promising lead (plaintext
 `waypoint_mis_state`/`waypoint_job_state`/mission-config strings) but is
 a dead end for this purpose: those strings are field names of an embedded
@@ -112,19 +126,20 @@ in the binary's `.text` (triple cross-checked: full capstone disassembly
 scan, full relocation-table scan, raw hex-operand grep). `dji_perception`
 imports no `duss_event_register_dynamic_command`-family symbol at all.
 
-The real mechanism was found in `dji_sys`: a Binder-exposed "command
-agent" framework (`sys_command_agent_init/_add/_config/_request/_task`)
-that lets *other* daemons register their own `cmd_set`+`cmd_id` arrays at
-runtime over Android Binder IPC. This is architecturally real and
-confirmed (the registration loop, `sys_command_agent_config`, does call
-`duss_event_register_dynamic_command` once per entry) — but the actual
-`cmd_set`/`cmd_id` values live in whichever daemon populates the table at
-runtime, not in `dji_sys`'s own static data, so they can't be enumerated
-from this binary alone. This is the same "needs full control-flow
+The real mechanism was found in `dji_sys`: a "command agent" framework
+(`sys_command_agent_init/_add/_config/_request/_task`) that, per the
+original hypothesis here, let *other* daemons register their own
+`cmd_set`+`cmd_id` arrays at runtime over Android Binder IPC. This is
+architecturally real (the registration loop, `sys_command_agent_config`,
+does call `duss_event_register_dynamic_command` once per entry) — **but
+the Binder-IPC part of that hypothesis is now disproven** (see the Update
+note above): the actual `cmd_set`/`cmd_id` values live in a local JSON
+config file `dji_sys` reads itself, not in a runtime Binder registration
+from another daemon. This is still the same "needs full control-flow
 decompilation of the specific daemon, or live traffic" limitation
 `01_BINARY_ANALYSIS_FINDINGS.md` §3 already flagged — now narrowed to a
-specific, named mechanism rather than a general "per-daemon tables exist
-somewhere" statement.
+specific, named (and corrected) mechanism rather than a general
+"per-daemon tables exist somewhere" statement.
 
 A direct `grep` sweep across the whole extracted tree for
 ESC/Automation-adjacent terms (run directly, not via a declining
