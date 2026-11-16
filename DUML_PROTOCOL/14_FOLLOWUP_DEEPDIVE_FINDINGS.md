@@ -325,6 +325,17 @@ confirmed.
 
 ## Track H — `dji_flight` cmd_set `0x10` (Automation) / `api_wp2_*` wiring
 
+> **Erratum (added in a later pass).** The "Not determined" section below
+> flags an unverified claim about `api_wp2_get_wp_index_in_list`'s
+> `ctx+0x28` indirect-call target and a specific cited call site
+> (`~0x78a90`). A dedicated follow-up independently re-examined this and
+> found the specific cited call site incorrect (it is an unrelated
+> object-constructor function with no such call pattern) and found no
+> generic wp2-table registration loop anywhere in the binary either. The
+> question itself remains open. See
+> `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track P.2 for the full
+> correction; the text below is left as originally written.
+
 **Methodology finding worth keeping regardless of the rest of this
 track:** `dji_flight`'s PIC code splits every local address computation
 into a relative-delta literal-pool load (`ldr rX,[pc,#imm]`) *plus* a

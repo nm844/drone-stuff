@@ -1090,6 +1090,29 @@ Payload decoder: `flyc_assistant_unlock_dissector`
   |---|---|---|---|---|
   | 0 | 1 | `flyc_assistant_unlock_status` (Status) | uint8 |  |
 
+> **Real firmware implementation found (follow-up pass).** The whole
+> "Config Table" family below (`0xE0`-`0xE4`, `0xF3`, `0xF7`-`0xFC`, plus
+> their cmd_set `0x01` aliases `0x40`-`0x43`) was, until this pass, known
+> only from the public dissector's name-level decode — no firmware
+> implementation had been traced. `test_rtos_raw` (a `dji_perception`
+> Parameter-Manager QA/test harness, despite its filename-coincidence with
+> the unrelated flight-control-RTOS `rtos_debug` tool) registers exactly
+> this set of 12 distinct cmd_set `0x03` handlers (the 4 cmd_set `0x01`
+> entries are confirmed exact aliases of 4 of them) under its own bus
+> identity, using synthetic test-fixture parameters rather than real
+> flight-controller parameters — confirming this is a **generic, reusable
+> RPC surface any Parameter-Manager-linked daemon can register**, not
+> something exclusive to the flight controller. The write-capable entries
+> (`0xE3`/`0xF9`/`0xFC` and their `0x01` aliases) are gated, in this
+> registrant, by two real checks: a writable-vs-read-only flag bit and a
+> per-item privilege-level enum (an earlier draft of this finding claimed
+> no check existed at all; that claim was independently re-examined and
+> found incorrect — see below). See
+> `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track L for the full
+> byte-level trace, the on-device QA-script corroboration
+> (`dji_mb_ctrl -s 03 -c f8/f9 ...` over the real bus), and the correction
+> to the original "no auth check" claim.
+
 ## 0xE0 — Config Table: Get Tbl Attribute
 
 Payload decoder: `flyc_config_table_get_tbl_attribute_dissector`
