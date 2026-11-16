@@ -161,6 +161,52 @@ offline against synthetic frames (fragment accumulation, end-of-transfer,
 0xDF/0x09 decode, raw fallback for the still-undocumented commands) —
 not yet run against a real aircraft.
 
+## 4c. WM260 fallback: real firmware obtained and decrypted (success)
+
+Per the "same chipset as WM265, if known" fallback: WM260 is confirmed to
+be exactly that. A plaintext file already in hand (the Android build
+fingerprint inside a WM260 OTA payload) names the device
+`eagle2_wm260_native` — same board family referenced by WM265e's own
+recovery-mode fastboot identity (`product: eagle-fpga`).
+
+Obtained a real WM260 firmware package (`wm260` V01.00.1000, dated
+2022-12-09) via the DankDroneDownloader web app
+(`dankdronedownloader.com`) — a plain HTML form (`brand=DJI&model=wm260&
+version=01.00.1000&category=Aircraft` → `download/preview` →
+`download/start`), no auth needed, streamed the real 429 MB package
+directly. All three target modules decrypted **cleanly, with both RSA
+signature verification and decrypted-content checksum passing** (not
+forced/bypassed):
+
+| Module | Key pair that worked |
+|---|---|
+| 0105 (LCPU, flight-controller MCU) | `PRAK-2020-01` / `UFIE-2020-04` |
+| 0802 (E2, camera/gimbal Android computer) | `PRAK-2021-09` / `UFIE-2021-08` |
+| 1502 (E1E, main aircraft Android computer) | `PRAK-2020-01` / `UFIE-2020-04` |
+
+This independently confirms (not just secondhand) that WM260 uses
+different, *published* keys than WM265e/t's unknown production keys —
+same airframe generation and board family, different per-SKU key
+material, exactly as suspected.
+
+E2's `system.new.dat.br`/`vendor.new.dat.br` (Brotli-compressed Android
+block-OTA data) were decompressed and reassembled into flat raw ext4
+images (`DUML_PROTOCOL` doesn't carry this helper — ad hoc script, see
+`/home/user/wm260_fw/build_raw_image.py` in this session's scratch area)
+and read with `debugfs` (no mount/root privileges needed). This exposed
+**the full Android `/system` and `/vendor` filesystem**, including a much
+larger DUML library family than the prior pass examined:
+`libduml_frwk/hal/util/rpc/payload/dn/fb/dsocket/osal/audio/vcodec/
+f2d/fastrtps/hal_cam/ffremux/watermark/async_remux/dev_hb/shineIO/
+orte/databuffer.so`, plus the daemons `dji_sec`, `dji_camera3`,
+`dji_mb_ctrl`, `dji_mb_parser`, `dji_sys`, `dji_dcs`, `dji_hms`,
+`dji_amt`, `dji_perception`, and many more (838 files total under
+`lib`/`lib64`/`bin`/`xbin`) — none of which were extracted in the
+original `01_BINARY_ANALYSIS_FINDINGS.md` pass (that pass only confirmed
+the frame codec in `libduml_frwk.so`, explicitly leaving "the per-daemon
+runtime registration tables" as future work). A mining pass across this
+material is in progress; results to follow.
+
 ## 5. Not yet pursued: the DJI Fly app / FlySafe side
 
 The *account-gated* "unlock certificate" layer (as opposed to the local

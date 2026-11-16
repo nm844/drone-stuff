@@ -25,6 +25,17 @@ CMD_DISSECT_TABLE_RE = re.compile(r'^\s*(?:local\s+)?([A-Za-z0-9_]+_CMD_DISSECT)
 TABLE_ENTRY_RE = re.compile(r'\[\s*(0x[0-9A-Fa-f]+|\d+)\s*\]\s*=\s*(.+?),?\s*(?:--.*)?$')
 ENUM_DEF_RE = re.compile(r'^\s*enums\.([A-Za-z0-9_]+)\s*=\s*\{')
 
+def norm_hexkey(k):
+    """Normalize a table-entry key to lowercase hex. The Lua source itself
+    is inconsistent about hex-digit casing between its CMD_TEXT and
+    CMD_DISSECT tables for the same cmd_id (e.g. camera.lua has both
+    `[0x8A]` and `[0x8a]` for cmd_id 138) -- without this, lookups across
+    the two tables for the same command silently miss."""
+    if re.fullmatch(r'0[xX][0-9A-Fa-f]+', k):
+        return '0x' + k[2:].lower()
+    return k
+
+
 def strip_comment(line):
     # naive: remove -- comment not inside quotes (good enough for this codebase)
     out = []
@@ -79,7 +90,7 @@ def parse_file(path):
             while j < n and not re.match(r'^\s*\}', lines[j]):
                 em = TABLE_ENTRY_RE.search(strip_comment(lines[j]))
                 if em:
-                    entries[em.group(1)] = em.group(2).strip().strip("'\"")
+                    entries[norm_hexkey(em.group(1))] = em.group(2).strip().strip("'\"")
                 j += 1
             enums_tables[name] = entries
             i = j+1
@@ -93,7 +104,7 @@ def parse_file(path):
             while j < n and not re.match(r'^\s*\}', lines[j]):
                 em = TABLE_ENTRY_RE.search(strip_comment(lines[j]))
                 if em:
-                    entries[em.group(1)] = em.group(2).strip().strip("'\"")
+                    entries[norm_hexkey(em.group(1))] = em.group(2).strip().strip("'\"")
                 j += 1
             cmd_text_tables[name] = entries
             i = j+1
@@ -107,7 +118,7 @@ def parse_file(path):
             while j < n and not re.match(r'^\s*\}', lines[j]):
                 em = TABLE_ENTRY_RE.search(strip_comment(lines[j]))
                 if em:
-                    entries[em.group(1)] = em.group(2).strip().rstrip(',')
+                    entries[norm_hexkey(em.group(1))] = em.group(2).strip().rstrip(',')
                 j += 1
             cmd_dissect_tables[name] = entries
             i = j+1
