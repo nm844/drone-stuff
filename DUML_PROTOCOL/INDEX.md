@@ -43,3 +43,10 @@ unrelated to this pass's own additions. The aggregate totals in the
 paragraph above (898 / 157) were independently recomputed directly from
 `commands.json` and are accurate; every row in the table above has now
 been recomputed the same way and the two now agree.
+
+**For the status of the ongoing binary-by-binary sweep** (which
+binaries/libraries have been checked for undiscovered DUML command
+registrations, which haven't, and the reproducible methodology behind the
+checks), see `BINARY_COVERAGE_TRACKER.md` — it tracks that independently
+of this file's command-set totals, and should be updated whenever a new
+sweep round changes a binary's disposition.

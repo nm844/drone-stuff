@@ -27,6 +27,12 @@ known command/payload, built for the firmware in this project
    disassembly established it — a byte-exact table of offset / size /
    field name / type / enum / bitmask / description, or a purpose /
    evidence / confidence writeup for binary-RE'd entries.
+5. **`BINARY_COVERAGE_TRACKER.md`** — not a findings doc, a living status
+   tracker: which of the 808 binaries/libraries across both firmware
+   images have been checked for undiscovered DUML command registrations,
+   which haven't, why, and the reproducible methodology/tooling gotchas
+   behind the checks. Start here before launching a new sweep so you
+   don't redo already-done work or repeat a known false-negative.
 
 ## Totals
 
