@@ -1,6 +1,6 @@
 # Cmd Set 0x00 — General
 
-Total known command IDs: 80
+Total known command IDs: 84
 
 ## 0x00 — Ping
 
@@ -475,6 +475,49 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+## 0x83 — External Upgrade Request
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** issues an "external upgrade" request to the on-device
+  "upgrade center" service — triggered by the `upgrade_test` CLI tool's
+  `external_upgrade` subcommand, which installs a firmware package from
+  an operator-supplied path rather than the normal OTA flow.
+- **Evidence:** literal `mov w9, #0x83` immediately before a call to the
+  shared `send_fn` wrapper, found in `upgrade_test` (both the E1E/ARM32
+  and E2/aarch64 builds, at different addresses per architecture but an
+  identical immediate-then-call pattern); the call path is reached only
+  from the code handling the `external_upgrade_test_client` CLI
+  subcommand. `cmd_set=0x00` is inferred by this project's established
+  "General" convention for the upgrade-center channel (consistent with
+  already-catalogued `0x41`/`0x4f`), not a directly observed wire byte.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call site;
+  medium on the semantic "external upgrade package install" purpose
+  (drawn from the CLI subcommand name, not the handler's internal logic).
+  See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
+## 0x85 — Transfer Complete Notification
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** notifies the upgrade-center service that a firmware
+  package transfer has completed, confirmed by this call site's own
+  adjacent log string: `"up_center: send transfer complete message,
+  len = %d, timeout = %d"`.
+- **Evidence:** literal `mov w8, #0x85` immediately before the log call
+  and the `send_fn` call, found in `upgrade_test` (E2/aarch64 build).
+  `cmd_set=0x00` inferred by the same General-channel convention as
+  `0x83` above.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair, call site, and
+  purpose (the log string names the exact semantics). See
+  `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
 ## 0x89 — Shell Command
 
 _No byte-level payload decoder in source dissector (name-only / unparsed
@@ -502,6 +545,47 @@ notable security relevance._
   fact (the command exists and is wired to a shell-exec path), not
   investigated or demonstrated as a usable attack. See
   `04_WM260_DAEMON_FINDINGS.md`.
+
+## 0x93 — Begin Single Module Upgrade
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** begins a single-module firmware upgrade and, separately,
+  sets upgrade flags — reached from two different code paths inside
+  `upgrade_test`: one logging `"single_module_upgrading_test_entry"` /
+  `"Will send msg:0x%x(%d bytes) require to upgrade center(0x%x) to
+  begin single module upgrade!!!"`, the other from the CLI's
+  `set_up_flags_request` subcommand (which sets the `UP_AB_BOTH` /
+  `FORCE_UP_ALL` flags per its own `--help` text).
+- **Evidence:** literal `mov w8, #0x93` immediately before 3 separate
+  calls to the shared `send_fn` wrapper, found in `upgrade_test`
+  (E2/aarch64 build). `cmd_set=0x00` inferred by the same General-channel
+  convention as `0x83`/`0x85` above.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call sites;
+  medium on which of the two reached code paths is the "primary" purpose
+  (both share the same cmd_id). See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
+## 0x94 — Set Upgrade Flag
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper,
+  internally tagged `"client_send_with_ack"`) → `duss_event_send_sync`
+  (imported from `libduml_frwk.so`).
+- **Purpose:** sets an upgrade flag (paired with `0x93`'s query/set
+  pattern for the `UP_AB_BOTH` / `FORCE_UP_ALL` CLI flags), with the
+  sender explicitly waiting for an acknowledgement per the internal
+  `send_fn` tag name.
+- **Evidence:** literal `mov w8, #0x94` before 2 calls to `send_fn`,
+  found in `upgrade_test` (E2/aarch64 build), in the same
+  `set_up_flags_request` function as `0x93` above. `cmd_set=0x00`
+  inferred by the same General-channel convention.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call sites.
+  See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
 
 ## 0xA3 — USB State Report
 

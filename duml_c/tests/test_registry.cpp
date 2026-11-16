@@ -5,7 +5,7 @@ using namespace duml;
 
 TEST(LoadsExpectedCounts) {
     auto s = GetRegistryStats();
-    EXPECT_EQ(s.total, size_t(884));
+    EXPECT_EQ(s.total, size_t(898));
     EXPECT_EQ(s.full, size_t(157));
 }
 TEST(PingLookup) {
