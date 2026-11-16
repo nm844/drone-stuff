@@ -14,9 +14,9 @@ files this doc references are committed under `tools/triage/` — treat
 `/tmp` and any session scratchpad as **ephemeral**; nothing durable should
 live only there.
 
-## The three known DUML command-registration mechanisms
+## The four known DUML command-registration/send mechanisms
 
-Every investigation in this project checks a binary for these three,
+Every investigation in this project checks a binary for these four,
 using `readelf`/`objdump`/`capstone`/`pyelftools` — not string greps alone:
 
 1. **Direct registration call.** A call to the imported function
@@ -40,8 +40,27 @@ using `readelf`/`objdump`/`capstone`/`pyelftools` — not string greps alone:
    "Smart" cmd_set. **Caveat**: a repeating relocated-pointer array can
    also be a compiler-generated C++/unwinder function-pointer table (same
    shape, unrelated purpose) — confirmed as a false lead once, on
-   `app_echo`'s ARM32 build. Always check where the resolved pointers
-   actually point before calling this a command table.
+   `app_echo`'s ARM32 build, and several more times in round 2 (C++
+   vtables, RTTI/locale-facet data, EHABI unwinder tables, FSM/lifecycle
+   enum tables, V4L2 format-name tables — see
+   `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md` Track Y for the specific shapes).
+   Always check where the resolved pointers actually point before calling
+   this a command table.
+4. **Direct client-side send via a private link framework.** A call to an
+   imported `*_v1_send(cmd_set, cmd_id, ...)`-style function from a
+   framework *other than* `libduml_frwk.so`'s DUSS event bus — confirmed
+   via `imss_link_v1_send` (from `libimss.so`) in two `at_*.so` factory
+   test/calibration plugins, with `cmd_set`/`cmd_id` loaded as literal
+   immediates into `r0`/`r1` immediately before the call, structurally
+   parallel to mechanism #1's calling convention but reached through a
+   wholly separate transport and registration/callback API
+   (`imss_link_register_v1_callback`/`imss_link_register_sdk_callback`).
+   See `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md` Track W. A binary can carry
+   real wire-level DUML traffic with zero footprint in mechanisms #1-#3 if
+   it goes through a private transport like this one — don't conclude "no
+   registration signal" from those three alone without also checking for
+   imported `*_send`/`*_link_send`-shaped functions called with small
+   literal immediates.
 
 ## Tooling gotcha: `readelf -r` truncates on 32-bit ARM
 
@@ -108,8 +127,10 @@ find "$FW"/e1e_extracted "$FW"/e2_extracted -type f \( -perm -u+x -o -name '*.so
 
 # 4. Of the weak-signal set, which have a REAL relocation into a registration
 #    function? Use readelf -rW (not -r) against duss_event_register_dynamic_command /
-#    duss_mb_create_route_table / duss_event_create_client. Sanity-check the method
-#    against known positives (dji_sys, dji_flight) before trusting a zero result.
+#    duss_mb_create_route_table / duss_event_create_client -- AND check imports for
+#    a private-transport send function (e.g. imss_link_v1_send) called with small
+#    literal immediates, per mechanism #4. Sanity-check the method against known
+#    positives (dji_sys, dji_flight) before trusting a zero result.
 #    -> strong_candidates (became round 1's 16 tier-1 units, 19 basenames)
 
 # 5. Of the 591 "no signal" binaries, which have their own listening socket
@@ -138,7 +159,7 @@ version's binary set) — copy one, swap in a new target list and `BASE`
 path, and re-launch rather than re-deriving the prompt structure from
 scratch.
 
-## Current disposition (as of `16_EXHAUSTIVE_SWEEP_FINDINGS.md`, round 2 in progress)
+## Current disposition (as of `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`)
 
 Of the full **808** binaries/libraries:
 
@@ -151,12 +172,13 @@ Of the full **808** binaries/libraries:
 | ↳↳ remaining, generic-tooling-by-name, not individually investigated | 50 | **not done** — lower priority; mostly stock Android/Linux tooling (`adb`, `hostapd`, `iperf3`, `toybox`, etc.) by name, but a few DJI/vendor-named libraries in here (`liblte.so`, `libwlm.so`, `libduml_hal.so`, `libupgrade_common.so`, `quectel-qmi-proxy`, `Quectel_upgrade_tool`) haven't actually been disassembled despite the generic-sounding bucket — worth a closer look before calling this bucket fully closed | `10_socket_bearing_no_signal_remaining_50.txt` |
 | Weak/ambiguous DUML-adjacent signal, no doc coverage | 160 | see sub-rows below | `05_weak_signal_uninvestigated_at_start_160.txt` |
 | ↳ confirmed real relocation into a registration function ("tier 1") | 19 basenames / 16 investigation units | **done** (round 1) — 10 new commands confirmed + 1 unconfirmed lead (doc 16, Track R) | `06_round1_tier1_investigated_19.txt` |
-| ↳ remaining, weak/ambiguous signal only | 141 | **in progress** (round 2) — Workflow task `wjeclp5ew`, run `wf_f4eae03d-334`, launched 2026-11-16; results not yet written up as of this doc's last edit | `07_round2_weak_signal_pending_141.txt` |
+| ↳ remaining, weak/ambiguous signal only | 141 | **done** (round 2) — 1 new command confirmed (`0x04`/`0x51`, via a newly-identified 4th mechanism) + 140 ruled out, several independent security findings (doc 17, Tracks V-Y) | `07_round2_weak_signal_pending_141.txt` |
 
-**Fully accounted for right now: 57 + 591 + 19 = 667 of 808** (either
-documented, or ruled out with real evidence). **In progress: 141**
-(round 2, running). **Flagged-but-not-individually-checked: 50**
-(socket-bearing, no detected signal — lower priority, see above).
+**Fully accounted for right now: 57 + 591 + 19 + 141 = 808 of 808** — the
+entire "weak/ambiguous signal" bucket is now closed.
+**Flagged-but-not-individually-checked: 50** (socket-bearing, no detected
+signal — lower priority, see above; the only remaining gap in the full
+808-binary universe).
 
 ## Round history
 
@@ -171,12 +193,23 @@ documented, or ruled out with real evidence). **In progress: 141**
   this tracker's methodology — the 16 tier-1 + 8 tier-2 candidates above.
   Registry grew 888 → 898 (10 new commands, including the new `0x23`
   cmd_set).
-- **Round 2** (in progress): the 141 remaining weak-signal binaries. A
-  follow-up findings doc (continuing the Track-lettering sequence from
-  wherever doc 16 left off) should be written once this completes, and
-  this tracker's table above updated to reflect the new disposition.
+- **Round 2** (`17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`, Tracks V-Z): the
+  141 remaining weak-signal binaries, all investigated. One new command
+  confirmed (`0x04`/`0x51` "Gimbal Calibration Result Query", in
+  `at_gimbalcali.so`) via a newly-identified 4th registration/send
+  mechanism (`imss_link_v1_send`, a private client-side transport
+  distinct from the DUSS event bus — see the four-mechanism list above).
+  Registry grew 898 → 899. The other 140 were ruled out, with several
+  independent architecture/security findings (command-injection-shaped
+  primitives in `file_transfer`/`libdcam_audio_frwk.so`/
+  `libupgrade_product.so`; several diagnostic CLIs with direct raw
+  hardware-device access shipped in production; a path-traversal-shaped
+  weakness in `libOmxVideoPyramidGen.so`) and new false-positive
+  precedents for the mechanism-#3 relocated-array shape (OMX
+  plugin-registration tables, C++ unwinder/RTTI data, internal
+  lifecycle/stream-metadata enum tables, V4L2 format-name tables).
 
-## What's genuinely still open after round 2 lands
+## What's genuinely still open after round 2
 
 - The 50-binary "socket-bearing, no detected signal, not individually
   investigated" tail above — flag it again rather than silently dropping

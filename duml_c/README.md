@@ -28,7 +28,7 @@ make examples   # build/examples/*
 | `include/duml/enums.hpp` | `DeviceType`, `CmdSet`, `AckType`, `EncryptType`, `PacketType` |
 | `include/duml/codecs.hpp`, `src/codecs.cpp` | `EncodePayload`/`DecodePayload`: scalars, bitfields, and Request/Response or length-gated branches |
 | `include/duml/registry.hpp`, `src/registry.cpp` | `LookupCommand`, `RequireCommand`, `CommandsInSet`, `FindByName` |
-| `generated/registry_data.cpp` | All 898 commands and 1370 fields as static data (generated) |
+| `generated/registry_data.cpp` | All 899 commands and 1370 fields as static data (generated) |
 | `include/duml/commands.hpp` | One named constant per command, e.g. `cmd::gimbal::kGimbalControl` (generated) |
 | `include/duml/transport.hpp` | `Transport`, `StreamFramer` (resync like the firmware's frame scanner), `FrameListener`, `SerialTransport`, `TcpTransport`, `TcpServerTransport` |
 | `include/duml/client.hpp`, `src/client.cpp` | `DumlClient`: build, send, `SendAndWait`, `Listen`, background listener |
@@ -68,7 +68,7 @@ build/duml_cli listen --transport tcp --host 127.0.0.1 --port 9000 --duration-ms
 
 ## Coverage
 
-All 898 known commands are registered and sendable. 157 have named,
+All 899 known commands are registered and sendable. 157 have named,
 field-level payload layouts; the other 727 send and receive as raw bytes
 (`{"raw": bytes}`). The two layouts added from flight-recorder
 cross-references (Battery/0x06, Flight Control/0x0A) are candidate

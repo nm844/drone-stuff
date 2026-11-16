@@ -6,7 +6,7 @@
 | 0x01 | Special | 12 | 2 |
 | 0x02 | Camera | 207 | 17 |
 | 0x03 | Flight Control | 191 | 36 |
-| 0x04 | Gimbal | 46 (45 pre-existing + `0x69`, newly rendered this pass — see `cmdset_04_Gimbal.md`, which also flags 9 pre-existing duplicate-heading cmd_ids) | 26 |
+| 0x04 | Gimbal | 48 (45 pre-existing + `0x69`, rendered in an earlier pass, + `0x51` found this pass — see `cmdset_04_Gimbal.md`, which also flags 9 pre-existing duplicate-heading cmd_ids) | 26 |
 | 0x05 | Center Board | 18 | 1 |
 | 0x06 | Remote Control | 84 | 2 |
 | 0x07 | Wi-Fi | 64 | 5 |
@@ -24,15 +24,19 @@
 | 0x23 | Smart (not from the public dissector — found by this project's own binary RE, independently in 2 different binaries; see `cmdset_23_Smart.md`) | 3 | 0 |
 | 0x51 | Route Switch (not from the public dissector — found by this project's own binary RE; see `cmdset_51_Route_Switch.md`) | 1 | 0 |
 
-**Total: 898** known `(cmd_set, cmd_id)` pairs across 19 non-empty cmd_sets
+**Total: 899** known `(cmd_set, cmd_id)` pairs across 19 non-empty cmd_sets
 (of the 21 cmd_sets catalogued at all, 2 — `0x0c` and `0x10` — are
 confirmed-empty with an architectural explanation rather than unexamined;
 see their own `.md` files). 157 have a full byte-level payload decode.
-(This total adds 10 commands found via an exhaustive follow-up sweep of
-24 previously-unexamined WM260 binaries/libraries, all independently
-reverify-confirmed: 4 under `0x00` — `0x83`/`0x85`/`0x93`/`0x94` — 1 under
-`0x02` — `0xEC` — 2 under `0x09` — `0xA9`/`0xAA` — and 3 under a brand-new
-cmd_set, `0x23`. See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.)
+(The prior total of 898 added 10 commands found via an exhaustive
+follow-up sweep of 24 previously-unexamined WM260 binaries/libraries, all
+independently reverify-confirmed: 4 under `0x00` — `0x83`/`0x85`/`0x93`/
+`0x94` — 1 under `0x02` — `0xEC` — 2 under `0x09` — `0xA9`/`0xAA` — and 3
+under a brand-new cmd_set, `0x23`. See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+The current **899** adds 1 more: `0x04`/`0x51`, found via a round-2 sweep
+of the 141 residual weak-signal binaries left over from round 1, via a
+4th client-side DUML send mechanism (`imss_link_v1_send`) not previously
+documented. See `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`.)
 
 **Accuracy note (this pass):** the per-row "# with byte-level decoder"
 column above was found to have drifted out of sync with the real

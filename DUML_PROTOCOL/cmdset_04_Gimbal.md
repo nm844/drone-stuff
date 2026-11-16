@@ -1,8 +1,9 @@
 # Cmd Set 0x04 — Gimbal
 
-Total known command IDs: 46 (47 as of this pass, with `0x69` added below —
+Total known command IDs: 46 (47 as of a prior pass, with `0x69` added —
 confirmed independently by this project's own binary disassembly, not the
-public dissector).
+public dissector; 48 as of this pass, with `0x51` added below by the same
+method — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`).
 
 **Pre-existing data-quality note, not introduced by this pass:** 9 cmd_ids
 below (`0x0A`, `0x0B`, `0x0C`, `0x0D`, `0x0E`, `0x0F`, `0x1C`, `0x1E`,
@@ -526,6 +527,32 @@ Payload decoder: `gimbal_set_mode_dissector`
   |---|---|---|---|---|
   | 0 | 1 | `gimbal_set_mode_mode` (Mode) | uint8 |  |
   | 1 | 1 | `gimbal_set_mode_cmd` (Cmd) | uint8 |  |
+
+## 0x51 — Gimbal Calibration Result Query
+
+_Not from the public dissector — found by this project's own binary
+disassembly (round 2 of the exhaustive sweep); see
+`17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`._
+
+- **Handler:** `gc_v1_gimbal_api_query_cali_result`, in `at_gimbalcali.so`
+  (a factory/automated-test calibration plugin, not a core DUSS daemon).
+- **Mechanism:** a 4th client-side DUML send pattern distinct from this
+  project's three previously-documented registration mechanisms — a
+  direct call to the imported `imss_link_v1_send(cmd_set, cmd_id, ...)`
+  (via `libimss.so`), with `cmd_set`/`cmd_id` loaded as literal immediates
+  (`movs r0,#4` / `movs r1,#0x51`) immediately before the call. The same
+  convention at 7 other call sites in this binary reproduces exactly
+  already-catalogued `(cmd_set, cmd_id)` pairs by name/semantics, which is
+  what makes this one credible despite the novel transport.
+- **Purpose:** sends no request payload; copies up to 99 raw response
+  bytes into a caller-supplied buffer on success — a query/response
+  accessor for a gimbal calibration result. No byte-level payload layout
+  recovered.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call site
+  (directly observed literal immediates, not inferred by convention);
+  medium on the exact semantic name (drawn from the handler's own
+  retained symbol name, not a recovered payload decoder). Adversarially
+  reverify-confirmed 3/3.
 
 ## 0x56 — Gimbal NotiFy Camera Id
 

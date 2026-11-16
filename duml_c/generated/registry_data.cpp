@@ -1383,7 +1383,7 @@ const Field kAllFields[1370] = {
 
 } // namespace
 
-extern const CommandSpec kCommandTable[898] = {
+extern const CommandSpec kCommandTable[899] = {
     {0, 0, "Ping", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 1, "Version Inquiry", "full", FieldSpan{&kAllFields[0], 1}, "dissector", "general_version_inquiry_dissector", ""},
     {0, 2, "Push Param Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -1920,6 +1920,7 @@ extern const CommandSpec kCommandTable[898] = {
     {4, 69, "Gimbal Get Temp", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_get_temp_dissector", ""},
     {4, 71, "Gimbal TBD 47", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_tbd_47_dissector", ""},
     {4, 76, "Gimbal Reset And Set Mode", "full", FieldSpan{&kAllFields[880], 2}, "dissector", "gimbal_set_mode_dissector", ""},
+    {4, 81, "Gimbal Calibration Result Query", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {4, 86, "Gimbal NotiFy Camera Id", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_notify_camera_id_dissector", ""},
     {4, 87, "Handheld Stick State Get/Push", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_state_get_dissector", ""},
     {4, 88, "Handheld Stick Control Set", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_control_set_dissector", ""},
@@ -2284,6 +2285,6 @@ extern const CommandSpec kCommandTable[898] = {
     {81, 5, "Route Switch", "none", FieldSpan{nullptr, 0}, "", "", ""},
 };
 
-extern const size_t kCommandTableSize = 898;
+extern const size_t kCommandTableSize = 899;
 
 } // namespace duml

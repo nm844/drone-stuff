@@ -535,6 +535,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x04,Gimbal,0x45,69,Gimbal Get Temp,none,Gimbal,APP / RC,gimbal_get_temp_dissector,0,
 0x04,Gimbal,0x47,71,Gimbal TBD 47,none,Gimbal,APP / RC,gimbal_tbd_47_dissector,0,
 0x04,Gimbal,0x4c,76,Gimbal Reset And Set Mode,full,Gimbal,APP / RC,gimbal_set_mode_dissector,2,0:1:uint8:gimbal_set_mode_mode | 1:1:uint8:gimbal_set_mode_cmd
+0x04,Gimbal,0x51,81,Gimbal Calibration Result Query,none,Gimbal,"at_gimbalcali.so (factory calibration test plugin -- binary-confirmed via imss_link_v1_send, not from a public dissector)",,0,
 0x04,Gimbal,0x56,86,Gimbal NotiFy Camera Id,none,Gimbal,APP / RC,gimbal_notify_camera_id_dissector,0,
 0x04,Gimbal,0x57,87,Handheld Stick State Get/Push,none,Gimbal,APP / RC,gimbal_handheld_stick_state_get_dissector,0,
 0x04,Gimbal,0x58,88,Handheld Stick Control Set,none,Gimbal,APP / RC,gimbal_handheld_stick_control_set_dissector,0,

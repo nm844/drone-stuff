@@ -16043,6 +16043,16 @@
  {
   "cmd_set": 4,
   "cmd_set_name": "Gimbal",
+  "cmd_id": 81,
+  "name": "Gimbal Calibration Result Query",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 4,
+  "cmd_set_name": "Gimbal",
   "cmd_id": 86,
   "name": "Gimbal NotiFy Camera Id",
   "decode_status": "none",

@@ -36,7 +36,7 @@ known command/payload, built for the firmware in this project
 
 ## Totals
 
-- **898** known `(cmd_set, cmd_id)` pairs documented by name across 19
+- **899** known `(cmd_set, cmd_id)` pairs documented by name across 19
   non-empty command sets (of 21 catalogued in total; the other 2,
   `0x0c`/ESC and `0x10`/Automation, are confirmed-empty with an
   architectural explanation rather than unexamined — see
@@ -56,7 +56,7 @@ known command/payload, built for the firmware in this project
   plus 5 cmd_ids that were already present in `commands.json`/
   `ALL_COMMANDS.csv` but had never been rendered into their per-cmd_set
   `.md` file — `0x00`'s `0x2F`/`0x89`/`0xA3`/`0xAA` and `0x04`'s `0x69`.
-  The current **898** adds 10 more commands found by an exhaustive
+  That pass's **898** adds 10 more commands found by an exhaustive
   follow-up sweep of 24 previously-unexamined WM260 binaries/libraries
   (16 with a strong relocation-based registration signal, 8 secondary
   candidates), every one independently reverify-confirmed by 3 skeptical
@@ -73,7 +73,19 @@ known command/payload, built for the firmware in this project
   majority of reviewers flagged the original write-up's file-scope claim
   as overstated — and was deliberately left uncatalogued rather than
   added on a technicality; see `16_EXHAUSTIVE_SWEEP_FINDINGS.md` for the
-  full reasoning.)
+  full reasoning. The current **899** adds 1 more: a follow-up round-2
+  sweep of the 141 residual weak-signal binaries left over from that
+  pass found exactly one new command, `0x04`/`0x51` ("Gimbal Calibration
+  Result Query", in the factory-test plugin `at_gimbalcali.so`), via a
+  4th client-side DUML send mechanism not previously documented — a
+  direct call to the imported `imss_link_v1_send(cmd_set, cmd_id, ...)`
+  (via `libimss.so`), distinct from the DUSS event-bus mechanisms the
+  other 898 commands were found through. 3/3 adversarial reverify. The
+  other 140 residual binaries were ruled out as true negatives (mostly
+  C++ vtables/FSM/lifecycle tables that superficially resemble this
+  project's known relocated command-dispatch-table shape, or libraries
+  that link the DUML framework purely for logging/OSAL without touching
+  any registration API) — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -98,8 +110,8 @@ known command/payload, built for the firmware in this project
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 898 commands is
-  registered by name and sendable/receivable there; the other 741 (no known
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 899 commands is
+  registered by name and sendable/receivable there; the other 742 (no known
   payload layout) send/receive as raw bytes.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"
@@ -161,7 +173,7 @@ the documented Camera command set.
   require full decompilation of several stripped PIE executables, which
   was out of scope for this pass. The command *names and payload layouts*
   documented here are accurate as a protocol reference; whether every one
-  of the 898 is actually *reachable* on this specific airframe/firmware
+  of the 899 is actually *reachable* on this specific airframe/firmware
   revision (vs. being a command another DJI product in the dissector's
   multi-product history supports) was not individually confirmed.
 - Some payload fields are named `unknownN` / have no enum decode in the
