@@ -536,7 +536,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x04,Gimbal,0x45,69,Gimbal Get Temp,none,Gimbal,APP / RC,gimbal_get_temp_dissector,0,
 0x04,Gimbal,0x47,71,Gimbal TBD 47,none,Gimbal,APP / RC,gimbal_tbd_47_dissector,0,
 0x04,Gimbal,0x4c,76,Gimbal Reset And Set Mode,full,Gimbal,APP / RC,gimbal_set_mode_dissector,2,0:1:uint8:gimbal_set_mode_mode | 1:1:uint8:gimbal_set_mode_cmd
-0x04,Gimbal,0x51,81,Gimbal Calibration Result Query,none,Gimbal,"at_gimbalcali.so (factory calibration test plugin -- binary-confirmed via imss_link_v1_send, not from a public dissector)",,0,
+0x04,Gimbal,0x51,81,Gimbal Calibration Result Query,none,Gimbal,APP / RC,,0,
 0x04,Gimbal,0x56,86,Gimbal NotiFy Camera Id,none,Gimbal,APP / RC,gimbal_notify_camera_id_dissector,0,
 0x04,Gimbal,0x57,87,Handheld Stick State Get/Push,none,Gimbal,APP / RC,gimbal_handheld_stick_state_get_dissector,0,
 0x04,Gimbal,0x58,88,Handheld Stick Control Set,none,Gimbal,APP / RC,gimbal_handheld_stick_control_set_dissector,0,
@@ -596,7 +596,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x06,Remote Control,0x23,35,RC Gimbal Ctr Permission Ack,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x24,36,RC Simulate Flight Mode Set,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x25,37,RC Simulate Flight Mode Get,none,Remote Control,APP / PC,,0,
-0x06,Remote Control,0x26,38,RC AETR Value Push,none,Remote Control,APP / PC,,0,
+0x06,Remote Control,0x26,38,RC AETR Value Push,full,Remote Control,APP / PC,"binary RE, inferred by cross-reference (no disassembled cmd_id-0x26-specific parser found): matches sibling cmd_id 0x05 ""RC Parameter Get/Push""'s exact field layout/order, backed by DJI's own internal ""dji_flightsystem_msgs"" struct schema (int16 aileron/elevator/throttle/rudder, this exact order) embedded verbatim in dji_perception, and dji_navigation's nav_rc_get_stick_value/nav_rc_update_stick_value plus its 4-value ""PANO_MOIVE: stick_value"" debug string. See doc 21.",4,0:2:int16:rc_aetr_push_aileron | 2:2:int16:rc_aetr_push_elevator | 4:2:int16:rc_aetr_push_throttle | 6:2:int16:rc_aetr_push_rudder
 0x06,Remote Control,0x27,39,RC Detection Info Get,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x28,40,RC Gimbal Control Access Right Get,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x29,41,RC Slave Control Mode Set,none,Remote Control,APP / PC,,0,
@@ -890,7 +890,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x11,ADSB,0x15,21,User Id Set,none,Any,Flight Controller,,0,
 0x11,ADSB,0x16,22,Key Version Get,none,Any,Flight Controller,,0,
 0x11,ADSB,0x17,23,Push Avoidance Action Get ,none,Any,Flight Controller,,0,
-0x18,LTE/Dongle Diagnostic,0x3d,61,Upgrade/Downgrade Test Trigger,none,"dji_lte (LTE/cellular modem daemon; addressed via device-type 8 ""ve_air"" idx 6, per /etc/dji.json's lte_service route entry)","dji_mb_ctrl / dongle_upgrade_test.sh (factory/QA test tool, not a normal operator-facing sender)",,0,
+0x18,LTE/Dongle Diagnostic,0x3d,61,Upgrade/Downgrade Test Trigger,none,unknown,unknown,,0,
 0x22,Demo Mode,0x06,6,Set Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x07,7,Get Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x08,8,Pause Recovery,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,

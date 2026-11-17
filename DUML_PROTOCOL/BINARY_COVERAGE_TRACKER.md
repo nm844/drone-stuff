@@ -399,3 +399,27 @@ discomfort with this specific subsystem. The one item this left genuinely
 incomplete (characterizing what the 6 unnamed-but-live TA command IDs
 actually do) was deliberately not retried with a more persuasive prompt;
 it's the project owner's call whether to continue it.
+
+## Payload decode sweep (started 2026-11-17): a new, larger, separate effort
+
+Distinct from everything above (which was about discovering/registering
+*which* `(cmd_set, cmd_id)` pairs exist), this effort fills in the
+byte-level *payload field layout* for the 744 of 901 known pairs that
+have none at all — confirmed separately that the public dissector this
+project already fully imported has zero field data for any of them, so
+this is genuine fresh binary RE, one cmd_set (or small bundle) at a time.
+Findings accumulate in `21_PAYLOAD_DECODE_SWEEP_FINDINGS.md`, one
+`## cmd_set 0xNN` section per wave. First wave: cmd_set 0x06 (Remote
+Control, 82 commands) — see that doc for the full result (headline: only
+1 of 82 decoded; the rest are very likely RC-MCU-local, outside this
+firmware extraction's scope — a real, well-evidenced architecture finding,
+not a shortfall of effort). Two more waves (cmd_set 0x00 General, 70
+commands; a 10-cmd_set bundle of smaller sets, 88 commands) were launched
+the same day and are digested separately as they land. Reusable tooling
+added this round: `tools/merge_payload_decode_wave.py` (applies a wave's
+result JSON into `commands.json`), `tools/apply_notes_to_cmdset_doc.py`
+(mirrors that into the hand-maintained `cmdset_XX_*.md` doc).
+**Process note:** `make -j4`/`make` alone does NOT rebuild
+`duml_c`'s test binaries (only `make test` does) — running stale
+`build/tests/test_*` binaries without it can silently report a false
+pass; always use `make test` when verifying a registry change.
