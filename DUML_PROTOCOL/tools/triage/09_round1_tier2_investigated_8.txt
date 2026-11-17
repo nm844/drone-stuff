@@ -1,0 +1,8 @@
+bsa_server
+cam_dt_cmdline
+dji_ftpd
+libdcam_base.so
+libdcamecg_process.so
+libmt_client.so
+libsrv_um.so
+wms_ipc_dsock.so

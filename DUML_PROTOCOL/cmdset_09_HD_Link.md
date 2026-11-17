@@ -1,6 +1,6 @@
 # Cmd Set 0x09 — HD Link
 
-Total known command IDs: 67
+Total known command IDs: 69
 
 ## 0x01 — HDLnk OSD General Data Get/Push
 
@@ -533,3 +533,51 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0x72 — HDLnk Main Camera Bandwidth Percent Get
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0xA9 — Liveview Pigeon State Heartbeat
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware.
+Outside the public dissector's documented range for this cmd_set (which
+otherwise tops out at `0x72`)._
+
+- **Handler:** `_ZN3dji32_on_event_pigeon_state_heartbeatEP17duss_event_clientP10duss_eventPv`
+  (`dji::_on_event_pigeon_state_heartbeat`), registered by
+  `dji::LiveviewObjectPigeon::initEventCallback`.
+- **Purpose:** a periodic heartbeat/liveness or state-push for the
+  live-view "pigeon" object (inferred from mangled C++ naming only). No
+  matching teardown/cancel call was found for this pair in this library
+  — `LiveviewObjectPigeon` has no exported deinit counterpart, which may
+  simply mean cleanup happens elsewhere.
+- **Evidence:** direct call to
+  `duss_event_register_dynamic_command_with_user_data(client, cmd_set=0x09,
+  cmd_id=0xA9, user_data)` at the registration call site inside
+  `libWorkModeLiveview.so` (ARM32/E1E), inside
+  `LiveviewObjectPigeon::initEventCallback`.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and registration
+  mechanism; low on the exact semantic purpose (inferred from naming
+  only, no payload/dispatch logic traced). See
+  `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
+## 0xAA — HDLnk MIPI/HDVT Live-View Parameter Set
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware.
+Outside the public dissector's documented range for this cmd_set._
+
+- **Handler:** `dji::hu_hdvt_set_liveview_param`, registered by
+  `dji::MipiHsRecvV1::initEventClientCallback`.
+- **Purpose:** sets MIPI/HDVT live-view parameters for the receive path.
+  The handler performs real input validation before acting: it requires
+  the incoming event payload-length field to be ≥ 0x15 (21) bytes, and
+  copies exactly 21 fixed bytes into a stack buffer matching that length
+  check (no length-driven overflow found).
+- **Evidence:** direct call to
+  `duss_event_register_dynamic_command_with_user_data(client, cmd_set=0x09,
+  cmd_id=0xAA, handler=&dji::hu_hdvt_set_liveview_param, this)` inside
+  `libMipiHandshake.so` (ARM32), cross-confirmed by a matching teardown
+  call to `duss_event_cancel_dynamic_command`. This is the only
+  `(cmd_set, cmd_id)` pair registered anywhere in this library.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair, registration
+  mechanism, and the handler's input-validation behavior (all directly
+  disassembly-confirmed). See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.

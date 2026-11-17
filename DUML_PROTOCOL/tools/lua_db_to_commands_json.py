@@ -38,11 +38,12 @@ CMD_SET_NAMES = {
     '0x0b': 'Simulator', '0x0c': 'ESC', '0x0d': 'Battery', '0x0e': 'Data Logger',
     '0x0f': 'RTK', '0x10': 'Automation', '0x11': 'ADSB',
     # Outside the 0x00-0x11 range this project documented from the public
-    # Wireshark dissector's own structure -- these two were found only by
+    # Wireshark dissector's own structure -- these were found only by
     # static binary disassembly of a WM260 (Mavic 3) image, not from any
     # known capture or prior public dissector source. See
-    # DUML_PROTOCOL/04_WM260_DAEMON_FINDINGS.md.
-    '0x22': 'Demo Mode', '0x51': 'Route Switch',
+    # DUML_PROTOCOL/04_WM260_DAEMON_FINDINGS.md and (0x23)
+    # DUML_PROTOCOL/16_EXHAUSTIVE_SWEEP_FINDINGS.md.
+    '0x22': 'Demo Mode', '0x23': 'Smart', '0x51': 'Route Switch',
 }
 
 FIXED_TYPE_SIZES = {

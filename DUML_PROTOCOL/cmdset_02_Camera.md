@@ -1,6 +1,6 @@
 # Cmd Set 0x02 — Camera
 
-Total known command IDs: 212
+Total known command IDs: 207
 
 ## 0x01 — Do Capture Photo
 
@@ -1104,6 +1104,29 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0xE2 — Capture Config Get
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0xEC — Camera Subscribe Push
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `_ZN3dji31_on_event_camera_subscribe_pushEP17duss_event_clientP10duss_eventPv`
+  (`dji::_on_event_camera_subscribe_push`), registered by
+  `dji::CamMsgSubscribe::initEventClientCallback`.
+- **Purpose:** pushes a subscribed live-view/camera-metadata feed to the
+  registering client; the handler plausibly forwards into
+  `handleNewCamMessage` → `transCamMsgToWlMetadata` (inferred from
+  mangled C++ class/method naming, not a directly-observed call chain).
+- **Evidence:** direct call to
+  `duss_event_register_dynamic_command_with_user_data(client, cmd_set=0x02,
+  cmd_id=0xEC, user_data)` in `libWorkModeLiveview.so` (ARM32/E1E),
+  cross-confirmed by a matching teardown call to
+  `duss_event_cancel_dynamic_command(client, 0x02, 0xEC)` in the same
+  class's `deinitEventClientCallback`.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and registration
+  mechanism; medium on the exact downstream dispatch chain (inferred from
+  naming, not traced byte-for-byte). See
+  `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
 
 ## 0xF0 — Camera TBD F0
 

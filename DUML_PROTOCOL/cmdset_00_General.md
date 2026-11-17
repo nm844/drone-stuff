@@ -1,6 +1,6 @@
 # Cmd Set 0x00 — General
 
-Total known command IDs: 80
+Total known command IDs: 85
 
 ## 0x00 — Ping
 
@@ -131,11 +131,25 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 > 7 commands' dispatch logic — `Enter Loader`/`Update Confirm`/
 > `Update Transmit`/`Update Finish` (`0x07`-`0x0A`) and
 > `Fw Update Desc Push`/`Fw Update Push Control`/`Fw Upgrade Finish`
-> (`0x40`/`0x41`/`0x43`) — and could not resolve it. Neither
-> `libduml_frwk.so`'s one built-in dynamic-command table nor `dji_sys`'s 11
-> direct command registrations cover any of these cmd_ids, and a full
-> disassembly of the firmware-upgrade daemon's entire 4-library plugin
-> chain (`libupgrade_register.so` → `libupgrade_communication.so` →
+> (`0x40`/`0x41`/`0x43`) — on the **receive/handler** side (`dji_sys`,
+> `libduml_frwk.so`, the 4-library upgrade plugin chain) and could not
+> resolve it there. **Update (firmware-update-process sweep,
+> `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`): 5 of these 7 —
+> `0x07`/`0x08`/`0x09`/`0x0A`/`0x41` — are now independently confirmed
+> live from the SENDER side.** DJI's own `test_upgrade` QA harness
+> (E1E/ARM32) builds and sends exactly these 5 literal cmd_ids to
+> `dji_sys` (module address `0x0801`) via `duss_event_send_sync`, in
+> `check_fw_entry`/`check_fw_start`/`check_fw_transmit`/`check_fw_finish`/
+> `check_update_control` respectively — confirming these are real, live
+> DUML traffic, not dead/legacy surface, even though the *handler*-side
+> dispatch inside `dji_sys` that receives them still hasn't been
+> disassembled with confidence (that remains the open half of this gap).
+> `0x40` and `0x43` remain fully unresolved on both sides. Original
+> handler-side investigation: neither `libduml_frwk.so`'s one built-in
+> dynamic-command table nor `dji_sys`'s 11 direct command registrations
+> cover any of these cmd_ids, and a full disassembly of the
+> firmware-upgrade daemon's entire 4-library plugin chain
+> (`libupgrade_register.so` → `libupgrade_communication.so` →
 > `libupgrade_commu_demo.so` → `libupgrade_upgrade.so`) found no
 > cmd_id-matching dispatch logic with confidence — its event callback
 > parses fixed struct-offset fields that don't look like a raw DUML cmd_id
@@ -144,8 +158,8 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 > dead/legacy protocol surface the upgrade subsystem has moved away from
 > (the upstream community Lua dissector's stubs for these same cmd_ids are
 > also empty `TODO` placeholders, with no payload-format knowledge to
-> borrow either). Reported as a genuine, unresolved gap, not guessed.
-> See `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E.
+> borrow either). See `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E for the
+> original investigation.
 
 ## 0x20 — File List
 
@@ -459,6 +473,20 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+## 0x5B — FTP Control (Start/Stop)
+
+_Not from the public dissector — found by this project's own binary RE._
+No byte-level payload decoder recovered yet; only the cmd_id itself is
+confirmed. Found in DJI's own `test_upgrade` QA harness (E1E/ARM32):
+`check_ftpd_start_control`/`check_ftpd_stop_control` both build a DUML
+request with cmd_id literal `0x5B` targeting `dji_sys` (module address
+`0x0801`) via `duss_event_send_sync`, differing only in a flag byte at
+request-struct offset `0x14` (`1` for start, `0`/unset for stop). 3/3
+adversarial reverify, independently re-derived from raw ELF bytes by all
+three skeptics. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`. Not a
+conflict with the unrelated `0x02`/`0x5B` ("Discon State Get", Camera) —
+different cmd_set namespace.
+
 ## 0x5C — UAV Fly Info
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
@@ -474,6 +502,49 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0x62 — Get Product Newest Ver
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0x83 — External Upgrade Request
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** issues an "external upgrade" request to the on-device
+  "upgrade center" service — triggered by the `upgrade_test` CLI tool's
+  `external_upgrade` subcommand, which installs a firmware package from
+  an operator-supplied path rather than the normal OTA flow.
+- **Evidence:** literal `mov w9, #0x83` immediately before a call to the
+  shared `send_fn` wrapper, found in `upgrade_test` (both the E1E/ARM32
+  and E2/aarch64 builds, at different addresses per architecture but an
+  identical immediate-then-call pattern); the call path is reached only
+  from the code handling the `external_upgrade_test_client` CLI
+  subcommand. `cmd_set=0x00` is inferred by this project's established
+  "General" convention for the upgrade-center channel (consistent with
+  already-catalogued `0x41`/`0x4f`), not a directly observed wire byte.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call site;
+  medium on the semantic "external upgrade package install" purpose
+  (drawn from the CLI subcommand name, not the handler's internal logic).
+  See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
+## 0x85 — Transfer Complete Notification
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** notifies the upgrade-center service that a firmware
+  package transfer has completed, confirmed by this call site's own
+  adjacent log string: `"up_center: send transfer complete message,
+  len = %d, timeout = %d"`.
+- **Evidence:** literal `mov w8, #0x85` immediately before the log call
+  and the `send_fn` call, found in `upgrade_test` (E2/aarch64 build).
+  `cmd_set=0x00` inferred by the same General-channel convention as
+  `0x83` above.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair, call site, and
+  purpose (the log string names the exact semantics). See
+  `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
 
 ## 0x89 — Shell Command
 
@@ -502,6 +573,47 @@ notable security relevance._
   fact (the command exists and is wired to a shell-exec path), not
   investigated or demonstrated as a usable attack. See
   `04_WM260_DAEMON_FINDINGS.md`.
+
+## 0x93 — Begin Single Module Upgrade
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper) →
+  `duss_event_send_sync` (imported from `libduml_frwk.so`).
+- **Purpose:** begins a single-module firmware upgrade and, separately,
+  sets upgrade flags — reached from two different code paths inside
+  `upgrade_test`: one logging `"single_module_upgrading_test_entry"` /
+  `"Will send msg:0x%x(%d bytes) require to upgrade center(0x%x) to
+  begin single module upgrade!!!"`, the other from the CLI's
+  `set_up_flags_request` subcommand (which sets the `UP_AB_BOTH` /
+  `FORCE_UP_ALL` flags per its own `--help` text).
+- **Evidence:** literal `mov w8, #0x93` immediately before 3 separate
+  calls to the shared `send_fn` wrapper, found in `upgrade_test`
+  (E2/aarch64 build). `cmd_set=0x00` inferred by the same General-channel
+  convention as `0x83`/`0x85` above.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call sites;
+  medium on which of the two reached code paths is the "primary" purpose
+  (both share the same cmd_id). See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
+
+## 0x94 — Set Upgrade Flag
+
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware._
+
+- **Handler:** `send_fn` (generic upgrade-center message-send wrapper,
+  internally tagged `"client_send_with_ack"`) → `duss_event_send_sync`
+  (imported from `libduml_frwk.so`).
+- **Purpose:** sets an upgrade flag (paired with `0x93`'s query/set
+  pattern for the `UP_AB_BOTH` / `FORCE_UP_ALL` CLI flags), with the
+  sender explicitly waiting for an acknowledgement per the internal
+  `send_fn` tag name.
+- **Evidence:** literal `mov w8, #0x94` before 2 calls to `send_fn`,
+  found in `upgrade_test` (E2/aarch64 build), in the same
+  `set_up_flags_request` function as `0x93` above. `cmd_set=0x00`
+  inferred by the same General-channel convention.
+- **Confidence:** high on the `(cmd_set, cmd_id)` pair and call sites.
+  See `16_EXHAUSTIVE_SWEEP_FINDINGS.md`.
 
 ## 0xA3 — USB State Report
 

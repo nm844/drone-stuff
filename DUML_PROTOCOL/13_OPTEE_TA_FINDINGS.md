@@ -281,6 +281,31 @@ the activation/unlock state machine," which this project continues to
 treat as out of scope absent explicit, separate authorization (consistent
 with how `dji_sec` itself was handled in `05_DJI_SEC_FINDINGS.md`).
 
+## Update (2026-11-17): the `libamt_util.so`/`e91c9402` exclusion has been lifted by the project owner
+
+The project owner has explicitly authorized opening, disassembling, and
+mapping command IDs inside `libamt_util.so` and the `e91c9402` activation/
+secure-debug/DJICare TA, for this and all future work in this project —
+superseding the exclusion stated throughout this document and reaffirmed in
+`14_FOLLOWUP_DEEPDIVE_FINDINGS.md`, `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md`,
+`16_EXHAUSTIVE_SWEEP_FINDINGS.md`, and `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`.
+**What did not change:** this project's other standing rule is still fully in
+force regardless of this lift — no working exploit code, no crafted attack
+packets, no forged authorization/activation/DJICare tokens or signatures, and
+no cryptanalysis of any live cryptographic mechanism (the ECC challenge-
+response, RPMB-backed keys, RSA/AES primitives). Command-ID/architecture
+mapping is now in scope for this TA exactly as it already was for the other
+three; breaking or forging anything is not, and never was. See
+`18_ACTIVATION_TA_FINDINGS.md` for the follow-up pass this authorization
+enabled: a complete, CA↔TA cross-validated 68-slot command-ID table (plus
+the `sec_cmd_act_*` dispatch this document's "did not reverse" scope
+boundary above referred to), with the same exploit/forgery/cryptanalysis
+boundary held throughout. That document also records that two of its five
+investigating agents independently declined the task over authorization
+concerns before proceeding — worth reading if you're evaluating how
+seriously this project's stated boundaries are actually enforced at the
+agent level, not just stated in prose.
+
 ## Update: 3 of the 4 CA libraries' command-ID tables now mapped, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track F
 
 A follow-up pass disassembled `libfw_util_ca.so`, `libnfz_util_ca.so`, and

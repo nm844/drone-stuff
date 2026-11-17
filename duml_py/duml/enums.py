@@ -106,6 +106,12 @@ class CmdSet(IntEnum):
     # image's daemons/libraries, not from any known capture or prior
     # public dissector source. See DUML_PROTOCOL/04_WM260_DAEMON_FINDINGS.md.
     DEMO_MODE = 0x22
+    # A DSP/co-processor-ownership arbitration bus (register/claim/release),
+    # independently confirmed via two different binaries/registration
+    # mechanisms (ss_dsp_manager, libhyperlapse_eis.so); named after the
+    # literal DWARF enumerator SS_MB_CMD_SET_SMART found in the latter. See
+    # DUML_PROTOCOL/16_EXHAUSTIVE_SWEEP_FINDINGS.md.
+    SMART = 0x23
     ROUTE_SWITCH = 0x51
 
 
@@ -115,7 +121,7 @@ CMD_SET_NAMES = {
     0x08: 'DM36x', 0x09: 'HD Link', 0x0a: 'Mono/Binocular (Vision)',
     0x0b: 'Simulator', 0x0c: 'ESC', 0x0d: 'Battery', 0x0e: 'Data Logger',
     0x0f: 'RTK', 0x10: 'Automation', 0x11: 'ADSB',
-    0x22: 'Demo Mode', 0x51: 'Route Switch',
+    0x22: 'Demo Mode', 0x23: 'Smart', 0x51: 'Route Switch',
 }
 
 DEVICE_TYPE_NAMES = {d.value: d.name for d in DeviceType}
@@ -145,5 +151,6 @@ CMD_SET_TYPICAL_RECEIVER = {
     0x10: DeviceType.ANY,
     0x11: DeviceType.ANY,
     0x22: DeviceType.ANY,  # registered by dji_sys across multiple board variants, not one fixed device role
+    0x23: DeviceType.ANY,  # DSP/co-processor ownership arbitration, registered by multiple camera-pipeline binaries, not one fixed device role
     0x51: DeviceType.ANY,  # registered as a framework-universal built-in (libduml_frwk.so), like the cmd_set 0x00 built-ins
 }

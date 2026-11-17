@@ -1383,7 +1383,7 @@ const Field kAllFields[1370] = {
 
 } // namespace
 
-extern const CommandSpec kCommandTable[884] = {
+extern const CommandSpec kCommandTable[900] = {
     {0, 0, "Ping", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 1, "Version Inquiry", "full", FieldSpan{&kAllFields[0], 1}, "dissector", "general_version_inquiry_dissector", ""},
     {0, 2, "Push Param Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -1441,11 +1441,16 @@ extern const CommandSpec kCommandTable[884] = {
     {0, 88, "Time Sync", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 89, "Test Mode", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 90, "Play Sound", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 91, "FTP Control (Start/Stop)", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 92, "UAV Fly Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 96, "Auto Test Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 97, "Set Product Newest Ver", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 98, "Get Product Newest Ver", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 131, "External Upgrade Request", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 133, "Transfer Complete Notification", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 137, "Shell Command", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 147, "Begin Single Module Upgrade", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {0, 148, "Set Upgrade Flag", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 163, "USB State Report", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 170, "Node Sniffer Request", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 239, "Send Reserved Key", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -1677,6 +1682,7 @@ extern const CommandSpec kCommandTable[884] = {
     {2, 224, "Capture Sound", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {2, 225, "Capture Config Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {2, 226, "Capture Config Get", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {2, 236, "Camera Subscribe Push", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {2, 240, "Camera TBD F0", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {2, 241, "Camera Tau Param", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {2, 242, "Camera Tau Param Get", "full", FieldSpan{&kAllFields[297], 55}, "dissector", "camera_camera_tau_param_dissector", ""},
@@ -1915,6 +1921,7 @@ extern const CommandSpec kCommandTable[884] = {
     {4, 69, "Gimbal Get Temp", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_get_temp_dissector", ""},
     {4, 71, "Gimbal TBD 47", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_tbd_47_dissector", ""},
     {4, 76, "Gimbal Reset And Set Mode", "full", FieldSpan{&kAllFields[880], 2}, "dissector", "gimbal_set_mode_dissector", ""},
+    {4, 81, "Gimbal Calibration Result Query", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {4, 86, "Gimbal NotiFy Camera Id", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_notify_camera_id_dissector", ""},
     {4, 87, "Handheld Stick State Get/Push", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_state_get_dissector", ""},
     {4, 88, "Handheld Stick Control Set", "none", FieldSpan{nullptr, 0}, "dissector", "gimbal_handheld_stick_control_set_dissector", ""},
@@ -2167,6 +2174,8 @@ extern const CommandSpec kCommandTable[884] = {
     {9, 99, "HDLnk Mic Enable Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {9, 113, "HDLnk Main Camera Bandwidth Percent Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {9, 114, "HDLnk Main Camera Bandwidth Percent Get", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {9, 169, "Liveview Pigeon State Heartbeat", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {9, 170, "MIPI/HDVT Liveview Param Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {10, 1, "Eye Bino Info", "none", FieldSpan{nullptr, 0}, "dissector", "mbino_bino_info_dissector", ""},
     {10, 2, "Eye Mono Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {10, 3, "Eye Ultrasonic Info", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -2266,10 +2275,17 @@ extern const CommandSpec kCommandTable[884] = {
     {17, 21, "User Id Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 22, "Key Version Get", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 23, "Push Avoidance Action Get ", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {34, 6, "Set Global Cruise Vel", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {34, 7, "Get Global Cruise Vel", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {34, 8, "Pause Recovery", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {34, 68, "Break Restore Waypoint Fly", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {34, 96, "Demo Mode Handle", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {35, 32, "Register As Smart Owner", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {35, 33, "Calling For Smart Owner", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {35, 34, "Finish Working On Smart", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {81, 5, "Route Switch", "none", FieldSpan{nullptr, 0}, "", "", ""},
 };
 
-extern const size_t kCommandTableSize = 884;
+extern const size_t kCommandTableSize = 900;
 
 } // namespace duml

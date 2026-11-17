@@ -1234,6 +1234,16 @@
  {
   "cmd_set": 0,
   "cmd_set_name": "General",
+  "cmd_id": 91,
+  "name": "FTP Control (Start/Stop)",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
   "cmd_id": 92,
   "name": "UAV Fly Info",
   "decode_status": "none",
@@ -1274,8 +1284,48 @@
  {
   "cmd_set": 0,
   "cmd_set_name": "General",
+  "cmd_id": 131,
+  "name": "External Upgrade Request",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 133,
+  "name": "Transfer Complete Notification",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
   "cmd_id": 137,
   "name": "Shell Command",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 147,
+  "name": "Begin Single Module Upgrade",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
+  "cmd_id": 148,
+  "name": "Set Upgrade Flag",
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
@@ -6521,6 +6571,16 @@
   "cmd_set_name": "Camera",
   "cmd_id": 226,
   "name": "Capture Config Get",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 2,
+  "cmd_set_name": "Camera",
+  "cmd_id": 236,
+  "name": "Camera Subscribe Push",
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
@@ -15993,6 +16053,16 @@
  {
   "cmd_set": 4,
   "cmd_set_name": "Gimbal",
+  "cmd_id": 81,
+  "name": "Gimbal Calibration Result Query",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 4,
+  "cmd_set_name": "Gimbal",
   "cmd_id": 86,
   "name": "Gimbal NotiFy Camera Id",
   "decode_status": "none",
@@ -21234,6 +21304,26 @@
   "fields": null
  },
  {
+  "cmd_set": 9,
+  "cmd_set_name": "HD Link",
+  "cmd_id": 169,
+  "name": "Liveview Pigeon State Heartbeat",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 9,
+  "cmd_set_name": "HD Link",
+  "cmd_id": 170,
+  "name": "MIPI/HDVT Liveview Param Set",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
   "cmd_set": 10,
   "cmd_set_name": "Mono/Binocular (Vision)",
   "cmd_id": 1,
@@ -25463,6 +25553,36 @@
   "cmd_set_name": "Demo Mode",
   "cmd_id": 96,
   "name": "Demo Mode Handle",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 35,
+  "cmd_set_name": "Smart",
+  "cmd_id": 32,
+  "name": "Register As Smart Owner",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 35,
+  "cmd_set_name": "Smart",
+  "cmd_id": 33,
+  "name": "Calling For Smart Owner",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 35,
+  "cmd_set_name": "Smart",
+  "cmd_id": 34,
+  "name": "Finish Working On Smart",
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,

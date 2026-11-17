@@ -565,6 +565,14 @@ response mechanism. See Part 2's cross-reference note to doc 09 above for
 how this relates to (and is architecturally distinct from) `dji_autotest`'s
 `get_eagle_mode()` gate.
 
+**Update, see `18_ACTIVATION_TA_FINDINGS.md`:** the project owner has since
+explicitly lifted the exclusion this section respected — a later pass does
+disassemble `libamt_util.so` and the `e91c9402` TA it backs, mapping the
+full command-ID table (including `sec_debug_state`/`sec_debug_generate_
+internal_msg`/`sec_debug_verify_internal_msg` at `cmd_id` `0x20`-`0x22`).
+That pass still does not attempt any bypass of the challenge-response
+mechanism itself — only command-ID/architecture mapping was authorized.
+
 ## §13. `libdji_fw_verify_util.so` — ION-shared-memory client for TEE-backed firmware verification
 
 **Role, confirmed and upgraded from "strongly suggests a TEE TA" to

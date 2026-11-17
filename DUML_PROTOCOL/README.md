@@ -15,22 +15,29 @@ known command/payload, built for the firmware in this project
    protocol natively, what the real camera-control daemon's parameters look
    like, and an honest list of what remains unverified (Battery/ESC firmware
    contents; per-daemon runtime command-registration tables).
-3. **`INDEX.md`** — table of all 20 command sets with command counts.
+3. **`INDEX.md`** — table of all 21 command sets with command counts.
 4. **`cmdset_XX_Name.md`** — one file per command set (General, Camera,
    Flight Control, Gimbal, Center Board, Remote Control, Wi-Fi, DM36x,
    HD Link, Mono/Binocular, Simulator, ESC, Battery, Data Logger, RTK,
-   Automation, ADSB, Special, plus `0x22` Demo Mode and `0x51` Route
-   Switch — the latter two found by this project's own binary RE, not the
-   public dissector). Each lists every known `cmd_id`, its name, and —
+   Automation, ADSB, Special, plus `0x22` Demo Mode, `0x23` Smart, and
+   `0x51` Route Switch — the latter three found by this project's own
+   binary RE, not the public dissector). Each lists every known `cmd_id`,
+   its name, and —
    where the source dissector decodes it, or this project's own binary
    disassembly established it — a byte-exact table of offset / size /
    field name / type / enum / bitmask / description, or a purpose /
    evidence / confidence writeup for binary-RE'd entries.
+5. **`BINARY_COVERAGE_TRACKER.md`** — not a findings doc, a living status
+   tracker: which of the 808 binaries/libraries across both firmware
+   images have been checked for undiscovered DUML command registrations,
+   which haven't, why, and the reproducible methodology/tooling gotchas
+   behind the checks. Start here before launching a new sweep so you
+   don't redo already-done work or repeat a known false-negative.
 
 ## Totals
 
-- **888** known `(cmd_set, cmd_id)` pairs documented by name across 18
-  non-empty command sets (of 20 catalogued in total; the other 2,
+- **900** known `(cmd_set, cmd_id)` pairs documented by name across 19
+  non-empty command sets (of 21 catalogued in total; the other 2,
   `0x0c`/ESC and `0x10`/Automation, are confirmed-empty with an
   architectural explanation rather than unexamined — see
   `cmdset_0c_ESC.md`/`cmdset_10_Automation.md`). (An earlier pass of
@@ -41,16 +48,48 @@ known command/payload, built for the firmware in this project
   across 2 entirely new cmd_sets — `0x22` and `0x51`, both outside the
   public dissector's 0x00-0x11 range — found by binary disassembly of a
   WM260/Mavic 3 image rather than from any known capture; see
-  `04_WM260_DAEMON_FINDINGS.md`. The current **888** adds 4 more cmd_ids
-  under `0x22` specifically — `0x06`/`0x07`/`0x08`/`0x44`, all 4 found
-  inside `dji_flight` rather than `dji_sys` — recovered by a later,
-  independently-verified follow-up pass; see
-  `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track H and `cmdset_22_Demo_Mode.md`.
-  Also fixed this pass: 5 cmd_ids that were already present in
-  `commands.json`/`ALL_COMMANDS.csv` but had never been rendered into
-  their per-cmd_set `.md` file — `0x00`'s `0x2F`/`0x89`/`0xA3`/`0xAA` and
-  `0x04`'s `0x69` — now added to `cmdset_00_General.md`/
-  `cmdset_04_Gimbal.md` with full purpose/evidence/confidence writeups.)
+  `04_WM260_DAEMON_FINDINGS.md`. A later pass took this to **888**: 4 more
+  cmd_ids under `0x22` specifically — `0x06`/`0x07`/`0x08`/`0x44`, all 4
+  found inside `dji_flight` rather than `dji_sys` — recovered by an
+  independently-verified follow-up pass (see
+  `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track H and `cmdset_22_Demo_Mode.md`),
+  plus 5 cmd_ids that were already present in `commands.json`/
+  `ALL_COMMANDS.csv` but had never been rendered into their per-cmd_set
+  `.md` file — `0x00`'s `0x2F`/`0x89`/`0xA3`/`0xAA` and `0x04`'s `0x69`.
+  That pass's **898** adds 10 more commands found by an exhaustive
+  follow-up sweep of 24 previously-unexamined WM260 binaries/libraries
+  (16 with a strong relocation-based registration signal, 8 secondary
+  candidates), every one independently reverify-confirmed by 3 skeptical
+  passes each: 4 under `0x00` (`0x83`/`0x85`/`0x93`/`0x94`, all in the
+  `upgrade_test` firmware-upgrade CLI), 1 under `0x02` (`0xEC`, in
+  `libWorkModeLiveview.so`), 2 under `0x09` (`0xA9`/`0xAA`, split across
+  `libWorkModeLiveview.so` and `libMipiHandshake.so`), and 3 under a
+  brand-new cmd_set — `0x23` "Smart" (`0x20`/`0x21`/`0x22`, a DSP/
+  co-processor ownership-arbitration bus independently confirmed in two
+  different binaries via two different registration mechanisms). See
+  `16_EXHAUSTIVE_SWEEP_FINDINGS.md` and `cmdset_23_Smart.md`. One further
+  candidate (`0x00`/`0x84`) was investigated with equally solid
+  mechanism-level evidence but did not clear the reverify bar — a
+  majority of reviewers flagged the original write-up's file-scope claim
+  as overstated — and was deliberately left uncatalogued rather than
+  added on a technicality; see `16_EXHAUSTIVE_SWEEP_FINDINGS.md` for the
+  full reasoning. The current **899** adds 1 more: a follow-up round-2
+  sweep of the 141 residual weak-signal binaries left over from that
+  pass found exactly one new command, `0x04`/`0x51` ("Gimbal Calibration
+  Result Query", in the factory-test plugin `at_gimbalcali.so`), via a
+  4th client-side DUML send mechanism not previously documented — a
+  direct call to the imported `imss_link_v1_send(cmd_set, cmd_id, ...)`
+  (via `libimss.so`), distinct from the DUSS event-bus mechanisms the
+  other 898 commands were found through. 3/3 adversarial reverify. The
+  other 140 residual binaries were ruled out as true negatives (mostly
+  C++ vtables/FSM/lifecycle tables that superficially resemble this
+  project's known relocated command-dispatch-table shape, or libraries
+  that link the DUML framework purely for logging/OSAL without touching
+  any registration API) — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`. The
+  current **900** adds 1 more: a dedicated sweep of the firmware-update/
+  upgrade process found `0x00`/`0x5B` ("FTP Control", start/stop) sent
+  literally by DJI's own `test_upgrade` QA harness to `dji_sys`. 3/3
+  adversarial reverify. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -75,8 +114,8 @@ known command/payload, built for the firmware in this project
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 888 commands is
-  registered by name and sendable/receivable there; the other 731 (no known
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 900 commands is
+  registered by name and sendable/receivable there; the other 743 (no known
   payload layout) send/receive as raw bytes.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"
@@ -138,7 +177,7 @@ the documented Camera command set.
   require full decompilation of several stripped PIE executables, which
   was out of scope for this pass. The command *names and payload layouts*
   documented here are accurate as a protocol reference; whether every one
-  of the 888 is actually *reachable* on this specific airframe/firmware
+  of the 900 is actually *reachable* on this specific airframe/firmware
   revision (vs. being a command another DJI product in the dissector's
   multi-product history supports) was not individually confirmed.
 - Some payload fields are named `unknownN` / have no enum decode in the
