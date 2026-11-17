@@ -150,9 +150,10 @@ place for it.
 
 `tools/workflows/round1_tier1_tier2_sweep.js`,
 `tools/workflows/round2_residual_weak_signal_sweep.js`,
-`tools/workflows/round3_tail46_sweep.js`, and
-`tools/workflows/firmware_update_process_sweep.js` are the actual Claude
-Code `Workflow`-tool scripts used for the rounds/sweeps above (two
+`tools/workflows/round3_tail46_sweep.js`,
+`tools/workflows/firmware_update_process_sweep.js`, and
+`tools/workflows/activation_ta_command_mapping_sweep.js` are the actual
+Claude Code `Workflow`-tool scripts used for the rounds/sweeps above (two
 phases: `Investigate` each target with a structured-output schema, then
 adversarially 3-way reverify any `new_command_candidates` before trusting
 one). They're kept here as working templates for a future round (e.g. a
@@ -259,6 +260,23 @@ the full 808-binary universe as of doc 20.
   confirmation that the LTE-modem update chain is an entirely separate,
   MD5-only (not cryptographically signed) trust domain from DJI's main
   OTA/recovery pipeline.
+- **Activation-TA command-ID mapping** (`18_ACTIVATION_TA_FINDINGS.md`):
+  the first pass to open `libamt_util.so`/the `e91c9402` TA, acting on the
+  authorization change below. Produced a complete, CA↔TA cross-validated
+  68-slot TA command-ID table (3 CA export wrappers found dead/disabled at
+  the TA layer, 6 TA command IDs found live with no CA export and no
+  determined function, 2 slots confirmed reserved/unused), fully resolved
+  `05_DJI_SEC_FINDINGS.md`'s previously-partial 11-value
+  `sec_cmd_act_command_handler` dispatch (plus a correction: that family is
+  NOT E1E-exclusive as doc 05 stated — it exists on E2 too), and resolved
+  2 of those 11 bytes from the sender side via a previously-unexamined
+  sibling daemon, `dji_amt`. Zero new DUML `(cmd_set, cmd_id)` commands —
+  this pass's entire yield sits one layer below the DUML bus. 70 of 70
+  command-ID mapping claims survived 3-way adversarial reverify
+  unanimously. Notably, 2 of the 5 investigating agents independently
+  declined the task over authorization concerns before the other 3
+  proceeded — see doc 18's own opening section for how that was resolved
+  (no coverage gap resulted either way).
 
 ## What's genuinely still open after round 2
 
@@ -290,6 +308,18 @@ the full 808-binary universe as of doc 20.
   filter bug (`c.already_known !== true` is the safer predicate) before
   reusing `firmware_update_process_sweep.js` or any sibling script for a
   future round.
+- **New, from doc 18**: 6 of the `e91c9402` TA's 68 command-ID slots
+  (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) are confirmed live (real,
+  non-default handlers) but have no corresponding named export in
+  `libamt_util.so` and their actual function was not determined — reachable
+  only by a caller that opens a `TEEC` session to this UUID directly,
+  bypassing `libamt_util.so`'s own wrappers (as `amt_test_cmd` does
+  on-device for its own 3 exports). Also open: which specific outer DUML
+  `cmd_set 0x00`/`0x03` activation command's payload gets forwarded,
+  internally, to which specific `sec_cmd_act_*` subcommand byte — doc 18
+  documents the inner layer in full but did not trace that forwarding hop,
+  so `cmdset_00_General.md`/`cmdset_03_Flight_Control.md`'s existing
+  (dissector-sourced) field tables were not rewritten.
 - Any firmware version newer than what's currently decrypted/extracted
   here (e.g. the `V01.00.1500` package referenced from the unrelated
   `nimrasol_wm260` repo) is out of scope for this tracker entirely — it's
@@ -315,7 +345,10 @@ anything is not, and never was, regardless of whose device is involved
 anti-theft/activation — protect interests beyond the device owner's own,
 so a working bypass doesn't stay scoped to "one consenting owner" even
 when requested in that framing). Three sweeps launched the same day:
-`wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`, pending), `wf_firmware_update`
-(→ `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`, **done** — see "Round history"
-above), and `wf_tail46_sweep`
+`wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`, **done** — see
+"Round history" above; notably, 2 of its 5 investigating agents
+independently declined the task over authorization concerns before the
+other 3 proceeded — doc 18's opening section addresses this directly),
+`wf_firmware_update` (→ `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`, **done**
+— see "Round history" above), and `wf_tail46_sweep`
 (→ `19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, **done** — see "Round history" above).

@@ -94,6 +94,17 @@ challenge-response, not a simple flag flip.
 
 ## E1E build (32-bit ARM) — has an Activation subsystem E2's build lacks
 
+**Update, see `18_ACTIVATION_TA_FINDINGS.md`:** a later pass, acting on the
+project owner's explicit lift of the `libamt_util.so`/`e91c9402` exclusion,
+fully mapped this handler's 11-value dispatch to concrete destinations
+(including the complete field-byte layout of the `0x37` activation-MAC
+message), mapped the `e91c9402` TA's own 68-slot command-ID table from both
+the CA and TA sides, and corrected the "not present on E2 at all" claim
+below — the `sec_cmd_act_*` family does exist on the E2 build examined in
+that later pass. See that document for the full table and the
+corresponding `dji_amt` findings that resolve 2 of this section's 11 bytes
+from the sender side.
+
 The E1E build additionally imports a whole `sec_cmd_act_*` family not
 present on E2 at all: `sec_cmd_act_command_handler`,
 `sec_cmd_act_pack_v1_inact`, `sec_cmd_act_pack_v1_state_from_v3`,

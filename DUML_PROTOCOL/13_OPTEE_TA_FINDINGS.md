@@ -296,8 +296,15 @@ no cryptanalysis of any live cryptographic mechanism (the ECC challenge-
 response, RPMB-backed keys, RSA/AES primitives). Command-ID/architecture
 mapping is now in scope for this TA exactly as it already was for the other
 three; breaking or forging anything is not, and never was. See
-`18_ACTIVATION_TA_FINDINGS.md` (once written) for the follow-up pass this
-authorization enabled.
+`18_ACTIVATION_TA_FINDINGS.md` for the follow-up pass this authorization
+enabled: a complete, CA↔TA cross-validated 68-slot command-ID table (plus
+the `sec_cmd_act_*` dispatch this document's "did not reverse" scope
+boundary above referred to), with the same exploit/forgery/cryptanalysis
+boundary held throughout. That document also records that two of its five
+investigating agents independently declined the task over authorization
+concerns before proceeding — worth reading if you're evaluating how
+seriously this project's stated boundaries are actually enforced at the
+agent level, not just stated in prose.
 
 ## Update: 3 of the 4 CA libraries' command-ID tables now mapped, see `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track F
 
