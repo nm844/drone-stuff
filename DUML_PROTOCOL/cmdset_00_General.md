@@ -1,6 +1,6 @@
 # Cmd Set 0x00 — General
 
-Total known command IDs: 84
+Total known command IDs: 85
 
 ## 0x00 — Ping
 
@@ -131,11 +131,25 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 > 7 commands' dispatch logic — `Enter Loader`/`Update Confirm`/
 > `Update Transmit`/`Update Finish` (`0x07`-`0x0A`) and
 > `Fw Update Desc Push`/`Fw Update Push Control`/`Fw Upgrade Finish`
-> (`0x40`/`0x41`/`0x43`) — and could not resolve it. Neither
-> `libduml_frwk.so`'s one built-in dynamic-command table nor `dji_sys`'s 11
-> direct command registrations cover any of these cmd_ids, and a full
-> disassembly of the firmware-upgrade daemon's entire 4-library plugin
-> chain (`libupgrade_register.so` → `libupgrade_communication.so` →
+> (`0x40`/`0x41`/`0x43`) — on the **receive/handler** side (`dji_sys`,
+> `libduml_frwk.so`, the 4-library upgrade plugin chain) and could not
+> resolve it there. **Update (firmware-update-process sweep,
+> `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`): 5 of these 7 —
+> `0x07`/`0x08`/`0x09`/`0x0A`/`0x41` — are now independently confirmed
+> live from the SENDER side.** DJI's own `test_upgrade` QA harness
+> (E1E/ARM32) builds and sends exactly these 5 literal cmd_ids to
+> `dji_sys` (module address `0x0801`) via `duss_event_send_sync`, in
+> `check_fw_entry`/`check_fw_start`/`check_fw_transmit`/`check_fw_finish`/
+> `check_update_control` respectively — confirming these are real, live
+> DUML traffic, not dead/legacy surface, even though the *handler*-side
+> dispatch inside `dji_sys` that receives them still hasn't been
+> disassembled with confidence (that remains the open half of this gap).
+> `0x40` and `0x43` remain fully unresolved on both sides. Original
+> handler-side investigation: neither `libduml_frwk.so`'s one built-in
+> dynamic-command table nor `dji_sys`'s 11 direct command registrations
+> cover any of these cmd_ids, and a full disassembly of the
+> firmware-upgrade daemon's entire 4-library plugin chain
+> (`libupgrade_register.so` → `libupgrade_communication.so` →
 > `libupgrade_commu_demo.so` → `libupgrade_upgrade.so`) found no
 > cmd_id-matching dispatch logic with confidence — its event callback
 > parses fixed struct-offset fields that don't look like a raw DUML cmd_id
@@ -144,8 +158,8 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 > dead/legacy protocol surface the upgrade subsystem has moved away from
 > (the upstream community Lua dissector's stubs for these same cmd_ids are
 > also empty `TODO` placeholders, with no payload-format knowledge to
-> borrow either). Reported as a genuine, unresolved gap, not guessed.
-> See `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E.
+> borrow either). See `14_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track E for the
+> original investigation.
 
 ## 0x20 — File List
 
@@ -458,6 +472,20 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0x5A — Play Sound
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0x5B — FTP Control (Start/Stop)
+
+_Not from the public dissector — found by this project's own binary RE._
+No byte-level payload decoder recovered yet; only the cmd_id itself is
+confirmed. Found in DJI's own `test_upgrade` QA harness (E1E/ARM32):
+`check_ftpd_start_control`/`check_ftpd_stop_control` both build a DUML
+request with cmd_id literal `0x5B` targeting `dji_sys` (module address
+`0x0801`) via `duss_event_send_sync`, differing only in a flag byte at
+request-struct offset `0x14` (`1` for start, `0`/unset for stop). 3/3
+adversarial reverify, independently re-derived from raw ELF bytes by all
+three skeptics. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`. Not a
+conflict with the unrelated `0x02`/`0x5B` ("Discon State Get", Camera) —
+different cmd_set namespace.
 
 ## 0x5C — UAV Fly Info
 

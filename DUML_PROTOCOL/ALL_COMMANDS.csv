@@ -56,6 +56,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x00,General,0x58,88,Time Sync,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x59,89,Test Mode,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x5a,90,Play Sound,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x5b,91,FTP Control (Start/Stop),none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x5c,92,UAV Fly Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x60,96,Auto Test Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x61,97,Set Product Newest Ver,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,

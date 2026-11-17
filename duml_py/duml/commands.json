@@ -1234,6 +1234,16 @@
  {
   "cmd_set": 0,
   "cmd_set_name": "General",
+  "cmd_id": 91,
+  "name": "FTP Control (Start/Stop)",
+  "decode_status": "none",
+  "source": null,
+  "dissector_fn": null,
+  "fields": null
+ },
+ {
+  "cmd_set": 0,
+  "cmd_set_name": "General",
   "cmd_id": 92,
   "name": "UAV Fly Info",
   "decode_status": "none",

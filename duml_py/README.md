@@ -1,7 +1,7 @@
 # duml — a DUML v1 protocol library
 
 A from-scratch Python implementation of DJI's DUML v1 wire protocol: frame
-codec (header/CRC8/CRC16), a registry covering all 899 known
+codec (header/CRC8/CRC16), a registry covering all 900 known
 `(cmd_set, cmd_id)` pairs, field-level payload encode/decode wherever the
 byte layout is known, and transports for actually sending/receiving over
 serial or TCP.
@@ -13,12 +13,12 @@ behind it. This package is the "make it actually usable" half of that work.
 
 ## What's really decoded, and what isn't
 
-**Every one of the 899 known `(cmd_set, cmd_id)` pairs is registered by
+**Every one of the 900 known `(cmd_set, cmd_id)` pairs is registered by
 name** (`duml list`) and **every one is sendable/receivable** — `send_command`
 accepts a `raw_payload=` for anything, and `decode_incoming` always succeeds
 (falling back to `{'raw': <bytes>}` for commands with no known field layout).
 
-**157 of those 899 have a real, field-level byte decode** — offset, size,
+**157 of those 900 have a real, field-level byte decode** — offset, size,
 type, bitmask, enum for every field — pulled mechanically from the public
 `dji-firmware-tools` Wireshark dissector, plus 2 commands newly
 reverse-engineered this round by cross-referencing the DJI flight-recorder
@@ -35,7 +35,7 @@ byte-level payload decode (`decode_status: 'none'`) — see
 
 ```
 duml.registry.default_registry().stats()
-# {'total': 899, 'full': 157, 'none': 742}
+# {'total': 900, 'full': 157, 'none': 743}
 ```
 
 The other 742 are real DJI commands (used by at least one product across
@@ -103,7 +103,7 @@ duml listen --transport tcp --host 127.0.0.1 --port-num 9000 --duration 10
 | `duml/frame.py` | `Frame.encode()`/`Frame.decode()`, CRC8/CRC16, firmware-confirmed (see `DUML_PROTOCOL/00_FRAME_FORMAT.md`) |
 | `duml/enums.py` | DeviceType, CmdSet, AckType, EncryptType, PacketType |
 | `duml/registry.py` | `CommandRegistry` — loads `commands.json`, lookup by id or name |
-| `duml/commands.json` | The generated data: all 899 commands, 157 with field specs |
+| `duml/commands.json` | The generated data: all 900 commands, 157 with field specs |
 | `duml/codecs.py` | `encode_payload()`/`decode_payload()` — turns a field spec + bytes into a dict and back, including bitfields and conditional/optional branches (Request-vs-Response, optional tails, value-selected variants) |
 | `duml/client.py` | `DumlClient` — the high-level send/receive/listen API |
 | `duml/transport/` | `SerialTransport` (pyserial), `TcpTransport`/`TcpServerTransport` (stdlib), `StreamFramer` (byte-stream resynchronization, same algorithm as the firmware's own frame scanner), `FrameListener` (background-thread listener) |
@@ -151,7 +151,7 @@ python -m unittest discover -s tests -v    # 28 tests: CRC vectors, frame
   package cannot encrypt a payload for you. If you have your own key
   material, encrypt the payload yourself and pass the ciphertext as
   `raw_payload` with `encrypt_type` set on the `Frame` directly.
-- **742 of 899 commands have no known payload layout** (see above) — they
+- **743 of 900 commands have no known payload layout** (see above) — they
   send/receive fine as raw bytes, but you won't get named fields.
 - **`StreamFramer`'s resync is byte-at-a-time** (matches the firmware's own
   approach exactly, but it's O(n) per candidate SOF on pathological noisy

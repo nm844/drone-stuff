@@ -36,7 +36,7 @@ known command/payload, built for the firmware in this project
 
 ## Totals
 
-- **899** known `(cmd_set, cmd_id)` pairs documented by name across 19
+- **900** known `(cmd_set, cmd_id)` pairs documented by name across 19
   non-empty command sets (of 21 catalogued in total; the other 2,
   `0x0c`/ESC and `0x10`/Automation, are confirmed-empty with an
   architectural explanation rather than unexamined — see
@@ -85,7 +85,11 @@ known command/payload, built for the firmware in this project
   C++ vtables/FSM/lifecycle tables that superficially resemble this
   project's known relocated command-dispatch-table shape, or libraries
   that link the DUML framework purely for logging/OSAL without touching
-  any registration API) — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`.)
+  any registration API) — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`. The
+  current **900** adds 1 more: a dedicated sweep of the firmware-update/
+  upgrade process found `0x00`/`0x5B` ("FTP Control", start/stop) sent
+  literally by DJI's own `test_upgrade` QA harness to `dji_sys`. 3/3
+  adversarial reverify. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -110,8 +114,8 @@ known command/payload, built for the firmware in this project
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 899 commands is
-  registered by name and sendable/receivable there; the other 742 (no known
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 900 commands is
+  registered by name and sendable/receivable there; the other 743 (no known
   payload layout) send/receive as raw bytes.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"
@@ -173,7 +177,7 @@ the documented Camera command set.
   require full decompilation of several stripped PIE executables, which
   was out of scope for this pass. The command *names and payload layouts*
   documented here are accurate as a protocol reference; whether every one
-  of the 899 is actually *reachable* on this specific airframe/firmware
+  of the 900 is actually *reachable* on this specific airframe/firmware
   revision (vs. being a command another DJI product in the dissector's
   multi-product history supports) was not individually confirmed.
 - Some payload fields are named `unknownN` / have no enum decode in the

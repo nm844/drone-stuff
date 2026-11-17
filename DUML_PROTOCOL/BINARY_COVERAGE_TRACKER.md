@@ -149,15 +149,17 @@ place for it.
 ### Reusable sweep templates
 
 `tools/workflows/round1_tier1_tier2_sweep.js`,
-`tools/workflows/round2_residual_weak_signal_sweep.js`, and
-`tools/workflows/round3_tail46_sweep.js` are the actual Claude Code
-`Workflow`-tool scripts used for rounds 1-3 above (two phases: `Investigate`
-each target with a structured-output schema, then adversarially 3-way
-reverify any `new_command_candidates` before trusting one). They're kept
-here as working templates for a future round (e.g. the 4 binaries pulled
-out of round 3's scope, or a new firmware version's binary set) — copy one,
-swap in a new target list and `BASE` path, and re-launch rather than
-re-deriving the prompt structure from scratch.
+`tools/workflows/round2_residual_weak_signal_sweep.js`,
+`tools/workflows/round3_tail46_sweep.js`, and
+`tools/workflows/firmware_update_process_sweep.js` are the actual Claude
+Code `Workflow`-tool scripts used for the rounds/sweeps above (two
+phases: `Investigate` each target with a structured-output schema, then
+adversarially 3-way reverify any `new_command_candidates` before trusting
+one). They're kept here as working templates for a future round (e.g. a
+new firmware version's binary set, or a targeted follow-up like the
+`0x18`/`0x3D` verification gap noted below) — copy one, swap in a new
+target list and `BASE` path, and re-launch rather than re-deriving the
+prompt structure from scratch.
 
 ## Current disposition (as of `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`)
 
@@ -169,16 +171,18 @@ Of the full **808** binaries/libraries:
 | No DUML/DUSS signal at all | 591 | ruled out on signal absence | `03_no_signal_basenames_591.txt` |
 | ↳ of which, has its own listening socket (corrected) | 58 | see sub-rows below | `08_socket_bearing_no_signal_corrected_58.txt` |
 | ↳↳ investigated as round-1 "tier 2" | 8 | **done** — all ruled out, several independent security findings (doc 16, Track T) | `09_round1_tier2_investigated_8.txt` |
-| ↳↳ remaining, generic-tooling-by-name, not individually investigated | 50 | **46/50 done (round 3)** — all 46 ruled out for DUML command registration (43 confirmed stock/vendor/AOSP, plus `libwlm.so`/`libduml_hal.so` confirmed as real DJI infrastructure but not command handlers); `liblte.so` was the one surprise — not stock, and identified as a genuinely new DUML transport-channel backend (doc 19, Track AA) despite registering no commands itself. Several independent security findings (doc 19, Track AB). The other 4 (`libupgrade_common.so`, `Quectel_upgrade_tool`, `quectel-qmi-proxy`, `libduml_orte.so`) are tracked under the firmware-update sweep / doc 15 respectively, not here. | `10_socket_bearing_no_signal_remaining_50.txt` |
+| ↳↳ remaining, generic-tooling-by-name, not individually investigated | 50 | **50/50 done** — 46 via round 3 (all ruled out for DUML command registration: 43 confirmed stock/vendor/AOSP, plus `libwlm.so`/`libduml_hal.so` confirmed as real DJI infrastructure but not command handlers; `liblte.so` was the one surprise — not stock, identified as a genuinely new DUML transport-channel backend, doc 19 Track AA). The other 4: `libduml_orte.so` was already covered as a side-mention elsewhere (doc 15 Track I); `libupgrade_common.so` and `Quectel_upgrade_tool` were ruled out for DUML registration by the firmware-update-process sweep (doc 20); `quectel-qmi-proxy` was ruled unrelated to firmware update entirely by that same sweep (a QMI control-plane proxy, zero upgrade strings). | `10_socket_bearing_no_signal_remaining_50.txt` |
 | Weak/ambiguous DUML-adjacent signal, no doc coverage | 160 | see sub-rows below | `05_weak_signal_uninvestigated_at_start_160.txt` |
 | ↳ confirmed real relocation into a registration function ("tier 1") | 19 basenames / 16 investigation units | **done** (round 1) — 10 new commands confirmed + 1 unconfirmed lead (doc 16, Track R) | `06_round1_tier1_investigated_19.txt` |
 | ↳ remaining, weak/ambiguous signal only | 141 | **done** (round 2) — 1 new command confirmed (`0x04`/`0x51`, via a newly-identified 4th mechanism) + 140 ruled out, several independent security findings (doc 17, Tracks V-Y) | `07_round2_weak_signal_pending_141.txt` |
 
 **Fully accounted for right now: 57 + 591 + 19 + 141 = 808 of 808** — the
-entire "weak/ambiguous signal" bucket is now closed.
-**Flagged-but-not-individually-checked: 50** (socket-bearing, no detected
-signal — lower priority, see above; the only remaining gap in the full
-808-binary universe).
+entire "weak/ambiguous signal" bucket is now closed, **and** the
+previously-"flagged but not individually checked" 50-binary
+socket-bearing tail (a sub-slice of the 591 "no signal" bucket, not an
+addition to the 808 total) is now also fully closed — see the row above
+and "Round history" below. There is no remaining unexamined binary in
+the full 808-binary universe as of doc 20.
 
 ## Round history
 
@@ -226,6 +230,35 @@ signal — lower priority, see above; the only remaining gap in the full
   local IPC socket pattern in `libwlm.so`, a DJI-added undocumented
   `vold` sub-command namespace, and several further old-bundled-OSS-
   version findings in the same vein as doc 17 Track X.
+- **Firmware-update-process sweep** (`20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`,
+  Tracks BA-BF): a dedicated end-to-end investigation of the
+  firmware-update/upgrade subsystem (verification chain, A/B OTA engine,
+  orchestration layer, PKCS7-signing side-channel, modem-update chain),
+  launched the same day as the activation-TA authorization change. 1 new
+  command confirmed (`0x00`/`0x5B` "FTP Control", registry grows
+  899 → **900**), 5 previously-unresolved command IDs
+  (`0x07`/`0x08`/`0x09`/`0x0A`/`0x41`) independently confirmed live from
+  the sender side, 1 candidate found and refuted (`0x01`/`0x78`), and 1
+  candidate found but left genuinely unverified due to an identified bug
+  in this round's own verify-pipeline (`0x18`/`0x3D` — see "What's
+  genuinely still open" below). The A/B-OTA architectural question is
+  definitively resolved: genuinely wired up, not vestigial, fully traced
+  end-to-end. Also closes out the last 3 of round 3's 4 redirected tail
+  binaries (see the row above). Independent security findings include a
+  broken retry-loop and a TOCTOU-shaped pattern in `dji_fw_verify`'s core
+  verify function, a second (`popen()`-based, command-injection-shaped)
+  firmware-verification path for `mcu`/`eagle`/`rk3399` chip targets, a
+  5th previously-uncatalogued DUML-adjacent dispatch shape (a wire-byte-
+  keyed cross-library function-pointer registry in the upgrade-test
+  plugin chain), missing-bounds-check primitives in two `libupgrade_*`
+  libraries (one an OOB write into a caller's own buffer), a disabled/
+  no-op "whitelist" security stub (`libdji_sec_ds_whitelist_upgrade.so`),
+  a live but weakly-authenticated PKCS7-signing side-channel (`p7_sign`
+  invoked by `dji_lte`, incomplete shell-injection denylist, a static
+  "fake" key used instead of the device's TEE-backed signer), and
+  confirmation that the LTE-modem update chain is an entirely separate,
+  MD5-only (not cryptographically signed) trust domain from DJI's main
+  OTA/recovery pipeline.
 
 ## What's genuinely still open after round 2
 
@@ -241,9 +274,22 @@ signal — lower priority, see above; the only remaining gap in the full
   to already be covered as a side-mention in
   `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track I despite not appearing
   in `02_covered_basenames_57.txt` — another instance of that list's
-  known incompleteness caveat earlier in this doc. **The 46-binary slice
-  is now closed** (doc 19); only the 4 redirected binaries remain open,
-  tracked under the firmware-update sweep / doc 15.
+  known incompleteness caveat earlier in this doc. **The full 50-binary
+  tail is now closed** (46 via doc 19, the remaining 4 via doc 20/the
+  side-mention above) — see the disposition table above.
+- **New, from doc 20**: a candidate DUML command, `0x18`/`0x3D` ("LTE
+  Dongle Full-Upgrade Test Trigger"), was found in `dongle_upgrade_test.sh`
+  but **never reached this round's own adversarial-verify phase** — a bug
+  in the workflow script's post-processing (filtering on
+  `already_known === false`, which silently drops a candidate whose
+  JSON omitted that field entirely rather than setting it `false`) means
+  this one is neither confirmed nor refuted. It was NOT added to the
+  registry. Recommended follow-up: re-verify directly (the likely
+  handler, `dji_lte`'s own DUML route table, is already named in doc 20)
+  rather than trusting the circumstantial match as-is, and fix the
+  filter bug (`c.already_known !== true` is the safer predicate) before
+  reusing `firmware_update_process_sweep.js` or any sibling script for a
+  future round.
 - Any firmware version newer than what's currently decrypted/extracted
   here (e.g. the `V01.00.1500` package referenced from the unrelated
   `nimrasol_wm260` repo) is out of scope for this tracker entirely — it's
@@ -270,5 +316,6 @@ anti-theft/activation — protect interests beyond the device owner's own,
 so a working bypass doesn't stay scoped to "one consenting owner" even
 when requested in that framing). Three sweeps launched the same day:
 `wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`, pending), `wf_firmware_update`
-(→ a new firmware-update-process findings doc, pending), and `wf_tail46_sweep`
+(→ `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`, **done** — see "Round history"
+above), and `wf_tail46_sweep`
 (→ `19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, **done** — see "Round history" above).
