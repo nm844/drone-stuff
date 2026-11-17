@@ -132,12 +132,7 @@ open on a technicality. A specific 19-entry dispatch table the follow-up
 pass initially thought it had recovered turned out, on independent
 re-verification, to be misread C++ RTTI/vtable data, not a real table —
 that specific claim should not be trusted. A different, separately-found
-`.data` array (confirmed via real `R_ARM_RELATIVE` relocations, rooted at
-vaddr `0xae0f8` and, per an independent 2026-11-17 re-count across two
-separate passes — see `21_PAYLOAD_DECODE_SWEEP_FINDINGS.md` — confirmed
-to be exactly **20 records total**, spanning only cmd_sets
-`{0x02, 0x04, 0x0a, 0x1f, 0x22}`, correcting this doc's earlier "43+"
-estimate) tags
+`.data` array (confirmed via real `R_ARM_RELATIVE` relocations) tags
 three of the `api_wp2_*` cruise-velocity/pause-recovery functions under
 cmd_set `0x22` — `set_global_cruise_vel`→cmd_id `0x06`,
 `get_global_cruise_vel`→cmd_id `0x07`, `pause_recovery`→cmd_id `0x08` —
@@ -147,8 +142,27 @@ waypoint functions belong to `0x22` ("Demo Mode") instead. This mapping,
 including the exact per-function ordering, is now **independently
 confirmed** by a dedicated third pass done entirely from scratch (an
 earlier correction had the three-function order transposed —
-`pause_recovery` is last, `0x08`, not first). The other ~39 records in
-that same array remain unmapped — a concrete lead for a future pass.
+`pause_recovery` is last, `0x08`, not first).
+
+**Correction (2026-11-17), see `21_PAYLOAD_DECODE_SWEEP_FINDINGS.md` and
+`cmdset_22_Demo_Mode.md`'s "Known gap" section for the full detail:** this
+array is actually rooted at vaddr `0xae038`, not `0xae0f8` as earlier
+stated here (`0xae0f8` is just the row for `0x06`, 24 rows into the
+table, not the table's start) — directly re-derived from the raw bytes.
+From `0xae038`, the array decodes to sensible `(cmd_set, cmd_id)` pairs
+across 8 cmd_sets (`0x00, 0x02, 0x03, 0x04, 0x0a, 0x11, 0x1f, 0x22`)
+through vaddr `0xae190` inclusive — **44 raw 8-byte rows total**, closely
+confirming (not correcting) this doc's original "43+" estimate. A
+separate 2026-11-17 re-count, from a different payload-decode pass,
+reported "20 records... spanning only cmd_sets `{0x02, 0x04, 0x0a, 0x1f,
+0x22}`" — that figure was not independently reconciled against this
+direct recount (it may describe a subset or a different counting
+convention) and the two should not be assumed to agree. Of the 44 rows,
+cmd_set `0x22` alone accounts for 16; only 4 of those 16 (`0x06, 0x07,
+0x08, 0x44`) plus `0x60` (found separately, in `dji_sys`) have been
+decoded and tied to a named function so far. The remaining ~12 `cmd_set
+0x22` rows, plus the rows for the other 7 cmd_sets in this same array,
+are a concrete, bounded lead for a future pass.
 
 **Update, see `08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md` for the full
 follow-up pass:** the "Binder-exposed command agent" framing further below

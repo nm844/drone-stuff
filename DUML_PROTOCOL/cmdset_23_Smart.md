@@ -76,6 +76,17 @@ entries below for how that maps onto register/claim/release semantics).
   `ss_dsp_status_ctrl` naming) is the more complete description — treat
   both as describing the same wire command from two different
   participants' perspectives.
+- **2026-11-17 re-confirmation:** a payload-decode pass independently
+  re-disassembled `ss_dsp_manager`'s registration call site at
+  `.text+0x685a` byte-for-byte (`movs r0,#0x23; movs r1,#0x20;` then
+  `bl .text+0xe448`) and confirmed `.text+0xe448` structurally mirrors
+  `duss_event_register_dynamic_command` exactly (bounds-checks `cmd_set
+  <= 0xef`, lazily `malloc`s a 256-slot/8-byte-stride table per cmd_set,
+  logs-but-doesn't-reject on overwrite). **Payload format/fields were
+  not resolved** — `ss_dsp_manager`'s handler copies a fixed `0x1c`-byte
+  struct from the incoming event and forwards it unparsed via
+  `duss_osal_msgq_send`; the actual field meanings live in the worker
+  thread that processes it, which was not traced.
 
 ## 0x21 — Calling For Smart Owner
 
@@ -93,6 +104,14 @@ entries below for how that maps onto register/claim/release semantics).
   different handler address.
 - **Confidence:** high on both registration sites and the `(cmd_set,
   cmd_id)` pair; same semantic-label caveat as `0x20`.
+- **2026-11-17 re-confirmation:** same `ss_dsp_manager` registrar
+  (`.text+0xe448`), called at `.text+0x686e`, confirmed byte-for-byte;
+  handler at `.text+0x56b4` confirmed to be the same 28-byte
+  forward-to-msgq shape as `0x20`'s, with an injected discriminator
+  constant of `1` (`movs r6,#1; str r6,[sp,#48]`) distinguishing it from
+  `0x20`'s constant `0` — internal-consistency evidence the three
+  handlers share one template. Payload format/fields not resolved, same
+  basis as `0x20`.
 
 ## 0x22 — Finish Working On Smart
 
@@ -110,6 +129,14 @@ entries below for how that maps onto register/claim/release semantics).
   protocol rather than a one-directional push.
 - **Confidence:** high on both registration sites and the `(cmd_set,
   cmd_id)` pair; same semantic-label caveat as `0x20`/`0x21`.
+- **2026-11-17 re-confirmation:** same registrar (`.text+0xe448`), called
+  at `.text+0x6884`; handler at `.text+0x55f8` confirmed same 28-byte
+  shape with discriminator constant `2`, completing the `0`/`1`/`2`
+  pattern across all three commands. `nm` additionally confirms an
+  un-stripped symbol `finish_working_on_dspN_callback` at
+  `.text+0x66040` in `libhyperlapse_eis.so`, DWARF-typed as
+  `status_code_t finish_working_on_dspN_callback(...)`. Payload
+  format/fields not resolved, same basis as `0x20`/`0x21`.
 
 ## Architecture notes (not separate commands)
 

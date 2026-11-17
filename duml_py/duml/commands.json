@@ -1628,7 +1628,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, this almost certainly toggles the aircraft's SDK/'Nav'-authority control mode on or off -- the gate a Mobile/Onboard SDK client must open before cmd_ids 0x05/0x1a/0x1b/0x20/0x21/0x22 in this same cmd_set are honoured. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1757,7 +1758,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Legacy counterpart to cmd_id 0x01 'Old Special App Control' (which does have a public decoder) and to 0x04 'New Special Remote Control' -- plausibly an older RC-stick/virtual-RC-channel override frame sent by a special controller rather than the normal app. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1790,7 +1792,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Newer counterpart to 0x02, and sibling to the already-decoded 0x03 'New Special App Control' (a flat 24-byte opaque blob per the public dissector) -- plausibly a newer-format virtual-RC/stick-override frame. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1800,7 +1803,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated motor arm/disarm command -- the kind of command a companion-computer flight-automation client would send to start or stop the motors without touching the physical RC stick/throttle gesture. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1810,7 +1814,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated gimbal angular-velocity command (pitch/roll/yaw speed, analogous to the OSDK 'gimbal speed control' API) -- distinct from the normal cmd_set 0x04 Gimbal Control command because it carries SDK control authority rather than RC-stick authority. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1820,7 +1825,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated absolute gimbal-angle command (pitch/roll/yaw target angle), the companion to 0x1a's rate-based control -- analogous to OSDK's 'gimbal angle control' API. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1830,7 +1836,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated 'take a photo now' trigger, bypassing the normal cmd_set 0x02 Camera 'Do Capture Photo' path's RC/app-button semantics in favour of SDK control authority. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1840,7 +1847,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated 'start recording video' trigger, the SDK-authority counterpart to the normal camera record-start command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1850,7 +1858,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "By name, an SDK-initiated 'stop recording video' trigger, pairing with 0x21. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 1,
@@ -1860,7 +1869,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Per the task hint and the 0xFF convention used elsewhere in DUML, this is plausibly a simple diagnostic echo: a client sends an arbitrary payload and the aircraft mirrors it back unchanged, used for link-latency/sanity testing. I was not able to confirm this structurally, only by naming convention. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 2,
@@ -16108,7 +16118,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Attempted: grepped DUML_PROTOCOL/*.md (no prior decode); searched dji_sys's recovered .gnu_debugdata symbol names and a full `strings` sweep of every binary on both E1E/E2 images for 'vrc'/'virtual_rc'/'virtualrc' -- the only hit anywhere on either image is an unrelated blackbox-log field formula, `Op.expr E_virtual_rc_on_off bitand(shift_r(bit_S,4),1)`, found in dji_flight (E1E) and libmt_client.so (E2). That is a flight-log telemetry-channel definition (a named log column computed by extracting bit 4 of some other internal status word called bit_S for post-flight analysis), not a DUML payload dissector -- this project's own 04_WM260_DAEMON_FINDINGS.md hit the exact same kind of dead end previously with dji_perception's self-describing ROS-style schema strings. Also checked: no literal cmd_set=5 immediate registration in any of the 4 binaries that import duss_event_register_dynamic_command; no `dji_mb_ctrl -s 5` invocation in any shell script on either image. The real handler most plausibly lives in the Center Board's own bare-metal MCU firmware (module 0500_PD_MCU), whose decrypted binary is not present in this session's firmware root. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16118,17 +16129,55 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same search as 0x05/0x00 (these two are an open/close + data pair). No handler-specific evidence found beyond the same single, unrelated 'E_virtual_rc_on_off' blackbox-log-formula string noted for 0x05/0x00. Given 0x00 is presumably the enable/disable toggle and this is the actual channel-data payload, a per-channel u16 array is a plausible guess by analogy with Flight Control's RC-channel-data commands, but I have no binary evidence for the channel count, ordering, or scaling, so I am not asserting a layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
   "cmd_set_name": "Center Board",
   "cmd_id": 2,
   "name": "Center Push Batt Dynamic Info",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: sys_battery_get_dynamic_info (generic request handler) -> per-board-model callback at offset +0xb0 of a device-context struct -> duss_event_resp_data (confirmed real PLT import, resolved by name) sends the 32-byte result back",
+  "fields": [
+   {
+    "name": "reserved_0",
+    "label": "Reserved / board-model-specific (bytes 0x00-0x13)",
+    "offset": 0,
+    "size": 20,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Zeroed by the generic handler before the per-board callback runs; for the one named per-board callback actually disassembled (a different DJI product, not WM260) these bytes stay zero. WM260's own callback was not identified by name, so these bytes' real WM260 content is unknown.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "remaining_capacity_percent",
+    "label": "Remaining Capacity (%)",
+    "offset": 20,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Confirmed via disassembly of sys_update_battery_info: an SBS/SMBus i2c_write_then_read of standard register 0x0D (RelativeStateOfCharge), low byte of the 2-byte result; defaults to 100 on I2C failure. Confirmed at this exact offset (0x14) for the one per-board callback disassembled; very likely the same slot for WM260 given the shared generic dispatcher, but not independently confirmed for WM260's own callback.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "reserved_1",
+    "label": "Reserved / board-model-specific (bytes 0x15-0x1F)",
+    "offset": 21,
+    "size": 11,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Same caveat as reserved_0.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 5,
@@ -16138,7 +16187,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched dji_sys's recovered symbol table for LED-related functions: found led_control_thread (0x44960), sys_fc_led_exit (0x37888), sys_fc_logout_led_ctrl_action (0x37548) -- all real, but (a) none appear as the handler/arg-struct of any of the 12 literal duss_event_register_dynamic_command call sites found in dji_sys, (b) `strings` on both E1E/E2 dji_sys binaries found zero human-readable 'led'-related log/format strings to anchor them semantically, and (c) no BL caller or static-data relocation tying them to a cmd_set/cmd_id pair was found in the time available. These read as the aircraft's own internal status-LED driver thread, not confirmed as the wire-facing handler for this specific command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16148,7 +16198,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched dji_sys/dji_blackbox/dji_perception symbol tables and full `strings` output on both images for 'transform' -- zero hits anywhere except unrelated camera-playback 'Center X'/'Center Y' coordinate fields (cmdset_02_Camera.md, a different, already-documented command) and C++ RTTI/vtable noise. No literal cmd_set=5 registration found either. No handler identified; most plausibly lives in the Center Board's own MCU firmware (out of this round's scoped firmware root). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16158,7 +16209,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No handler distinct from 0x05/0x02 was found. This command's name strongly suggests it is in the same family as 0x02 ('Push Batt Dynamic Info'), and may in fact be dispatched through the exact same generic sys_battery_get_dynamic_info path in dji_sys (which is config-driven and could plausibly serve more than one cmd_id) -- but I found no second static reference, no second handler-name string, and no literal immediate anywhere tying a distinct cmd_id to that dispatcher or to any other function. Reporting this honestly as unconfirmed rather than assuming it shares 0x02's layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16395,7 +16447,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched dji_sys/dji_blackbox symbol tables and `strings` for 'bat_status'/'battery status' -- no distinct hits beyond the generic battery-dynamic-info and PHM telemetry code already attributed to 0x02/0x21/0x22. No literal cmd_set=5 registration found. No handler identified. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16405,7 +16458,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for 'history'/'hisoty' (matching the command's own misspelling) and 'bat_history' across every binary on both images -- zero hits. The already-known cmd_set 0x0D sibling ('Battery History Get', 0x0D/0x05) is itself undecoded in the existing dissector too, so there was no cross-reference to borrow from either. No handler identified. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16415,7 +16469,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for 'selfdis'/'self_dis'/'discharge'/'sleep_mode'/'ship_mode'/'hibernat' across dji_sys and dji_blackbox (the two binaries with confirmed real battery-telemetry code) on both images -- zero hits on either, despite dji_blackbox's PHM telemetry struct (see 0x05/0x22) containing dozens of other confirmed battery-health field names (sohc_fsm, bms_mode, qcell_max, etc.) in the immediate vicinity; self-discharge specifically never appears as a string anywhere. The task hint's suggestion that cmd_set 0x05 and 0x0D might share a handler was checked directly: cmd_set 0x0D's own 'SetSelfDischargeDays' (0x0D/0x11) is ALSO undecoded in the existing dissector, so there was no existing decode to confirm sharing against. No handler identified in the scoped firmware root; most plausibly implemented entirely in the smart-battery MCU itself (which negotiates its own sleep/ship-mode timers) with the Center Board/dji_sys acting as a pure passthrough needing no field-aware parsing on the Linux side. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16425,27 +16480,606 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for 'storage_info'/'bat_storage'/'storage_mode' across dji_sys/dji_blackbox on both images -- the only 'storage' hits found anywhere are unrelated (filesystem/SD-card storage functions: get_data_storage_size, init_storage, etc., and an unrelated log string 'get free storage memory fail'). No battery-storage-mode-specific string or function found. No handler identified. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
   "cmd_set_name": "Center Board",
   "cmd_id": 33,
   "name": "Center Req Bat Static Data",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: parse_bat_static_data (0x25090), called from phm_bat_data_upload (0x243b8)",
+  "fields": [
+   {
+    "name": "sn",
+    "label": "Serial Number (string)",
+    "offset": 0,
+    "size": 32,
+    "type": "string",
+    "enum": null,
+    "mask": null,
+    "desc": "Read via strlen() starting at offset 0; log label is literally 'sn'. Buffer size inferred from the gap to the next field (0x20), not independently confirmed as exactly 32.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_year",
+    "label": "Active Time - Year",
+    "offset": 32,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "First of 6 fields combined under one log label 'active_time', formatted as '%04d-%02d-%02d %02d:%02d:%02d'.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_month",
+    "label": "Active Time - Month",
+    "offset": 34,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See active_time_year.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_day",
+    "label": "Active Time - Day",
+    "offset": 35,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See active_time_year.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_hour",
+    "label": "Active Time - Hour",
+    "offset": 36,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See active_time_year.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_min",
+    "label": "Active Time - Minute",
+    "offset": 37,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See active_time_year.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "active_time_sec",
+    "label": "Active Time - Second",
+    "offset": 38,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See active_time_year; byte at offset 39 appears to be 1 byte of padding before product_time, inferred from offsets, not separately labeled in the log code.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "product_time",
+    "label": "Product Time (packed manufacture date)",
+    "offset": 40,
+    "size": 4,
+    "type": "uint32",
+    "enum": null,
+    "mask": null,
+    "desc": "Log label 'product_time'. Code unpacks it via bitfield extraction (ubfx at bits 4 and 9, plus a +0x7bc / 1980-style year-bias constant) consistent with a classic packed DOS-date encoding (day/month/year-since-1980), matching the sibling field 'manufacture_date' already documented for cmd_set 0x0D/0x01 in this project's existing dissector. Exact bit boundaries not re-verified to the bit.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "design_voltage",
+    "label": "Design Voltage",
+    "offset": 44,
+    "size": 4,
+    "type": "uint32",
+    "enum": null,
+    "mask": null,
+    "desc": "Log label 'design_voltage'; units not independently confirmed (likely mV, by analogy to cmd_set 0x0D/0x01's existing 'design_voltage [mV]' field).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "design_capacity",
+    "label": "Design Capacity",
+    "offset": 48,
+    "size": 4,
+    "type": "uint32",
+    "enum": null,
+    "mask": null,
+    "desc": "Log label 'design_capacity'; units not independently confirmed (likely mAh, by analogy to cmd_set 0x0D/0x01).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "factory_info",
+    "label": "Factory Info (string)",
+    "offset": 52,
+    "size": -1,
+    "type": "string",
+    "enum": null,
+    "mask": null,
+    "desc": "Log label 'factory_info'; length-via-strlen, variable length, exact max size not determined.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 5,
   "cmd_set_name": "Center Board",
   "cmd_id": 34,
   "name": "Center Req Bat Dynamic Data",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: phm_bat_data_upload (0x243b8)",
+  "fields": [
+   {
+    "name": "current",
+    "label": "Current",
+    "offset": 0,
+    "size": 4,
+    "type": "int32",
+    "enum": null,
+    "mask": null,
+    "desc": "Signed; units not independently confirmed, likely mA by analogy with the already-documented cmd_set 0x0D/0x06 'Current' field.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "voltage",
+    "label": "Voltage",
+    "offset": 4,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely mV by analogy with cmd_set 0x0D/0x06.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mcu_temp",
+    "label": "MCU Temperature",
+    "offset": 6,
+    "size": 2,
+    "type": "int16",
+    "enum": null,
+    "mask": null,
+    "desc": "Signed; likely 0.1 degC scale.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mos_temp",
+    "label": "MOSFET Temperature",
+    "offset": 8,
+    "size": 2,
+    "type": "int16",
+    "enum": null,
+    "mask": null,
+    "desc": "Battery discharge/charge MOSFET temperature sensor.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "conn_temp_0",
+    "label": "Connector Temperature 0",
+    "offset": 10,
+    "size": 2,
+    "type": "int16",
+    "enum": null,
+    "mask": null,
+    "desc": "Battery-to-aircraft power connector temperature sensor, position 0.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "conn_temp_1",
+    "label": "Connector Temperature 1",
+    "offset": 12,
+    "size": 2,
+    "type": "int16",
+    "enum": null,
+    "mask": null,
+    "desc": "Connector temperature sensor, position 1.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "fcc",
+    "label": "Full Charge Capacity",
+    "offset": 14,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely mAh, by analogy with cmd_set 0x0D/0x01 and 0x0D/0x06's existing fcc-equivalent fields.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "rm",
+    "label": "Remaining Capacity",
+    "offset": 16,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely mAh.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc",
+    "label": "State of Charge (%)",
+    "offset": 18,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Raw/cell-model SOC percentage.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc_dji",
+    "label": "DJI-adjusted State of Charge (%)",
+    "offset": 19,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "The value shown to the user in the app, per common DJI practice of smoothing/rescaling the raw SOC for display.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mos_state",
+    "label": "MOSFET State",
+    "offset": 20,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely a bitmask of charge/discharge FET on/off states; not decoded bit by bit.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "fsm_state",
+    "label": "FSM State",
+    "offset": 22,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Overall battery state-machine state (e.g. idle/charging/discharging/fault).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "status_flags",
+    "label": "Status Flags",
+    "offset": 23,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read (ldurh); general status bitmask, bits not individually decoded.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "vol_pack",
+    "label": "Pack Voltage",
+    "offset": 25,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read; likely an alternate/aggregate voltage reading alongside the earlier 'voltage' field.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "cycle",
+    "label": "Cycle Count",
+    "offset": 27,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read; charge cycle count.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "protect_flag",
+    "label": "Protection Flag",
+    "offset": 29,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Battery protection-circuit flags (e.g. over-temp/over-current trip).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "bms_mode",
+    "label": "BMS Mode",
+    "offset": 31,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Battery-management-system operating mode.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "no_sleep_flag",
+    "label": "No-Sleep Flag",
+    "offset": 32,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely indicates something is holding the battery out of its low-power sleep state.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "sdsg_fsm",
+    "label": "Self-Discharge State Machine",
+    "offset": 34,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "'SDSG' read as Self-DiScharGe; directly relevant to this batch's self-discharge commands (0x09/0x31/0x32) even though it did not resolve their own handler -- this confirms self-discharge is tracked as a battery-internal state machine value.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "host_state",
+    "label": "Host State",
+    "offset": 35,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Likely the state of whatever host (aircraft) the battery is currently plugged into/communicating with.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "app_ver",
+    "label": "Application Firmware Version",
+    "offset": 36,
+    "size": 4,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "4 raw bytes formatted as 'V%02d.%02d.%02d.%02d' -- a major.minor.patch.build style version quad.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "hw_ver",
+    "label": "Hardware Version",
+    "offset": 40,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Battery PCB/hardware revision.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "algo_ver",
+    "label": "Algorithm Version",
+    "offset": 42,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "SOC/health-estimation algorithm version.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "algo_state",
+    "label": "Algorithm State",
+    "offset": 44,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "State of the SOC/health estimation algorithm.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "avg_curr",
+    "label": "Average Current",
+    "offset": 46,
+    "size": 4,
+    "type": "int32",
+    "enum": null,
+    "mask": null,
+    "desc": "Signed; averaged/filtered current reading.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "sohc_fsm",
+    "label": "State-of-Health-Capacity State Machine",
+    "offset": 50,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "'SOHC' = State Of Health Capacity; a distinct state machine from sdsg_fsm.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "passedq",
+    "label": "Passed Charge (coulomb count)",
+    "offset": 51,
+    "size": 4,
+    "type": "int32",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read (ldur); accumulated charge passed through the coulomb counter.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "qbat",
+    "label": "Battery Charge Quantity",
+    "offset": 55,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "qcell_max",
+    "label": "Max Cell Charge",
+    "offset": 57,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Highest individual-cell charge-quantity reading.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "qcell_min",
+    "label": "Min Cell Charge",
+    "offset": 58,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Lowest individual-cell charge-quantity reading.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc1_0",
+    "label": "SOC Model 1, reading 0",
+    "offset": 59,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "One of two parallel SOC estimation models tracked by this battery's firmware.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc1_1",
+    "label": "SOC Model 1, reading 1",
+    "offset": 60,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See soc1_0.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc2_0",
+    "label": "SOC Model 2, reading 0",
+    "offset": 61,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Second SOC estimation model.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "soc2_1",
+    "label": "SOC Model 2, reading 1",
+    "offset": 62,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "See soc2_0.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "sop_avg",
+    "label": "State of Power, Average",
+    "offset": 63,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read; see handler_evidence for the sop_avg/sop_pulse same-offset caveat.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "sop_pulse",
+    "label": "State of Power, Pulse",
+    "offset": 63,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Disassembly reads this from the SAME offset as sop_avg (0x3f) -- flagged as an open inconsistency, not silently resolved.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "kf_res_max",
+    "label": "Kalman-Filter Resistance Estimate, Max",
+    "offset": 67,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Byte-unaligned read; internal-resistance estimate from a Kalman-filter-based SOC/health algorithm. Structure continues past this point; not traced further.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 5,
@@ -16455,7 +17089,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for 'bat_auth'/'battery auth'/'auth_data' across all binaries on both images. Found exactly one, isolated string 'is_bat_auth_fail' in dji_perception (E1E) via a plain `strings` dump; dji_perception has no .gnu_debugdata (fully stripped, no symbol names recoverable), and finding the function that references this string and determining whether it is even reachable from the DUML bus (vs. an unrelated internal sensor-battery check within the vision/perception subsystem) would require substantially more disassembly than the time available for this batch allowed. Reporting this as a real but unconfirmed lead rather than a decode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16465,7 +17100,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same lead and same caveat as 0x05/0x23 ('is_bat_auth_fail' in dji_perception, unconfirmed). Given the predicate-style naming ('is_X_fail'), if this string does turn out to be relevant it would suggest the auth-result payload reduces to a simple pass/fail boolean somewhere, but I have no byte-offset evidence to back that up, so I am not asserting a layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16475,7 +17111,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same search as 0x05/0x09 ('selfdis'/'self_dis'/'discharge') across dji_sys and dji_blackbox on both images -- zero hits. No handler identified. Note for whoever picks this up next: dji_blackbox's PHM dynamic-data struct (see 0x05/0x22) does carry a confirmed 'sdsg_fsm' (self-discharge state machine) byte at offset 0x22 of that struct, so the self-discharge STATE is tracked somewhere, but that is a state-machine value inside a different command's payload, not evidence of this Req/Set Time pair's own wire format. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16485,7 +17122,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same search and same result as 0x05/0x31. No handler identified. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 5,
@@ -16495,7 +17133,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for 'barcode'/'bat_barcode' across every binary on both images -- zero hits anywhere (including dji_sys and dji_blackbox, which otherwise have rich, confirmed battery-telemetry vocabulary). Checked the task's shared-handler hint against the already-documented cmd_set 0x0D/0x04 'Battery BarCode Data Get' sibling: that command's existing dissector is itself thin (unk1[2 bytes] + length[1 byte] + variable string), so there was nothing substantive to confirm sharing against even if the handler were the same. No handler identified. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 6,
@@ -18542,7 +19181,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "A \"Reserved\" cmd_id is, by DUML convention, a placeholder slot that was never assigned a real payload even on DM36x-equipped aircraft; the Lua dissector that this project imported already shows it name-only with no fields. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18622,7 +19262,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "On DM36x-era aircraft this would have been the air-side push of UAV control/encoder parameters (paired conceptually with the already-catalogued 0x01 \"Gnd Ctrl Info Send\"/0x02 \"Gnd Ctrl Info Recv\" in this same cmd_set) down to the ground DM36x decoder chip. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18632,7 +19273,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "The acknowledgement/echo counterpart to 0x03 in the legacy DM36x ground-control-info exchange (mirroring the existing 0x01 Send / 0x02 Recv pair already catalogued for the DM36x \"Gnd Ctrl Info\" side). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18642,7 +19284,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "dm36x_send_gnd_stat_info_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Legacy ground-side status push (video-encoder/link status) to the air unit's DM36x chip, paired with the already-documented 0x06 \"UAV Stat Info Send\" and this batch's own 0x07 \"Gnd Stat Info Recv\". No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18711,7 +19354,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "dm36x_recv_gnd_stat_info_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Acknowledgement/echo counterpart to 0x05, closing the legacy ground-status reporting loop for the retired DM36x video pipeline. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18721,7 +19365,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "dm36x_get_app_conn_stat_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Would have let the mobile app query whether it is currently connected to the DM36x video-encoder path (connection/liveview-link status), analogous to the general-cmd-set 'link state' queries used elsewhere in DUML. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18731,7 +19376,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Would have told the DM36x encoder which decoded/displayed vision frame buffer(s) can be recycled back to the air unit's frame pool \u2014 a buffer-lifecycle management message typical of hardware video-encoder control protocols of that generation. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18741,7 +19387,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Would have set the DM36x H.264 encoder's target bitrate for the downlink video stream. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18751,7 +19398,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Query counterpart to 0x20 \u2014 would have returned the DM36x encoder's current bitrate setting. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18761,7 +19409,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "'Foresight' commands on legacy DJI aircraft toggled a predictive/latency-compensation overlay in the liveview video path; this would have told the DM36x pipeline whether that overlay is currently being displayed to the user. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18771,7 +19420,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Query counterpart to 0x30 \u2014 would have returned whether the foresight/predictive overlay is currently shown. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 8,
@@ -18781,7 +19431,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Would have told the legacy DM36x vision/encoder pipeline which camera feed to use as the source for ActiveTrack subject-tracking cropping/processing. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -24114,7 +24765,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only (never confirmed): the simulator-in-the-loop (SIL) host periodically pushes synthetic accelerometer/gyro IMU samples to the flight controller so it behaves as if real IMU hardware were reporting data while on a test bench. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24147,7 +24799,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: a query for the serial number of a 'headbelt' peripheral (likely the FPV-goggle head-tracking strap/module) as surfaced through the simulator subsystem, possibly for binding/pairing a real headbelt unit to a simulated flight session. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24251,7 +24904,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets the simulated flight-permitted area/boundary (e.g. a virtual NFZ or arena limit) so the simulator's physics/geofence logic constrains the synthetic flight the same way a real GPS-fenced area would. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24261,7 +24915,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets synthetic air/atmosphere parameters (air density, pressure, temperature-adjacent values) feeding the simulator's aerodynamic model, which would plausibly be a multi-field float struct as the task brief anticipates \u2014 but no evidence of the actual layout was recoverable. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24271,7 +24926,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely injects a synthetic external force/moment (e.g. simulated wind gust or collision impulse) directly into the simulated rigid-body dynamics, which would plausibly carry 3-axis force + 3-axis moment floats \u2014 but no evidence of the actual layout was recoverable. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24281,7 +24937,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets a synthetic ambient/component temperature value (feeding thermal-dependent sensor models such as barometer or battery temperature compensation) into the simulated environment. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24291,7 +24948,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets a synthetic local-gravity vector/magnitude for the simulated dynamics model \u2014 plausibly a 3-axis float vector as the task brief anticipates, but no evidence of the actual layout was recoverable. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24301,7 +24959,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely a notification/command that the simulated aircraft has 'crashed' in the synthetic physics, triggering a motor/flight shutdown in the simulated session \u2014 possibly carrying a crash-cause/severity code rather than a wide struct. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24311,7 +24970,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely a direct per-motor control/override command for the simulated motors (bypassing the normal flight-control mixer) used for bench motor-response testing under simulation. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24321,7 +24981,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely injects or reports a synthetic linear/angular momentum state into the simulated dynamics, conceptually adjacent to 'Simu Force Moment' (0x0a). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24331,7 +24992,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets the simulated aircraft's arm length (motor-to-center-of-mass distance), a single-float airframe-geometry parameter feeding the simulated flight-dynamics model. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24341,7 +25003,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets the simulated aircraft's mass and moment-of-inertia tensor (mass plus 3x3 or diagonal inertia terms) \u2014 plausibly one of the widest/most float-heavy payloads in this group, but no evidence of the actual layout was recoverable. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24351,7 +25014,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets simulated per-motor characteristic parameters (thrust/RPM curve coefficients, response time constant, etc.) feeding the simulated motor-response model. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24361,7 +25025,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely sets simulated battery characteristics (capacity, voltage curve, internal resistance) feeding a synthetic battery-state model for the simulated flight, so battery-dependent flight behavior can be exercised without a real pack. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24371,7 +25036,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely a query for the simulator's update/push frequency (how often the synthetic sensor-push commands in this same group are expected to arrive), possibly a near-trivial single-scalar response rather than a wide struct. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24381,7 +25047,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: likely switches the vision/perception subsystem between real-camera and simulated-vision (synthetic image/feature feed) modes for SIL testing of vision-dependent flight features. This is the one command in the group with a genuine, named-but-unresolved lead (see evidence). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,
@@ -24391,7 +25058,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Inferred from the name only: a query returning the current vision-mode state that cmd_id 0x1a would set (real-camera vs. simulated-vision), likely as this group's response counterpart. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -24697,7 +25365,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Name suggests a getter for stored historical battery records (e.g. indexed past-cycle/event log entries kept in the smart battery's own flash) rather than live telemetry; this is inferred only from the command name, not from any disassembled handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -24971,7 +25640,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "DJI smart batteries have a user-configurable 'self-discharge after N days of inactivity' feature (exposed in the DJI Fly app's battery settings, typically a small set of day-count options). This is almost certainly a getter for that single stored configuration value, inferred from the command name alone \u2014 no handler was found to confirm the actual wire encoding (e.g. whether it's a raw day-count byte, an enum index, or something else). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -24981,7 +25651,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Name suggests a command telling the smart battery to power itself off (e.g. issued by the app/aircraft after a controlled landing+disarm sequence, or via a long-press pairing-button-equivalent over the wire). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -24991,7 +25662,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a forced/unconditional variant of 0x12 (bypassing any safety interlocks such as 'not while in flight' or 'not while charging'), inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25001,7 +25673,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely the counterpart to 0x12/0x13 \u2014 a command telling the smart battery to power itself on / wake from shutdown. Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25011,7 +25684,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a getter for the battery-to-aircraft pairing/binding state (DJI smart batteries can be bound to a specific aircraft for anti-theft/compatibility reasons). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25021,7 +25695,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely the setter counterpart to 0x15 (initiates or clears the battery-aircraft pairing/binding). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25031,7 +25706,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a control command toggling the smart battery's own internal data-logging (start/stop/interval for whatever generates the records that 'Battery History Get' (0x05) would retrieve). Inferred from the name and its numeric proximity/pairing with 0x05 only \u2014 not confirmed by any code. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25041,7 +25717,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a challenge/response or SN-verification exchange used to confirm the connected battery is a genuine/authorized DJI battery before allowing flight \u2014 architecturally analogous to the DJICare/activation device-binding chain this project's docs 13/18 already mapped, but for the battery rather than the aircraft-to-cloud relationship. Inferred from the name and the adjacent evidence below, not from a disassembled 0x0d/0x23 handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25051,7 +25728,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "battery_re_arrangement_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Likely relates to cell/pack 're-arrangement' \u2014 a smart-battery maintenance operation (e.g. rebalancing or re-sequencing which physical cells are treated as which logical cell after a repair/cell-replacement) that DJI's official battery-service tooling would invoke. Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 13,
@@ -25061,7 +25739,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a telemetry getter that aggregates status for multiple batteries at once \u2014 relevant to DJI airframes with dual/parallel battery bays (the WM260/Mavic 3 itself uses a single battery, so this cmd_id may be a cmd-set-wide command inherited from a shared battery-subsystem codebase shared with multi-battery airframes). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 14,
@@ -25536,7 +26215,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: app/RC polls or the aircraft pushes live ADS-B-decoded traffic (nearby aircraft) data; could not be confirmed. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25546,7 +26226,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25556,7 +26237,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25566,7 +26248,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25576,7 +26259,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25586,7 +26270,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25596,7 +26281,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25606,7 +26292,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25616,7 +26303,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25626,7 +26314,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 17,
@@ -25636,17 +26325,43 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 24,
   "cmd_set_name": "LTE/Dongle Diagnostic",
   "cmd_id": 61,
   "name": "Upgrade/Downgrade Test Trigger",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: Sender: dji_mb_ctrl's getopt-driven CLI packs -s 18/-c 3d into the cmd word and the trailing hex string into the payload, calling duss_event_send_sync_v2 to device word 0x0806 (type 8/idx 6) -- independently re-confirmed in this pass (readelf -sW/-rW + disassembly) as already established in DUML_PROTOCOL/20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md. Receiver: dji_lte's registered bus callback at vaddr 0xb5f0 gates on the destination word (ldrh [x21,#8] == 0x806) and calls a GENERIC frame-field logger at vaddr 0xb108 for every message addressed to that identity -- I disassembled both functions in full in this pass and independently confirmed, by direct inspection, that neither contains any branch on cmd_set/cmd_id anywhere, and neither calls any of dji_lte's own imported duss_event_resp_data / duss_event_resp_data_without_retcode / duss_event_resp_ok / duss_event_resp_err response-construction routines (grep-confirmed against the full disassembly listing). So there is no cmd-0x3D-specific handler logic to be found here beyond what the sender itself already establishes -- the name and byte layout describe the sender tool's intent, not a resolved receiver-side function, exactly as doc 20 already flagged.",
+  "fields": [
+   {
+    "name": "operation",
+    "label": "Operation / Mode",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8 (enum)",
+    "enum": null,
+    "mask": null,
+    "desc": "First payload byte. Only these two literal values are ever observed in the firmware, both from dongle_upgrade_test.sh's own labelled invocations ('start upgrade' before the 0x01 line, 'start downgrade' before the 0x03 line). No receiver-side code was found that reads or branches on this byte specifically (see handler_function) -- its name/meaning is established from the sender's own intent, not from observed receiver logic.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "filler",
+    "label": "Filler / Padding (purpose unconfirmed)",
+    "offset": 1,
+    "size": 15,
+    "type": "uint8[15]",
+    "enum": null,
+    "mask": null,
+    "desc": "15 bytes, the literal ASCII byte 0x61 ('a') repeated, identical in both of the only two real invocations found anywhere in the firmware tree. No validation, length-check, or parsing of these bytes was found anywhere in the traced receiver-side code (the generic decoder at 0xb108 only reads the standard DUML header fields it logs, never anything past them). Reported honestly as filler of unconfirmed purpose -- it may be arbitrary pad chosen by the test script's author to fill a fixed-size buffer, or it may be consumed by logic this pass could not locate. NOT invented as having any specific meaning.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 34,
@@ -25656,7 +26371,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "A single float32 cruise-velocity field -- matches the task's hint and the single validated 32-bit scalar found flowing toward the generic send primitive for this command family. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 34,
@@ -25666,7 +26382,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Handler mechanism IS confirmed (dji_flight .data dispatch row at vaddr 0xae100, same vtable-indirect architecture as the sibling SET command 0x22/0x06), but the specific payload field-layout claim (a single 4-byte float32 cruise-velocity value) does not survive scrutiny: 0x06's own adversarial reverify found that the generic send primitive both commands share (duss_event_resp_data_without_retcode in libduml_frwk.so) treats the candidate 'value' argument as a memcpy source POINTER and the companion 16-bit value as a variable copy LENGTH, not a fixed 4-byte scalar -- directly contradicting the single-float32 model. That finding applies equally to this GET command (identical architecture, same unresolved per-command vtable override), so it is treated as unverified here too even though its own adversarial vote split 2-1 in its favor -- see DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for the full reasoning."
  },
  {
   "cmd_set": 34,
@@ -25676,7 +26393,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 34,
@@ -25686,17 +26404,31 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 34,
   "cmd_set_name": "Demo Mode",
   "cmd_id": 96,
   "name": "Demo Mode Handle",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: sys_wm260_demo_mode_handle",
+  "fields": [
+   {
+    "name": "demo_mode_action",
+    "label": "Demo Mode Action",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Mode-selector byte, read directly from the incoming event at the handler's own event-struct offset 0x14; mapped here to payload offset 0 (single-byte payload).",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 35,
@@ -25706,7 +26438,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 35,
@@ -25716,7 +26449,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 35,
@@ -25726,16 +26460,102 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 81,
   "cmd_set_name": "Route Switch",
   "cmd_id": 5,
   "name": "Route Switch",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: duss_event_route_switch",
+  "fields": [
+   {
+    "name": "operation",
+    "label": "Operation / Sub-command",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8 (enum)",
+    "enum": null,
+    "mask": null,
+    "desc": "Dispatch byte read via ldrb at internal struct offset +0x14 (20) on both architecture builds. Selects one of three structurally different sub-layouts for the rest of the payload: operation=1 ('port switch') uses only byte1=switch_mode and replies synchronously via duss_event_resp_data_without_retcode with a 2-byte {return_command=1, return_code=0} ack; operation=2 ('route switch', detailed in the remaining fields below) is forwarded asynchronously to an internal queue with no immediate ack payload; operation=3 ('switch done') uses byte1=link_mode and byte2=type and replies synchronously with a 2-byte {return_command=3, return_code=0} ack. Any other value falls to a default branch logging 'RS: unsupport rs command :%#x' and returns an internal error code (-1001) with no wire response constructed at all.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "inverted",
+    "label": "Inverted flag (operation=2 only)",
+    "offset": 1,
+    "size": 1,
+    "type": "uint8 (boolean-like flag)",
+    "enum": null,
+    "mask": null,
+    "desc": "Named directly from this handler's own debug string 'RS: route switch: inverted = %d, old link mode = %d, new link mode = %d, type = %d'. Read via ldrb at struct offset +0x15 (21). Only meaningful when operation=2.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "old_link_mode",
+    "label": "Old Link Mode (operation=2 only)",
+    "offset": 2,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Second value in the same debug string ('old link mode = %d'). Read via ldrb at struct offset +0x16 (22). Exact numeric encoding (e.g. which value means a wired vs. wireless transport) was not recovered -- only the field's existence, position, and name.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "new_link_mode",
+    "label": "New Link Mode (operation=2 only)",
+    "offset": 3,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Third value in the same debug string ('new link mode = %d'). Read via ldrb at struct offset +0x17 (23). Numeric encoding not recovered.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "type",
+    "label": "Route/Link Type (operation=2 only)",
+    "offset": 4,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Fourth value in the same debug string ('type = %d'). Read via ldrb at struct offset +0x18 (24). Semantic enumeration not recovered.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "host_id_count",
+    "label": "Host ID Count (operation=2 only)",
+    "offset": 5,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Read via ldrb at struct offset +0x19 (25). Used directly both as the loop bound for, and to decide whether to execute, the host_id_list array below (confirmed on both architecture builds: a cmp/bls-style bound check against this exact byte gates the per-entry 'RS: route switch host id = %#x' log loop).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "host_id_list",
+    "label": "Host ID List (operation=2 only)",
+    "offset": 6,
+    "size": 2,
+    "type": "uint16[] (little-endian, 2 bytes per element, repeated host_id_count times)",
+    "enum": null,
+    "mask": null,
+    "desc": "Array of little-endian 16-bit host IDs starting at struct offset +0x1a (26), each individually logged via 'RS: route switch host id = %#x'. 2-byte element stride independently confirmed on both builds: AArch64 indexes as `ldrh w4,[x28, x27, lsl #1]` with x28 = base+0x1a; ARM32 indexes identically as `ldrh.w r2,[ip, #26]` with ip = base + (index*2). Total field size is 2*host_id_count bytes; the size shown here (2) is for a single element.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  }
 ]

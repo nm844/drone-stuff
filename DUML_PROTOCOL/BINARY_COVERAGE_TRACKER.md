@@ -413,9 +413,23 @@ Findings accumulate in `21_PAYLOAD_DECODE_SWEEP_FINDINGS.md`, one
 Control, 82 commands) — see that doc for the full result (headline: only
 1 of 82 decoded; the rest are very likely RC-MCU-local, outside this
 firmware extraction's scope — a real, well-evidenced architecture finding,
-not a shortfall of effort). Two more waves (cmd_set 0x00 General, 70
-commands; a 10-cmd_set bundle of smaller sets, 88 commands) were launched
-the same day and are digested separately as they land. Reusable tooling
+not a shortfall of effort). Second wave: a 10-cmd_set bundle of smaller
+sets (0x01, 0x05, 0x08, 0x0b, 0x0d, 0x11, 0x18, 0x22, 0x23, 0x51 — 88
+commands) — 6 decoded and merged (registry 158→164 full), 1 explicitly
+refuted on adversarial reverify and 1 more downgraded by the digesting
+pass itself after the same refuting evidence was found to apply to it
+too (see doc 21's "Demo Mode" section), the rest honestly
+`insufficient_evidence` (DM36x's 12 as a clean "not implemented on this
+firmware generation" — the chip is retired). This digestion also
+corrected a real error in `04_WM260_DAEMON_FINDINGS.md`/
+`cmdset_22_Demo_Mode.md`: the `dji_flight` WP2-command dispatch array
+was mis-stated as rooted at vaddr `0xae0f8`; it's actually rooted at
+`0xae038` (`0xae0f8` is just one row, 24 in), confirmed by directly
+re-deriving the raw bytes — see doc 21 for the full reconciliation
+(partial — a separate "20 records" figure from elsewhere doesn't fully
+agree and wasn't force-resolved). A third wave (cmd_set 0x00 General, 70
+commands) was launched the same day and is digested separately as it
+lands. Reusable tooling
 added this round: `tools/merge_payload_decode_wave.py` (applies a wave's
 result JSON into `commands.json`), `tools/apply_notes_to_cmdset_doc.py`
 (mirrors that into the hand-maintained `cmdset_XX_*.md` doc).

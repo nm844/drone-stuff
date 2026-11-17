@@ -76,7 +76,7 @@ Payload decoder: `battery_barcode_data_dissector`
 
 ## 0x05 — Battery History Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Name suggests a getter for stored historical battery records (e.g. indexed past-cycle/event log entries kept in the smart battery's own flash) rather than live telemetry; this is inferred only from the command name, not from any disassembled handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x06 — Battery Push Common Info
 
@@ -108,35 +108,35 @@ Payload decoder: `battery_push_common_info_dissector`
 
 ## 0x11 — Battery SetSelfDischargeDays Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ DJI smart batteries have a user-configurable 'self-discharge after N days of inactivity' feature (exposed in the DJI Fly app's battery settings, typically a small set of day-count options). This is almost certainly a getter for that single stored configuration value, inferred from the command name alone — no handler was found to confirm the actual wire encoding (e.g. whether it's a raw day-count byte, an enum index, or something else). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x12 — Battery ShutDown
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Name suggests a command telling the smart battery to power itself off (e.g. issued by the app/aircraft after a controlled landing+disarm sequence, or via a long-press pairing-button-equivalent over the wire). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x13 — Battery Force ShutDown
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a forced/unconditional variant of 0x12 (bypassing any safety interlocks such as 'not while in flight' or 'not while charging'), inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x14 — Battery StartUp
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely the counterpart to 0x12/0x13 — a command telling the smart battery to power itself on / wake from shutdown. Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x15 — Battery Pair Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a getter for the battery-to-aircraft pairing/binding state (DJI smart batteries can be bound to a specific aircraft for anti-theft/compatibility reasons). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x16 — Battery Pair Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely the setter counterpart to 0x15 (initiates or clears the battery-aircraft pairing/binding). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x22 — Battery Data Record Control
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a control command toggling the smart battery's own internal data-logging (start/stop/interval for whatever generates the records that 'Battery History Get' (0x05) would retrieve). Inferred from the name and its numeric proximity/pairing with 0x05 only — not confirmed by any code. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x23 — Battery Authentication
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a challenge/response or SN-verification exchange used to confirm the connected battery is a genuine/authorized DJI battery before allowing flight — architecturally analogous to the DJICare/activation device-binding chain this project's docs 13/18 already mapped, but for the battery rather than the aircraft-to-cloud relationship. Inferred from the name and the adjacent evidence below, not from a disassembled 0x0d/0x23 handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x31 — Battery Re-Arrangement Get/Push
 
@@ -144,4 +144,4 @@ Payload decoder: `battery_re_arrangement_dissector`
 
 ## 0x32 — Battery Mult Battery Info Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a telemetry getter that aggregates status for multiple batteries at once — relevant to DJI airframes with dual/parallel battery bays (the WM260/Mavic 3 itself uses a single battery, so this cmd_id may be a cmd-set-wide command inherited from a shared battery-subsystem codebase shared with multi-battery airframes). Inferred from the name only. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.

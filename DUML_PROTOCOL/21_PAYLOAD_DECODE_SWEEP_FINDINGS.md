@@ -221,3 +221,176 @@ disassemble with confidence — stripped 32-bit ARM/Thumb2 with no mapping
 symbols defeated the available disassemblers past the PLT — flagged as a
 concrete lead for a future pass with better ARM32 tooling (a heuristic
 Thumb-aware disassembler, or Ghidra) rather than asserted either way.
+
+---
+
+## cmd_sets 0x01, 0x05, 0x08, 0x0b, 0x0d, 0x11, 0x18, 0x22, 0x23, 0x51 (bundled, 88 commands)
+
+Second wave: a bundle of 10 small/misc cmd_sets, run as 8 investigate
+groups (32 agents total). Net yield: **6 decoded and merged** (registry
+158→164 full; `total` unchanged at 901, since this wave only enriches
+existing "none" rows), **1 decoded-but-refuted on reverify**, 1 further
+command downgraded by the digesting pass itself after the refuted
+sibling's evidence was found to apply to it too (see "Demo Mode" below),
+and the remaining 80 honestly reported `insufficient_evidence` (including
+12 under a `"confirmed not implemented on this firmware generation"`
+variant for DM36x) with specific research notes, not guesses.
+
+### Special (0x01) — all 10 insufficient_evidence; a concrete new lead
+
+All 10 "SDK Ctrl"/arm-disarm/gimbal/camera-shutter bridge commands came
+back `insufficient_evidence` after an unusually thorough pass: this
+investigation fully decoded `dji_flight`'s relocated dispatch array
+(independently re-confirmed by this digestion to be rooted at vaddr
+`0xae038`, running 44 raw rows to `0xae190` — see the `cmdset_22_Demo_
+Mode.md`/`04_WM260_DAEMON_FINDINGS.md` corrections below), resolved its
+generic route+client registration (a hardcoded 10-cmd_set array:
+`{0x00,0x02,0x03,0x04,0x05,0x11,0x1f,0x22,0x0a,0x3c}`), checked all 11 of
+`dji_sys`'s literal `duss_event_register_dynamic_command` call sites, and
+swept every other binary in both images importing any
+`duss_event_register_dynamic_command*` variant. cmd_set `0x01` appears in
+none of them.
+
+**Concrete new lead, not yet chased:** a 4.5MB non-ELF blob,
+`e1e_extracted/rtos_dec_RTOS.bin` (`file` reports plain "data", no
+recoverable ELF/symbol structure), is the most likely candidate for where
+arm/disarm, gimbal, and camera-shutter logic actually lives — if
+`ALL_COMMANDS.csv`'s `typical_receiver: Flight Controller` designation
+for these commands means the flight-controller **MCU's own RTOS
+firmware**, not the Android-side `dji_flight` daemon of the same
+descriptive name (a real ambiguity this project hasn't previously had to
+resolve, relevant to other still-undecoded commands too, not just these
+10). Determining this blob's load address/ISA and disassembling it is a
+concrete, bounded lead for a future pass.
+
+### Center Board (0x05) — 3 decoded, 14 insufficient_evidence
+
+- **`0x02` "Center Push Batt Dynamic Info"** — decoded. Handler:
+  `dji_sys`'s `sys_battery_get_dynamic_info` (generic request dispatcher)
+  → a per-board-model callback at device-context offset `+0xb0` → a
+  32-byte response via `duss_event_resp_data`. Only one field is
+  confirmed WM260-specific-reachable with full confidence
+  (`remaining_capacity_percent`, offset 20, a standard SBS/SMBus register
+  `0x0D` read); the surrounding 20+11 bytes are confirmed-zeroed-by-the-
+  generic-handler but their real per-board content for WM260 specifically
+  wasn't independently confirmed (the one per-board callback actually
+  disassembled was for a different DJI product). See
+  `cmdset_05_Center_Board.md` for the full field table and worked example.
+- **`0x21`/`0x22` "Center Req Bat Static/Dynamic Data"** — decoded (11
+  and 37 fields respectively). Both trace to `dji_blackbox`'s
+  `phm_bat_data_upload`/`parse_bat_static_data`/`parse_bat_dynamic_data`
+  functions (already known by this project, `12_WM260_EXHAUSTIVE_BINARY_
+  SWEEP_FINDINGS.md`, as battery health-management/prognostics
+  forwarding) — field names/positions read directly from each function's
+  own `.rodata` format-label strings during a ~170-instruction disassembly
+  walk. See `cmdset_05_Center_Board.md`.
+- The other 14 Center Board commands (LED control, virtual RC,
+  self-discharge days/time, barcode, auth data) came back
+  `insufficient_evidence` — real functions were found for some (e.g.
+  `led_control_thread`, `sys_fc_led_exit` for `0x03`) but none could be
+  tied to a specific `duss_event_register_dynamic_command` call site or
+  anchored by a matching log/format string.
+
+### DM36x (0x08) — 12 "confirmed not implemented on this firmware generation"
+
+Clean negative result, exactly the outcome this group's task hint
+anticipated: the DM36x video-encoder chip is retired this firmware
+generation (device-type 8's firmware string is now the generic `"ve_air"`,
+not DM36x-specific — independently corroborated by this same wave's own
+`0x18`/`0x3D` finding, below). No handler was found for any of the 12
+DM36x-named commands.
+
+### Simulator (0x0b) — all 17 insufficient_evidence
+
+The flight-simulator subsystem's physics-parameter commands (air params,
+gravity, arm length, mass/inertia, motor/battery settings) could not be
+tied to a registration site in `dji_flight` or any other binary checked.
+
+### Battery (0x0d) — all 11 insufficient_evidence
+
+No new decodes; cross-referenced against the project's existing
+flyrec-crossref-sourced "Battery Push Common Info" entry for field-naming
+convention, but no handler was located for any of these 11 commands'
+own registration.
+
+### ADSB (0x11) — all 11 insufficient_evidence
+
+Correctly kept the TEE-internal command-ID space (already mapped in docs
+13/14, a completely different numbering system inside the ADS-B OP-TEE
+TA) separate from these DUML wire-level cmd_ids throughout — no
+conflation found in this investigation's evidence. No DUML-level handler
+was located for any of the 11 licensing/whitelist/warning commands.
+
+### LTE/Dongle Diagnostic (0x18) + Route Switch (0x51) — both decoded
+
+- **`0x18`/`0x3D`** formalized into a full field table (new doc,
+  `cmdset_18_LTE-Dongle_Diagnostic.md`) from the exact payload bytes
+  already known from `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`. One
+  correction to that prior doc's own hint: the real payload is **16**
+  bytes (1 operation byte + 15 filler bytes of `0x61`), not 17 as
+  previously described.
+- **`0x51`/`0x05`** — a 7-field, 3-sub-layout payload (dispatched on a
+  leading `operation` byte: Port Switch / Route Switch / Switch Done)
+  recovered directly from the handler's own embedded `printf`-style debug
+  strings in `libduml_frwk.so`, confirmed identically on both
+  architecture builds. See `cmdset_51_Route_Switch.md` for the full
+  table and worked example. (One correction to this wave's own task
+  hint: `0x51`/`0x05`'s pre-existing lead was `cmdset_51_Route_Switch.md`
+  itself, not the round-2-sweep's `imss_link_v1_send` discovery — that
+  discovery was for a *different* command, `0x51`/`0x04` "Gimbal
+  Calibration Result Query", which merely shares the same cmd_set.)
+
+### Demo Mode (0x22) + Smart (0x23) — 1 decoded, 1 refuted, 1 downgraded, 5 insufficient_evidence
+
+- **`0x60` "Demo Mode Handle"** — decoded (1 field, a mode-selector
+  byte with 3 enum values). Handler identity confirmed directly from the
+  compiler's own embedded debug strings (source file path + literal
+  function name), not a guess.
+- **`0x06` "Set Global Cruise Vel"** — a candidate single-`float32`
+  field layout was proposed and **explicitly refuted 3-of-3** on
+  adversarial reverify. All three reviewers independently traced the
+  shared generic send primitive (`duss_event_resp_data_without_retcode`
+  in `libduml_frwk.so`) down to its actual `memcpy(dest, arg4, arg5)`
+  call, proving the candidate "value" register is used as a **pointer**
+  and the companion 16-bit value as a **variable length** — directly
+  contradicting the fixed-4-byte-scalar model, despite every other piece
+  of the claim's supporting dispatch-table/relocation evidence being
+  independently and precisely reproduced. **Not added to the registry.**
+- **`0x07` "Get Global Cruise Vel"** — the identical candidate layout
+  survived reverify 2-of-3 (only 1 of 3 reviewers independently traced
+  deep enough to find the same `memcpy` disproof). The digesting pass
+  judged this a near-miss in the automated adversarial process rather
+  than a genuine disagreement: `0x07` shares the *exact* architecture,
+  generic send-wrapper, and unresolved-vtable situation as `0x06` (the
+  claim's own evidence says so explicitly), so the same disproof applies
+  regardless of the vote count. **Downgraded and not added to the
+  registry**, with the reasoning recorded verbatim in both `commands.json`
+  (`note` field) and `cmdset_22_Demo_Mode.md`.
+- **`0x08`/`0x44`** (the other two `dji_flight` WP2 commands in this same
+  array) — `insufficient_evidence`; same generic send-wrapper confirmed,
+  but no command-specific disassembly evidence (comparison, enum check)
+  found to assign a meaning to the surviving scalar/length pair.
+- **`0x20`/`0x21`/`0x22` "Smart"** — `insufficient_evidence` for payload
+  fields, but this pass *did* independently re-confirm (byte-for-byte,
+  not just name-matched) both of this project's previously-documented
+  registration mechanisms for all three commands, plus a consistent
+  `0`/`1`/`2` discriminator-constant pattern across their three near-
+  identical handlers — see `cmdset_23_Smart.md`.
+
+**Correction to `04_WM260_DAEMON_FINDINGS.md` and `cmdset_22_Demo_Mode.md`
+(made during this digestion, not by the investigating agents):** the
+`dji_flight` dispatch array supplying `0x06`/`0x07`/`0x08`/`0x44` was
+previously described as "rooted at vaddr `0xae0f8`," with "~43" or "20"
+records depending on which prior pass's account you read. Directly
+re-deriving the raw bytes during this digestion found the array is
+actually rooted at **`0xae038`** (`0xae0f8` is merely the `0x06` row, 24
+rows in) and runs **44 raw 8-byte rows** through vaddr `0xae190`
+inclusive, after which the data becomes structurally incoherent (cmd_set
+bytes like `0xb4`/`0xa9`/`0x40` that match no known cmd_set) — strongly
+suggesting `0xae190` is the table's true end and a naive scan to the next
+double-zero (`0xae1b8`) overruns into unrelated data. This directly
+reconciles with, and essentially confirms, this project's original
+"43+" estimate. It does **not** fully reconcile with the separate "20
+records, cmd_sets `{0x02,0x04,0x0a,0x1f,0x22}`" figure reported elsewhere
+(possibly a different subset or counting convention) — that discrepancy
+is recorded, not resolved, here.
