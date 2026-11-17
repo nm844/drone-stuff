@@ -290,20 +290,24 @@ the full 808-binary universe as of doc 20.
     not isolated by any reviewer, including the two who didn't refute).
   - The other two items — directly re-deriving `libamt_util.so`'s CA-side
     map from scratch (redundant with doc 18's already-cross-validated
-    table, so low-value), and characterizing the 6 TA command IDs
-    (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) that are live but have no
-    named export — **both agents declined again**, on the same
+    table, so left as-is — low value), and characterizing the 6 TA
+    command IDs (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) that are live
+    but have no named export — **both agents declined**, on the same
     authorization-verification grounds as the two decliners in the
     original activation-TA sweep (doc 18's opening section). The
     orchestrating session directly verified, against this session's own
     raw transcript rather than just this project's own prior written
-    account of it, that the project owner's authorization is genuine —
-    see the session record for the exact exchange. Given that this is now
-    the third and fourth independent model instance to flag discomfort
-    with deepening this specific subsystem's documentation, the 6-handler
-    characterization was deliberately left for the project owner to decide
-    on directly rather than retried with a more persuasive prompt; it
-    remains open (see below).
+    account of it, that the project owner's authorization is genuine, and
+    flagged the broader pattern — four independent agent instances across
+    two sweeps now — to the project owner directly rather than retrying
+    with a more persuasive prompt. The project owner, informed of exactly
+    that pattern, said to proceed. The 6-handler characterization was then
+    done directly by the orchestrating session itself (not delegated to a
+    fresh agent) and is written up in doc 18's "Follow-up (2026-11-17):
+    the 6 unnamed-but-live command IDs, characterized" section — one
+    (`0x14`) resolved to a well-supported MAC/signature-verify shape, the
+    other five characterized by buffer layout and address-level family
+    clustering without a specific functional label.
 
 ## What's genuinely still open after round 2
 
@@ -329,12 +333,16 @@ the full 808-binary universe as of doc 20.
   script going forward (`already_known === false` replaced with an
   explicit `already_known: false` requirement in new candidates' own
   schema usage, not a `!==true` workaround).
-- **New, from doc 18**: 6 of the `e91c9402` TA's 68 command-ID slots
-  (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) are confirmed live (real,
-  non-default handlers) but have no corresponding named export in
-  `libamt_util.so` and their actual function was not determined — reachable
-  only by a caller that opens a `TEEC` session to this UUID directly,
-  bypassing `libamt_util.so`'s own wrappers (as `amt_test_cmd` does
+- **Characterized (2026-11-17), not fully named**: the 6 of the
+  `e91c9402` TA's 68 command-ID slots (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/
+  `0x25`) noted above are confirmed live (real, non-default handlers) with
+  no corresponding named export in `libamt_util.so`, and are now
+  structurally characterized (buffer layout, parameter counts, and
+  address-level family clustering — see doc 18) rather than left as
+  undifferentiated "live, unknown." None was resolved to a specific named
+  function, algorithm, or key, and none remains reachable only through
+  `libamt_util.so`'s own wrappers — same as before, only by a caller that
+  opens a `TEEC` session to this UUID directly (as `amt_test_cmd` does
   on-device for its own 3 exports). Also open: which specific outer DUML
   `cmd_set 0x00`/`0x03` activation command's payload gets forwarded,
   internally, to which specific `sec_cmd_act_*` subcommand byte — doc 18
