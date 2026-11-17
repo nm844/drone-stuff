@@ -148,16 +148,16 @@ place for it.
 
 ### Reusable sweep templates
 
-`tools/workflows/round1_tier1_tier2_sweep.js` and
-`tools/workflows/round2_residual_weak_signal_sweep.js` are the actual
-Claude Code `Workflow`-tool scripts used for rounds 1 and 2 above (two
-phases: `Investigate` each target with a structured-output schema, then
-adversarially 3-way reverify any `new_command_candidates` before trusting
-one). They're kept here as working templates for a future round (e.g.
-against `10_socket_bearing_no_signal_remaining_50.txt`, or a new firmware
-version's binary set) — copy one, swap in a new target list and `BASE`
-path, and re-launch rather than re-deriving the prompt structure from
-scratch.
+`tools/workflows/round1_tier1_tier2_sweep.js`,
+`tools/workflows/round2_residual_weak_signal_sweep.js`, and
+`tools/workflows/round3_tail46_sweep.js` are the actual Claude Code
+`Workflow`-tool scripts used for rounds 1-3 above (two phases: `Investigate`
+each target with a structured-output schema, then adversarially 3-way
+reverify any `new_command_candidates` before trusting one). They're kept
+here as working templates for a future round (e.g. the 4 binaries pulled
+out of round 3's scope, or a new firmware version's binary set) — copy one,
+swap in a new target list and `BASE` path, and re-launch rather than
+re-deriving the prompt structure from scratch.
 
 ## Current disposition (as of `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`)
 
@@ -169,7 +169,7 @@ Of the full **808** binaries/libraries:
 | No DUML/DUSS signal at all | 591 | ruled out on signal absence | `03_no_signal_basenames_591.txt` |
 | ↳ of which, has its own listening socket (corrected) | 58 | see sub-rows below | `08_socket_bearing_no_signal_corrected_58.txt` |
 | ↳↳ investigated as round-1 "tier 2" | 8 | **done** — all ruled out, several independent security findings (doc 16, Track T) | `09_round1_tier2_investigated_8.txt` |
-| ↳↳ remaining, generic-tooling-by-name, not individually investigated | 50 | **not done** — lower priority; mostly stock Android/Linux tooling (`adb`, `hostapd`, `iperf3`, `toybox`, etc.) by name, but a few DJI/vendor-named libraries in here (`liblte.so`, `libwlm.so`, `libduml_hal.so`, `libupgrade_common.so`, `quectel-qmi-proxy`, `Quectel_upgrade_tool`) haven't actually been disassembled despite the generic-sounding bucket — worth a closer look before calling this bucket fully closed | `10_socket_bearing_no_signal_remaining_50.txt` |
+| ↳↳ remaining, generic-tooling-by-name, not individually investigated | 50 | **46/50 done (round 3)** — all 46 ruled out for DUML command registration (43 confirmed stock/vendor/AOSP, plus `libwlm.so`/`libduml_hal.so` confirmed as real DJI infrastructure but not command handlers); `liblte.so` was the one surprise — not stock, and identified as a genuinely new DUML transport-channel backend (doc 19, Track AA) despite registering no commands itself. Several independent security findings (doc 19, Track AB). The other 4 (`libupgrade_common.so`, `Quectel_upgrade_tool`, `quectel-qmi-proxy`, `libduml_orte.so`) are tracked under the firmware-update sweep / doc 15 respectively, not here. | `10_socket_bearing_no_signal_remaining_50.txt` |
 | Weak/ambiguous DUML-adjacent signal, no doc coverage | 160 | see sub-rows below | `05_weak_signal_uninvestigated_at_start_160.txt` |
 | ↳ confirmed real relocation into a registration function ("tier 1") | 19 basenames / 16 investigation units | **done** (round 1) — 10 new commands confirmed + 1 unconfirmed lead (doc 16, Track R) | `06_round1_tier1_investigated_19.txt` |
 | ↳ remaining, weak/ambiguous signal only | 141 | **done** (round 2) — 1 new command confirmed (`0x04`/`0x51`, via a newly-identified 4th mechanism) + 140 ruled out, several independent security findings (doc 17, Tracks V-Y) | `07_round2_weak_signal_pending_141.txt` |
@@ -208,6 +208,24 @@ signal — lower priority, see above; the only remaining gap in the full
   precedents for the mechanism-#3 relocated-array shape (OMX
   plugin-registration tables, C++ unwinder/RTTI data, internal
   lifecycle/stream-metadata enum tables, V4L2 format-name tables).
+- **Round 3** (`19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, Tracks AA-AC): the
+  46-of-50 slice of the tail bucket pulled out for direct investigation
+  (see "What's genuinely still open after round 2" below for the other
+  4). Zero new DUML commands (none of the 46 implement any of the four
+  known mechanisms), but `liblte.so` turned out to be real,
+  previously-undocumented DJI transport code — the LTE/cellular-relay
+  backend for a DUML message-bus channel, parallel to the USB and WLM
+  (`libwlm.so`) channels, cloud-relayed via `relay.djigate.com`/
+  `relay-service.djicdn.com` — even though it registers no commands of
+  its own. 43 of the 46 were confirmed stock/vendor/AOSP tooling with no
+  DJI logic at all. Independent findings include a bundled `libsrt.so`
+  (v1.4.1) carrying two real, publicly-disclosed CVEs fixed only in
+  1.5.6 (CVE-2026-55869 stack buffer overflow, CVE-2026-55868 encryption
+  downgrade — verified against public records during digestion, not
+  just taken on the investigating subagent's word), an unauthenticated
+  local IPC socket pattern in `libwlm.so`, a DJI-added undocumented
+  `vold` sub-command namespace, and several further old-bundled-OSS-
+  version findings in the same vein as doc 17 Track X.
 
 ## What's genuinely still open after round 2
 
@@ -215,14 +233,17 @@ signal — lower priority, see above; the only remaining gap in the full
   investigated" tail above — flag it again rather than silently dropping
   it, and consider at least checking the handful of DJI/vendor-named
   libraries in it named explicitly above. **Round 3, launched 2026-11-17**
-  (`tools/workflows/round3_tail46_sweep.js`), covers 46 of the 50 — the
-  other 4 (`libupgrade_common.so`, `Quectel_upgrade_tool`,
-  `quectel-qmi-proxy`, `libduml_orte.so`) were pulled out: the first three
-  fall under the firmware-update-process sweep below instead, and the
-  fourth turned out to already be covered as a side-mention in
+  (`tools/workflows/round3_tail46_sweep.js`), covered 46 of the 50 — see
+  "Round history" above for the result — the other 4
+  (`libupgrade_common.so`, `Quectel_upgrade_tool`, `quectel-qmi-proxy`,
+  `libduml_orte.so`) were pulled out: the first three fall under the
+  firmware-update-process sweep below instead, and the fourth turned out
+  to already be covered as a side-mention in
   `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track I despite not appearing
   in `02_covered_basenames_57.txt` — another instance of that list's
-  known incompleteness caveat earlier in this doc.
+  known incompleteness caveat earlier in this doc. **The 46-binary slice
+  is now closed** (doc 19); only the 4 redirected binaries remain open,
+  tracked under the firmware-update sweep / doc 15.
 - Any firmware version newer than what's currently decrypted/extracted
   here (e.g. the `V01.00.1500` package referenced from the unrelated
   `nimrasol_wm260` repo) is out of scope for this tracker entirely — it's
@@ -248,6 +269,6 @@ anything is not, and never was, regardless of whose device is involved
 anti-theft/activation — protect interests beyond the device owner's own,
 so a working bypass doesn't stay scoped to "one consenting owner" even
 when requested in that framing). Three sweeps launched the same day:
-`wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`), `wf_firmware_update`
-(→ a new firmware-update-process findings doc), and `wf_tail46_sweep`
-(→ folded into whichever of the above, or a round-3 doc, fits best).
+`wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`, pending), `wf_firmware_update`
+(→ a new firmware-update-process findings doc, pending), and `wf_tail46_sweep`
+(→ `19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, **done** — see "Round history" above).
