@@ -16,6 +16,25 @@ of the same plaintext file. See `13_...` for the full mapping and its
 scope boundary (no attempt to verify/break the TA's own signature or
 extract any RPMB-backed key material).
 
+**Second update, see `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`:** a later
+pass fully decoded `dji_flight`'s DUML command table and found that every
+cmd_set `0x00` (General) command this binary implements — plus one each
+under cmd_sets `0x03`, `0x1f`, and `0x11` — is actually wired to this same
+database's **update machinery**: direct reads/writes of
+`/nfz_data/NFZ/nfz.bin` and `/nfz_data/NFZ/nfz_backup.bin`, MD5-verified
+against a received hash, version-compared against a "database" header.
+Internal function names (`nfz_upgrade_get_version`/`_entry`/`_start`/
+`_data`/`_end`/`_profile`/`_get_device_state`, `process_ddb_update_*`) and
+an embedded source path
+(`hardware/dji/service/flight/src/applications/nfz_data_upgrade/...`,
+independently found in `08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md`)
+confirm this is DUML's **generic firmware-update protocol (cmd_set
+`0x00`) being reused specifically to push updates to this geofence
+database** over the wire, distinct from the OTA firmware-update channel
+this repo documents elsewhere. Purely descriptive of a shipped mechanism,
+not an exploit or bypass — no attempt was made to characterize what
+authorization (if any) gates a real update over this path.
+
 Found while walking the E1E module's `vendor.img` (the same partition that holds
 the `ta/` TEE Trusted Applications referenced in `05_DJI_SEC_FINDINGS.md`) — a
 previously-undocumented-in-this-repo file at `/nfz/nfz.bin`, 14,266,972 bytes.

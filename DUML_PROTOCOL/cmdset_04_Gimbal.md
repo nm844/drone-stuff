@@ -1,9 +1,10 @@
 # Cmd Set 0x04 — Gimbal
 
-Total known command IDs: 46 (47 as of a prior pass, with `0x69` added —
+Total known command IDs: 49 (46 pre-existing + `0x69` + `0x51`, both
 confirmed independently by this project's own binary disassembly, not the
-public dissector; 48 as of this pass, with `0x51` added below by the same
-method — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md`).
+public dissector — see `17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md` — + `0xF1`,
+found this pass via `dji_flight`'s relocated command array — see
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`).
 
 **Pre-existing data-quality note, not introduced by this pass:** 9 cmd_ids
 below (`0x0A`, `0x0B`, `0x0C`, `0x0D`, `0x0E`, `0x0F`, `0x1C`, `0x1E`,
@@ -321,6 +322,16 @@ Payload decoder: `gimbal_type_dissector`
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+**`dji_flight` handler confirmed — a third, unrelated-looking data point
+on this already-doubly-ambiguous cmd_id, not a resolution of it.**
+`dji_flight`'s confirmed `R_ARM_RELATIVE`-relocated `.data` command array,
+vaddr `0xae160`, func at `0x1b860` (100B). No clean C-identifier name; one
+log line, `"into api_wp2_autotest\n"` — this handler is part of the
+`api_wp2_autotest`/`autotest_config` test-mode subsystem seen referenced
+elsewhere in this same array (see `cmdset_22_Demo_Mode.md`'s `0x02`). Low
+confidence on fit with either existing `0x1C` heading above. See
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+
 ## 0x1E — (name unknown)
 
 Payload decoder: `gimbal_degree_info_subscription_dissector`
@@ -587,3 +598,23 @@ payload) — but independently binary-confirmed live on this firmware._
 - **Confidence:** high on the `(cmd_set, cmd_id)` to handler mapping;
   medium on whether "Gimbal" correctly describes what this handler
   actually does. See `04_WM260_DAEMON_FINDINGS.md`.
+
+## 0xF1 — Recv Gimbal Product Type
+
+**Not from the public dissector — genuinely new, found by this project's
+own binary RE.** Confirmed absent from `cmdset_04_Gimbal.md` before this
+pass; this is an unusually high cmd_id byte, double-checked rather than
+assumed real.
+
+- **Handler:** `recv_gimbal_product_type_handler` (high confidence,
+  clean, repeats), inside `dji_flight`, func at `0x1d874` (80B).
+- **Purpose:** receives/handles a gimbal product-type report.
+- **Evidence:** `dji_flight`'s confirmed `R_ARM_RELATIVE`-relocated
+  `.data` command array, vaddr `0xae168`; cmd word decodes cleanly to
+  cmd_set `0x04` / cmd_id `0xf1`. Both the relocation and the name
+  resolution are solid, which resolves the original "worth double-checking
+  this row's alignment" concern — this is a real, intentional cmd_id, not
+  a misalignment artifact. See
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+- **Confidence:** high on mapping and name; reachability unresolved;
+  payload format not decoded.

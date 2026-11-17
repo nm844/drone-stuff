@@ -6,6 +6,15 @@ Total known command IDs: 85
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+**`dji_flight` handler confirmed** (not from the dissector): registered in
+`dji_flight`'s own `R_ARM_RELATIVE`-relocated `.data` command array (vaddr
+`0xae080`), internal name `check_version_need_update` (high confidence —
+repeats 4×). Reads a `[%d.%d.%d.%d]` version struct from a "database" file
+and compares it — part of this binary's NFZ-database-upgrade reuse of the
+generic cmd_set `0x00` protocol; see `cmdset_22_Demo_Mode.md`'s
+cross-cutting note and `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6 for
+the full writeup and every other `0x00` id this same array confirms.
+
 ## 0x01 — Version Inquiry
 
 Payload decoder: `general_version_inquiry_dissector`
@@ -15,6 +24,11 @@ Payload decoder: `general_version_inquiry_dissector`
   | Off | Size | Field | Type | Notes |
   |---|---|---|---|---|
   | 0 | 1 | `general_version_inquiry_rq_unknown0` (RqUnknown0) | uint8 | Some kind of request type/flags? |
+
+**`dji_flight` handler confirmed:** same array, vaddr `0xae088`, internal
+name `fc_db_init` (high confidence — "fc_db_init start"/"fc_db_init
+success" repeat), plus `check_print_db`. See
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0x02 — Push Param Set
 
@@ -40,17 +54,32 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 
 Payload decoder: `general_enter_loader_dissector`
 
+**`dji_flight` handler confirmed:** `dji_flight`'s relocated `.data`
+command array, vaddr `0xae040`, internal name `nfz_upgrade_get_version`
+(medium confidence). Part of the NFZ-database-upgrade family — see
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+
 ## 0x08 — Update Confirm
 
 Payload decoder: `general_update_confirm_dissector`
+
+**`dji_flight` handler confirmed:** same array, vaddr `0xae048`, internal
+name `nfz_upgrade_entry` (medium confidence).
 
 ## 0x09 — Update Transmit
 
 Payload decoder: `general_update_transmit_dissector`
 
+**`dji_flight` handler confirmed:** same array, vaddr `0xae050`, internal
+name `nfz_upgrade_start` (high confidence — clean, repeats).
+
 ## 0x0A — Update Finish
 
 Payload decoder: `general_update_finish_dissector`
+
+**`dji_flight` handler confirmed:** same array, vaddr `0xae058`, internal
+name `nfz_upgrade_data` (medium confidence). Log context: `"it is first
+packet, need to check revertable of databse"` (sic).
 
 ## 0x0B — Reboot Chip
 
@@ -69,6 +98,16 @@ Payload decoder: `general_reboot_chip_dissector`
   |---|---|---|---|---|
   | 0 | 1 | `general_reboot_chip_response` (Response) | uint8 | Non-zero if request was rejected |
 
+**`dji_flight` handler confirmed:** same array, vaddr `0xae060`, internal
+name `nfz_upgrade_end` (high confidence — repeats twice). This function
+also directly reads/writes `/nfz_data/NFZ/nfz.bin` and
+`/nfz_data/NFZ/nfz_backup.bin`, with explicit MD5 comparison
+(`check_file_data_md5_final`, `"the md5 code calculate from the file"` vs
+`"the md5 code received from the api"`) — this binary's reboot-chip
+handler is actually an NFZ-database-upgrade finalize step, not a literal
+chip reboot. See `06_NFZ_DATABASE_FINDINGS.md` for the database file and
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6 for the full writeup.
+
 ## 0x0C — Get Device State
 
 Payload decoder: `general_get_device_state_dissector`
@@ -78,6 +117,15 @@ Payload decoder: `general_get_device_state_dissector`
   | Off | Size | Field | Type | Notes |
   |---|---|---|---|---|
   | 0 | 1 | `general_get_device_state_status` (Status) | uint8 |  |
+
+**`dji_flight` handler confirmed:** same array, vaddr `0xae068`, no clean
+self-name recovered (low confidence — shares a generic
+`"ack_result, ret_code %d, ack_buf_len %d\n"` format string with a
+neighboring function). That format string is itself a payload-shape
+clue: an ack result code (int) plus an ack buffer length (int), which
+doesn't match the dissector's single-byte `Status` field above — flagged
+as a possible per-recipient payload-shape difference, not resolved
+further.
   | 1 | 1 | `general_get_device_state_unknown1` (Unknown1) | uint8 |  |
   | 2 | 4 | `general_get_device_state_state` (Device State) | uint32 |  |
 

@@ -1,6 +1,8 @@
 # Cmd Set 0x0a — Mono/Binocular (Vision)
 
-Total known command IDs: 48
+Total known command IDs: 50 (48 pre-existing + `0xDD`/`0xDE`, found this
+pass via `dji_flight`'s relocated command array — see
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`)
 
 ## 0x01 — Eye Bino Info
 
@@ -422,3 +424,40 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0xA5 — Eye Get SDK Func
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0xDD — Recv Camera Lens Param
+
+**Not from the public dissector — genuinely new, found by this project's
+own binary RE.** Confirmed absent from this file before this pass.
+
+- **Handler:** `recv_camera_len_param_handler` (high confidence, clean,
+  repeats), inside `dji_flight`, func at `0x1d9b4` (80B). ("Len" reads as
+  "lens" in context — camera lens parameters feeding the stereo/vision
+  pipeline, not "length".)
+- **Purpose:** receives camera lens parameters for the vision/stereo
+  pipeline.
+- **Evidence:** `dji_flight`'s confirmed `R_ARM_RELATIVE`-relocated
+  `.data` command array, vaddr `0xae188`; cmd word decodes to cmd_set
+  `0x0a` / cmd_id `0xdd`. See
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+- **Confidence:** high on mapping and name; reachability unresolved;
+  payload format not decoded.
+
+## 0xDE — Recv Navi Accurate-Shot Finish
+
+**Not from the public dissector — genuinely new, found by this project's
+own binary RE.** Confirmed absent from this file before this pass.
+
+- **Handler:** `recv_navi_accu_shot_finish_handler` (high confidence,
+  clean, right at entry), inside `dji_flight`, func at `0x1da04`
+  (**~2180B — likely several functions; only the entry region is
+  attributable**). A precision-landing/accurate-shot-adjacent feature.
+- **Purpose:** receives a "navigation accurate-shot finish" notification.
+  The same disassembly window also contains `recv_navi_heartbeat_handler`
+  and `gs_mission_wp_actions_download`, which are very likely separate,
+  unregistered neighboring functions, not part of this cmd_id.
+- **Evidence:** `.data` array row at vaddr `0xae190`; cmd word decodes to
+  cmd_set `0x0a` / cmd_id `0xde`. See
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+- **Confidence:** high on mapping and name; reachability unresolved;
+  payload format not decoded.

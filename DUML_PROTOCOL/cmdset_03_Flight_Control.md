@@ -1,6 +1,7 @@
 # Cmd Set 0x03 — Flight Control
 
-Total known command IDs: 192
+Total known command IDs: 194 (192 pre-existing + `0xC1`/`0xDB`, found this
+pass by `dji_flight` binary RE — see `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`)
 
 ## 0x00 — FlyC Scan/Test
 
@@ -291,6 +292,13 @@ Payload decoder: `flyc_set_nofly_zone_data_dissector`
   same field shapes, independently corroborated. See
   `02_WM265_MAVIC3_NFZ_FINDINGS.md` and the `test_set_nofly_zone_data_roundtrip`
   / `SetNoFlyZoneDataRoundTrip` regression tests.
+
+**`dji_flight` handler confirmed, semantic mismatch flagged:** `.data`
+array row at vaddr `0xae090`, func at `0x10eb4` (192B). No clean name; the
+only log text is `"ack the version check"` — this specific handler reads
+like a version-check acknowledgement, not NFZ zone-table data. Low
+confidence; not resolved against the dissector-derived name above. See
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0x41 — Upload Unlimit Areas
 
@@ -1042,6 +1050,24 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
 
+## 0xC1 — (name unknown)
+
+**Not from the public dissector — genuinely new, found by this project's
+own binary RE.** Confirmed absent from `ALL_COMMANDS.csv` under cmd_set
+`0x03` before this pass.
+
+- **Handler:** unresolved, inside `dji_flight`, func at `0x19acc`
+  (`0x19acc`–`0x19d24`, 600B).
+- **Purpose:** not characterized in depth. The function has no string
+  references at all (no logging calls) and operates purely on `.bss`
+  pointers — low confidence on behavior beyond that.
+- **Evidence:** `dji_flight`'s confirmed `R_ARM_RELATIVE`-relocated `.data`
+  command array, vaddr `0xae098`; cmd word decodes to cmd_set `0x03` /
+  cmd_id `0xc1`. Full array re-derivation in
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`.
+- **Confidence:** high on the `(cmd_set, cmd_id)` → function-address
+  mapping; no name or payload format recovered.
+
 ## 0xC6 — Shell Test
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
@@ -1049,6 +1075,16 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0xCD — Update Nofly Area
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+**`dji_flight` handler confirmed:** `.data` array row at vaddr `0xae0a0`,
+func at `0x1144c` (**~5648B — almost certainly several unrelated functions
+packed together; only the entry region is attributable**). No single
+clean C-identifier name found; a usage-string clue near entry —
+`"useage[1]:itdb -> disable tdb"`, `"useage[2]:itdb <tdbPath> -> enable
+tdb"`, `"sucess/fail to create nfz timer"` — describes a debug/test
+command processor for an "itdb" (NFZ timer/test database) feature,
+thematically consistent with "Update Nofly Area." Low confidence on the
+exact name; see `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0xCE — Push Forbid Data Infos
 
@@ -1073,6 +1109,27 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 ## 0xDA — FlyC Detection
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+## 0xDB — Process DDB Update
+
+**Not from the public dissector — genuinely new, found by this project's
+own binary RE.** Confirmed absent from `ALL_COMMANDS.csv` under cmd_set
+`0x03` before this pass.
+
+- **Handler:** `process_ddb_update_process` (high confidence — repeats
+  3×), inside `dji_flight`, func at `0x1985c` (624B). Related sub-steps
+  `process_ddb_update_verify`, `process_ddb_update_request`, and
+  `fc_event_cb_nfz_dynamic_update` each appear once nearby.
+- **Purpose:** "ddb" = NFZ (no-fly-zone) **dynamic database** update state
+  machine — another member of the same NFZ-upgrade family found under
+  cmd_set `0x00` (see `cmdset_00_General.md`) and cmd_set `0x1f`
+  (`cmdset_1f_Unclassified.md`), this time registered under Flight
+  Control.
+- **Evidence:** `.data` array row at vaddr `0xae0a8`; cmd word decodes to
+  cmd_set `0x03` / cmd_id `0xdb`.
+- **Confidence:** high on mapping and name; reachability unresolved;
+  payload format not decoded. See
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0xDF — Assistant Unlock Handler
 
@@ -1263,6 +1320,17 @@ Payload decoder: `flyc_config_command_table_get_or_exec_dissector`
 ## 0xEA — Register Open Motor Error Action
 
 _No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+
+**`dji_flight` handler confirmed, semantic mismatch flagged:** `.data`
+array row at vaddr `0xae078`, internal name `nfz_upgrade_profile` (high
+confidence, clean). This function's actual logic is **NFZ-profile file
+read/seek against `/nfz_data/NFZ/nfz.bin`** (`"file type:0x%x,
+address:0x%x, len:0x%x"`, `"seeK_result:%d"`, `"ack read_addr 0x%x"`) —
+nothing to do with motor-error registration. `dji_flight` reuses this
+wire cmd_id for a different purpose than its documented dissector name;
+DUML cmd_ids are not guaranteed unique in meaning across different
+recipient daemons, so this is a mismatch note, not a correction to the
+existing name. See `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0xEB — Logout Open Motor Error Action
 

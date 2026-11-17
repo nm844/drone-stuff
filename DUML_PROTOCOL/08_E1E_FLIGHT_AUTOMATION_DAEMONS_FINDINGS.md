@@ -43,6 +43,22 @@ these three next, in that order.
 
 ## `dji_flight` — the actual flight-control-adjacent daemon, finally located; still no numeric cmd_set `0x03` registration
 
+**Update, see `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` for the direct
+follow-up.** A later pass independently re-walked every relocation in the
+`.data` array mentioned below and found it is **43 rows
+(`0xae040`–`0xae190`)**, not just the 4 originally decoded — confirming
+the "43+ records" estimate on sight, not just carrying it forward. That
+pass also **resolves two of this section's own open leads**: the
+`api_wp2_waypoints_upload` string found below with "no call site... found
+anywhere" turns out to be reachable after all, as cmd_set `0x22` /
+cmd_id `0x03`; and `api_wp2_download_waypoint` likewise resolves to
+cmd_set `0x22` / cmd_id `0x0d` — both independent confirmations of the
+exact names already found here by string search. See that document for
+the other 37 rows (several completely unrelated to WP2 — NFZ-database
+upgrade internals under cmd_sets `0x00`/`0x03`/`0x1f`, the core ADS-B
+flight-tracking engine under `0x11`, and camera/gimbal/vision
+receive-handlers under `0x02`/`0x04`/`0x0a`).
+
 **Update, see `12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md` §1 addenda
 for a direct follow-up:** a later pass fully disassembled this binary and
 traced all six `system()`/`popen()` call sites to their actual arguments,

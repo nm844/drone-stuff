@@ -533,6 +533,15 @@ Payload decoder: `camera_camera_state_info_dissector`
   |---|---|---|---|---|
   | 37 | 2 | `camera_camera_state_info_padding` (Padding) | bytes |  |
 
+**`dji_flight` handler confirmed, naming cross-wire flagged:**
+`dji_flight`'s confirmed `R_ARM_RELATIVE`-relocated `.data` command array,
+vaddr `0xae170`, internal name `recv_gimbal_self_status_handler` (high
+confidence, clean, repeats). Note the mismatch: a **gimbal**-named handler
+is registered under this **Camera** cmd_id — either "Camera State Info"
+also carries gimbal self-status in this binary, or `0x80` is a generic
+device-status-push id shared by both subsystems. Flagged, not resolved.
+See `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
+
 ## 0x81 — Camera Shot Params
 
 Payload decoder: `camera_camera_shot_params_dissector`
@@ -615,6 +624,11 @@ Payload decoder: `camera_camera_shot_params_dissector`
   | 83 | 4 | `camera_camera_shot_params_timelapse_recorded_frame` (Timelapse Recorded Frame) | uint32 |  |
   | 87 | 2 | `camera_camera_shot_params_optics_scale` (Optics Scale) | uint16 |  |
   | 89 | 2 | `camera_camera_shot_params_digital_zoom_scale` (Digital Zoom Scale) | uint16 |  |
+
+**`dji_flight` handler confirmed:** `.data` array row at vaddr `0xae178`,
+internal name `recv_camera_status_handler` (high confidence, clean,
+repeats) — thematically consistent with the existing name. See
+`21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0x82 — Camera PlayBack Params
 
@@ -732,6 +746,11 @@ Payload decoder: `camera_camera_shot_info_dissector`
   | 37 | 1 | `camera_camera_shot_info_focus_window_start_y` (Focus Window Start Y) | uint8 |  |
   | 38 | 1 | `camera_camera_shot_info_focus_window_real_num_y` (Focus Window Real Num Y) | uint8 |  |
   | 39 | 1 | `camera_camera_shot_info_support_type` (Support Type) | uint8 |  |
+
+**`dji_flight` handler confirmed:** `.data` array row at vaddr `0xae180`,
+internal name `recv_camera_capture_para_handler` (high confidence, clean,
+repeats) — consistent with the existing name ("capture para" ≈ shot
+info). See `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md` §6.
 
 ## 0x88 — Camera Timelapse Parms
 

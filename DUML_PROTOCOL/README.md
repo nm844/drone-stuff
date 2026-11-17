@@ -36,8 +36,8 @@ known command/payload, built for the firmware in this project
 
 ## Totals
 
-- **900** known `(cmd_set, cmd_id)` pairs documented by name across 19
-  non-empty command sets (of 21 catalogued in total; the other 2,
+- **922** known `(cmd_set, cmd_id)` pairs documented by name across 20
+  non-empty command sets (of 22 catalogued in total; the other 2,
   `0x0c`/ESC and `0x10`/Automation, are confirmed-empty with an
   architectural explanation rather than unexamined — see
   `cmdset_0c_ESC.md`/`cmdset_10_Automation.md`). (An earlier pass of
@@ -89,7 +89,30 @@ known command/payload, built for the firmware in this project
   current **900** adds 1 more: a dedicated sweep of the firmware-update/
   upgrade process found `0x00`/`0x5B` ("FTP Control", start/stop) sent
   literally by DJI's own `test_upgrade` QA harness to `dji_sys`. 3/3
-  adversarial reverify. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`.)
+  adversarial reverify. See `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`. The
+  current **922** adds 22 more: a from-scratch independent re-walk of
+  `dji_flight`'s relocated command-pointer array (only 4 of an estimated
+  "43+" rows previously decoded) confirmed the array is genuinely 43 rows
+  (`0xae040`–`0xae190`) — a number `14_FOLLOWUP_DEEPDIVE_FINDINGS.md`
+  already had on record but `cmdset_22_Demo_Mode.md`'s own gap note had
+  never reconciled (it self-contradictorily said "rooted at `0xae0f8`"
+  while also claiming "43 records," though `0xae0f8`–`0xae190` is only 20
+  rows) — and, more substantively, decoded all 39 of those rows' actual
+  contents for the first time, neither prior document having done so —
+  12 new under `0x22`, 3 under `0x11`, 2
+  under `0x03`, 2 under a brand-new cmd_set `0x1f` (no established name —
+  its two cmd_ids share no common theme), 1 under `0x04`, and 2 under
+  `0x0a`; the other 17 rows in that same 39-row delta are
+  handler-confirmations of cmd_ids already known by name, several with a
+  semantic-mismatch flag. See `INDEX.md` and
+  `21_DJI_FLIGHT_COMMAND_TABLE_FINDINGS.md`. **Known gap, unlike every
+  earlier addition above:** these 22 have not yet been propagated into
+  `duml_py/duml/commands.json` (or `duml_c`'s generated registry, or
+  `ALL_COMMANDS.csv`, which `tools/export_master_list.py` generates *from*
+  `commands.json` — hand-editing the CSV directly would just be
+  overwritten/inconsistent on the next export). Doing that properly means
+  also re-running both language's test suites, which this pass didn't do;
+  left as reproducible future work rather than a rushed partial edit.)
 - **157** of those have a full, *non-empty* byte-level payload decode
   (offset/size/type for every field). This is a stricter count than an
   earlier pass used: a command only counts here if its dissector function
@@ -114,9 +137,12 @@ known command/payload, built for the firmware in this project
   compiled code (not inferred).
 - A runnable Python implementation of all of the above — frame codec,
   command registry, payload encode/decode, and serial/TCP send+receive — is
-  in [`../duml_py/`](../duml_py/README.md). Every one of the 900 commands is
-  registered by name and sendable/receivable there; the other 743 (no known
-  payload layout) send/receive as raw bytes.
+  in [`../duml_py/`](../duml_py/README.md). Every one of the 900 commands
+  known as of the prior pass is registered by name and sendable/receivable
+  there; the other 743 (no known payload layout) send/receive as raw
+  bytes. **Not yet current with the 922 total above** — see this
+  document's `## Totals` known-gap note for the 22 commands this pass
+  added that haven't been propagated into `commands.json` yet.
 
 ## Methodology — "use dji-firmware-tools as a template, but verify against the binaries"
 
