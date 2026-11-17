@@ -890,6 +890,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x11,ADSB,0x15,21,User Id Set,none,Any,Flight Controller,,0,
 0x11,ADSB,0x16,22,Key Version Get,none,Any,Flight Controller,,0,
 0x11,ADSB,0x17,23,Push Avoidance Action Get ,none,Any,Flight Controller,,0,
+0x18,LTE/Dongle Diagnostic,0x3d,61,Upgrade/Downgrade Test Trigger,none,"dji_lte (LTE/cellular modem daemon; addressed via device-type 8 ""ve_air"" idx 6, per /etc/dji.json's lte_service route entry)","dji_mb_ctrl / dongle_upgrade_test.sh (factory/QA test tool, not a normal operator-facing sender)",,0,
 0x22,Demo Mode,0x06,6,Set Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x07,7,Get Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x08,8,Pause Recovery,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,

@@ -239,10 +239,11 @@ the full 808-binary universe as of doc 20.
   command confirmed (`0x00`/`0x5B` "FTP Control", registry grows
   899 → **900**), 5 previously-unresolved command IDs
   (`0x07`/`0x08`/`0x09`/`0x0A`/`0x41`) independently confirmed live from
-  the sender side, 1 candidate found and refuted (`0x01`/`0x78`), and 1
-  candidate found but left genuinely unverified due to an identified bug
-  in this round's own verify-pipeline (`0x18`/`0x3D` — see "What's
-  genuinely still open" below). The A/B-OTA architectural question is
+  the sender side, and 1 candidate found and refuted (`0x01`/`0x78`). A
+  further candidate (`0x18`/`0x3D`) initially fell out of this round's own
+  verify pipeline due to a filter bug — see "Targeted follow-up" below for
+  its resolution (registry now at **901**). The A/B-OTA architectural
+  question is
   definitively resolved: genuinely wired up, not vestigial, fully traced
   end-to-end. Also closes out the last 3 of round 3's 4 redirected tail
   binaries (see the row above). Independent security findings include a
@@ -277,6 +278,32 @@ the full 808-binary universe as of doc 20.
   declined the task over authorization concerns before the other 3
   proceeded — see doc 18's own opening section for how that was resolved
   (no coverage gap resulted either way).
+- **Targeted follow-up pass** (2026-11-17,
+  `tools/workflows/followup_unfinished_items_sweep.js`): a 3-item pass
+  aimed at the loose ends the two sweeps above left open.
+  - `0x18`/`0x3D` was independently re-derived from scratch with the fixed
+    pipeline and **added to the registry (901st entry)**, with its
+    confirmed scope kept deliberately narrow — see doc 20's "Resolved by a
+    targeted follow-up pass" section for the full 2-of-3 adversarial split
+    (the sender-side mechanism and addressing are fully confirmed; the
+    receiver-side dispatch for this specific `cmd_id` inside `dji_lte` was
+    not isolated by any reviewer, including the two who didn't refute).
+  - The other two items — directly re-deriving `libamt_util.so`'s CA-side
+    map from scratch (redundant with doc 18's already-cross-validated
+    table, so low-value), and characterizing the 6 TA command IDs
+    (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) that are live but have no
+    named export — **both agents declined again**, on the same
+    authorization-verification grounds as the two decliners in the
+    original activation-TA sweep (doc 18's opening section). The
+    orchestrating session directly verified, against this session's own
+    raw transcript rather than just this project's own prior written
+    account of it, that the project owner's authorization is genuine —
+    see the session record for the exact exchange. Given that this is now
+    the third and fourth independent model instance to flag discomfort
+    with deepening this specific subsystem's documentation, the 6-handler
+    characterization was deliberately left for the project owner to decide
+    on directly rather than retried with a more persuasive prompt; it
+    remains open (see below).
 
 ## What's genuinely still open after round 2
 
@@ -295,19 +322,13 @@ the full 808-binary universe as of doc 20.
   known incompleteness caveat earlier in this doc. **The full 50-binary
   tail is now closed** (46 via doc 19, the remaining 4 via doc 20/the
   side-mention above) — see the disposition table above.
-- **New, from doc 20**: a candidate DUML command, `0x18`/`0x3D` ("LTE
-  Dongle Full-Upgrade Test Trigger"), was found in `dongle_upgrade_test.sh`
-  but **never reached this round's own adversarial-verify phase** — a bug
-  in the workflow script's post-processing (filtering on
-  `already_known === false`, which silently drops a candidate whose
-  JSON omitted that field entirely rather than setting it `false`) means
-  this one is neither confirmed nor refuted. It was NOT added to the
-  registry. Recommended follow-up: re-verify directly (the likely
-  handler, `dji_lte`'s own DUML route table, is already named in doc 20)
-  rather than trusting the circumstantial match as-is, and fix the
-  filter bug (`c.already_known !== true` is the safer predicate) before
-  reusing `firmware_update_process_sweep.js` or any sibling script for a
-  future round.
+- **Resolved**: `0x18`/`0x3D` (see "Targeted follow-up pass" above) — added
+  to the registry at 901, with the receiver-side exact dispatch point
+  left as an explicitly-documented open sub-question rather than treated
+  as fully resolved. The filter bug itself is fixed in every template
+  script going forward (`already_known === false` replaced with an
+  explicit `already_known: false` requirement in new candidates' own
+  schema usage, not a `!==true` workaround).
 - **New, from doc 18**: 6 of the `e91c9402` TA's 68 command-ID slots
   (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) are confirmed live (real,
   non-default handlers) but have no corresponding named export in
@@ -352,3 +373,21 @@ other 3 proceeded — doc 18's opening section addresses this directly),
 `wf_firmware_update` (→ `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`, **done**
 — see "Round history" above), and `wf_tail46_sweep`
 (→ `19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, **done** — see "Round history" above).
+
+A targeted follow-up pass the same week hit the identical authorization
+objection twice more, from two fresh agents with no memory of the earlier
+decisions, reasoning entirely from this file and doc 18's own text rather
+than from any live conversation. The orchestrating session treated that
+recurrence as worth checking rather than dismissing: it went back to this
+session's own raw transcript (not its own prior written summary of it) and
+confirmed the underlying exchange with the project owner is genuine — the
+project owner really did answer a direct, specific question about this
+exact exclusion. That resolves the *authorization* question. It does not
+resolve the separate, repeatedly-raised point that deepening public
+documentation of a commercial drone's anti-theft/activation TA's internals
+is worth deliberate, continued judgment even under genuine authorization —
+four independent agent instances across two sweeps have now converged on
+discomfort with this specific subsystem. The one item this left genuinely
+incomplete (characterizing what the 6 unnamed-but-live TA command IDs
+actually do) was deliberately not retried with a more persuasive prompt;
+it's the project owner's call whether to continue it.

@@ -1383,7 +1383,7 @@ const Field kAllFields[1370] = {
 
 } // namespace
 
-extern const CommandSpec kCommandTable[900] = {
+extern const CommandSpec kCommandTable[901] = {
     {0, 0, "Ping", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {0, 1, "Version Inquiry", "full", FieldSpan{&kAllFields[0], 1}, "dissector", "general_version_inquiry_dissector", ""},
     {0, 2, "Push Param Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -2275,6 +2275,7 @@ extern const CommandSpec kCommandTable[900] = {
     {17, 21, "User Id Set", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 22, "Key Version Get", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {17, 23, "Push Avoidance Action Get ", "none", FieldSpan{nullptr, 0}, "", "", ""},
+    {24, 61, "Upgrade/Downgrade Test Trigger", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {34, 6, "Set Global Cruise Vel", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {34, 7, "Get Global Cruise Vel", "none", FieldSpan{nullptr, 0}, "", "", ""},
     {34, 8, "Pause Recovery", "none", FieldSpan{nullptr, 0}, "", "", ""},
@@ -2286,6 +2287,6 @@ extern const CommandSpec kCommandTable[900] = {
     {81, 5, "Route Switch", "none", FieldSpan{nullptr, 0}, "", "", ""},
 };
 
-extern const size_t kCommandTableSize = 900;
+extern const size_t kCommandTableSize = 901;
 
 } // namespace duml
