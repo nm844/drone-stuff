@@ -214,8 +214,40 @@ signal — lower priority, see above; the only remaining gap in the full
 - The 50-binary "socket-bearing, no detected signal, not individually
   investigated" tail above — flag it again rather than silently dropping
   it, and consider at least checking the handful of DJI/vendor-named
-  libraries in it named explicitly above.
+  libraries in it named explicitly above. **Round 3, launched 2026-11-17**
+  (`tools/workflows/round3_tail46_sweep.js`), covers 46 of the 50 — the
+  other 4 (`libupgrade_common.so`, `Quectel_upgrade_tool`,
+  `quectel-qmi-proxy`, `libduml_orte.so`) were pulled out: the first three
+  fall under the firmware-update-process sweep below instead, and the
+  fourth turned out to already be covered as a side-mention in
+  `15_SECOND_FOLLOWUP_DEEPDIVE_FINDINGS.md` Track I despite not appearing
+  in `02_covered_basenames_57.txt` — another instance of that list's
+  known incompleteness caveat earlier in this doc.
 - Any firmware version newer than what's currently decrypted/extracted
   here (e.g. the `V01.00.1500` package referenced from the unrelated
   `nimrasol_wm260` repo) is out of scope for this tracker entirely — it's
   a different firmware revision, not part of this 808-binary universe.
+
+## Authorization change (2026-11-17): `libamt_util.so`/activation TA exclusion lifted
+
+The project owner explicitly lifted the standing exclusion on
+`libamt_util.so` and the `e91c9402` activation/secure-debug/DJICare OP-TEE
+TA (previously: never opened, disassembled, or command-mapped absent
+separate explicit authorization — honored consistently across docs 05, 09,
+12, 13, 14, 15, 16, and 17; see `13_OPTEE_TA_FINDINGS.md`'s own
+"Authorization change" note). This is now authorized, for this and all
+future work in this project. **This did not lift the project's other
+standing rule**, which was separately asked about and explicitly declined:
+no working exploit code, no crafted attack packets, no forged
+authorization/activation/DJICare tokens or signatures, no cryptanalysis of
+any live cryptographic mechanism. That rule remains in force exactly as
+before — command-ID/architecture mapping is in scope for this TA exactly
+as it already was for the other three OP-TEE TAs; breaking or forging
+anything is not, and never was, regardless of whose device is involved
+(the mechanisms gated behind this TA — geofence/NFZ enforcement and
+anti-theft/activation — protect interests beyond the device owner's own,
+so a working bypass doesn't stay scoped to "one consenting owner" even
+when requested in that framing). Three sweeps launched the same day:
+`wf_activation_ta` (→ `18_ACTIVATION_TA_FINDINGS.md`), `wf_firmware_update`
+(→ a new firmware-update-process findings doc), and `wf_tail46_sweep`
+(→ folded into whichever of the above, or a round-3 doc, fits best).
