@@ -711,7 +711,90 @@ _No byte-level payload decoder in source dissector (name-only / unparsed payload
 
 ## 0xFA — Log Control
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_No byte-level payload decoder in source dissector (name-only / unparsed
+payload) — but independently binary-confirmed live on this firmware, with
+a full byte-level payload layout recovered from disassembly (not from the
+dissector)._
+
+- **Handler:** `duss_event_log_control` (exported symbol, vaddr `0xc52c8`
+  in the E2/aarch64 build — matched exactly against the callback pointer,
+  not a name guess). Found as a 5th entry in `libduml_frwk.so`'s built-in
+  dynamic-command table (`duss_event_create_dynamic_cmd_tbl`, vaddr
+  `0x190ff8`), the same table that already supplies this cmd_set's `0x2F`/
+  `0x89`/`0xAA` above and cmd_set `0x51`/`0x05` (`cmdset_51_Route_Switch.md`)
+  — missed by the earlier passes over that table. Confirmed on a freshly
+  re-downloaded and re-decrypted copy of this firmware (not reused from a
+  prior session's extraction), via the `dankdronedownloader.com` → WM260
+  V01.00.1000 → `0802`/E2 module → `PRAK-2021-09`/`UFIE-2021-08` → Brotli
+  block-OTA → `sdat2img`/`debugfs` pipeline documented in
+  `02_WM265_MAVIC3_NFZ_FINDINGS.md` §4c; the raw table-row handler pointer
+  matches the symbol's address exactly, and this build's own `.dynsym`
+  resolved it directly (no `.gnu_debugdata` needed).
+- **Purpose:** the handler is a thin DUML-payload-unpacking wrapper around
+  a function it imports from a *different* shared library —
+  `duss_log_control()`, exported by `libduml_util.so`, not defined in
+  `libduml_frwk.so` itself. Confirmed by the handler's own embedded
+  strings (source path `hardware/dji/duml/framework/event/
+  internal_commands/duml_log_control.c`, debug format
+  `"duss_event_log_control %u %u %u\n"`, error format
+  `"duss_event_log_control() error: %d\n"`). `duss_log_control()` was
+  itself disassembled (`libduml_util.so`, vaddr `0x111f8`); it is a
+  `pthread_rwlock`-guarded dispatcher over the same `sub_cmd` value, and
+  its own embedded strings (`"[DEBUG]Debug Level Up(Level=%d, %s)\n"` /
+  `"...Down..."`, plus a 7-entry name table `LOG_NONE` / `DUSS_LOG_FATAL`
+  / `DUSS_LOG_ERROR` / `DUSS_LOG_WARNING` / `DUSS_LOG_INFO` /
+  `DUSS_LOG_TRACE` / `DUSS_LOG_VERBOSE`) confirm this is the framework's
+  own runtime debug-log-verbosity/output control, not an app/flight/camera
+  command — same "internal maintenance" category as this cmd_set's `0x89`
+  Shell Command and `0xAA` Node Sniffer Request above.
+- **Payload layout** (from disassembly of both functions, not the Lua
+  dissector):
+
+  | Off | Size | Field | Type | Notes |
+  |---|---|---|---|---|
+  | 0 | 1 | `sub_cmd` | uint8 | Selector, range-checked to 0-9 inclusive; any other value is rejected with internal error `-0x3e9` (no response data). |
+  | 1 | 0-2 | `arg` | uint8/uint16 | Present and sized per `sub_cmd`, see table below. Absent entirely for `sub_cmd` 1, 2, 5, 7, 9. |
+
+  `sub_cmd` semantics (string-confirmed where noted, otherwise inferred
+  directly from `duss_log_control`'s disassembled logic — mechanically
+  solid, but the human-readable field names below are this project's own,
+  not sourced from strings):
+
+  | sub_cmd | Payload bytes 1-2 | Behavior |
+  |---|---|---|
+  | 0 | 1 byte: enable (0/nonzero) | Sets a global log-enable flag. |
+  | 1 | _(none)_ | Increases the global log level by one step, saturating at `DUSS_LOG_VERBOSE` (6); broadcasts the new level to every per-module level entry; returns the new level. **String-confirmed**: `"[DEBUG]Debug Level Up(Level=%d, %s)\n"` against the named enum `LOG_NONE`(0)/`DUSS_LOG_FATAL`(1)/`DUSS_LOG_ERROR`(2)/`DUSS_LOG_WARNING`(3)/`DUSS_LOG_INFO`(4)/`DUSS_LOG_TRACE`(5)/`DUSS_LOG_VERBOSE`(6). |
+  | 2 | _(none)_ | Decreases the global log level by one step, floored at `LOG_NONE` (0); same broadcast/return behavior as `sub_cmd` 1. **String-confirmed** (`"...Debug Level Down..."`), same enum. |
+  | 3 | 2 bytes: module_id (0-139, or `0x8C`=140 as an "all modules" wildcard), level | Sets one module's (or, at id `0x8C`, every module's) per-module log level byte. |
+  | 4 | 1 byte: module_id (0-139) | Reads one module's per-module log level byte back (no "all modules" wildcard on this side). |
+  | 5 | _(none)_ | Returns the constant `0x8C` (140) — the bound/wildcard value `sub_cmd` 3/4 use for the per-module id range. |
+  | 6 | 2 bytes, little-endian uint16 | Sets a 16-bit struct field (plausibly an output-channel bitmask; no string ties a name to this specific field). |
+  | 7 | _(none)_ | Reads back the field `sub_cmd` 6 sets. |
+  | 8 | 1 byte: sink index (0-6) | Selects the active log output sink from a small table of up to 7 registered sinks, invoking that table's deinit callback on the previously active entry and its init callback on the newly selected one. |
+  | 9 | _(none)_ | Reads back the currently active sink index `sub_cmd` 8 selects. |
+
+  For `sub_cmd` values with no input byte (1, 2, 5, 7, 9), the response
+  still carries data: the wrapper passes `duss_log_control()` an output
+  pointer instead of a value, and echoes back whatever that call wrote
+  into it.
+- **Response:** on success, `duss_event_resp_data` with a 4-byte value
+  (either the input byte echoed back, or the queried/new value for the
+  read-style `sub_cmd`s above). On failure (`sub_cmd` out of range, or
+  `duss_log_control()` returning nonzero), `duss_event_resp_err` with code
+  `0xE6`.
+- **Confidence:** high on the `(cmd_set, cmd_id)` → handler mapping, on
+  `duss_event_log_control` forwarding to `duss_log_control()`, and on the
+  `sub_cmd` 0/1/2/3/4/5/8/9 behaviors (each traced through to a concrete
+  memory effect, and 1/2 additionally string-confirmed against a named
+  log-level enum). **Medium** on `sub_cmd` 6/7's real-world meaning (the
+  bit-level mechanism is clear — set/get a 16-bit field — but no string
+  names what that field controls).
+- **Not determined:** whether this command is reachable from outside the
+  device without prior root/ADB access (same standing boundary as `0x89`
+  above); the real-world name/purpose of the `sub_cmd` 6/7 field; which
+  concrete sinks (console/file/network/etc.) occupy indices 0-6 of
+  `sub_cmd` 8/9's table, since none of the sink-table entries themselves
+  were disassembled.
 
 ## 0xFB — Selftest State
 

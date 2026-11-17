@@ -54,6 +54,12 @@ repo's own derived files.
   finding holds for both chips, but future table dumps from this file
   should state which build they came from, since this document previously
   didn't.
+  **Update:** a re-read of this same table (freshly re-downloaded/
+  re-decrypted copy of the firmware, not reused from a prior extraction)
+  found a 5th row, missed by the earlier passes above: cmd_set `0x00`
+  cmd_id `0xFA`, handler `duss_event_log_control` — see the
+  "already-known-but-undecoded" list below and `cmdset_00_General.md` for
+  the full decode.
 - **`0x22`/`0x60` "Demo Mode Handle"**: found via direct disassembly of
   `dji_sys`, registered from 4 separate platform-init functions
   (`sys_platform_{e1e,e2}_wm260[l]_post_init`), each with its own named
@@ -81,7 +87,14 @@ new, but now binary-verified rather than only dissector-asserted):
 `cmd_set 0/0xf0` "Log Push" (handler `delete_v1_obj`/`create_v1_obj`),
 `cmd_set 6/0x3a` "RC 2014 Usb Mode Set" (handler `sys_ac103_usb_otg` /
 `sys_wm162_usb_otg` — also served as the ground-truth check validating
-the `w1=cmd_set, w2=cmd_id` argument order used throughout this document).
+the `w1=cmd_set, w2=cmd_id` argument order used throughout this document),
+and `cmd_set 0/0xfa` "Log Control" (handler `duss_event_log_control`,
+the 5th row of the `0x190ff8` table noted above — forwards to a generic
+`duss_log_control()` function exported by a *different* library,
+`libduml_util.so`, not `libduml_frwk.so` itself; full byte-level
+sub-command decode, string-confirmed in part against a named
+`DUSS_LOG_FATAL`/`_ERROR`/`_WARNING`/`_INFO`/`_TRACE`/`_VERBOSE` enum, now
+in `cmdset_00_General.md`).
 
 **Field-level confirmation of existing Camera commands**, from
 `dji_camera3`'s own embedded parameter-name strings, cross-checked
