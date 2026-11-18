@@ -470,10 +470,38 @@ both firmware extractions) — identified as the single most actionable
 structural blocker for this and 9 other cmd_sets `dji_flight` serves.
 Also caught and explicitly disproved one strong-looking name-based false
 lead (`FC_PARAM:` strings belong to cmd_set 0x11/ADS-B, not cmd_set
-0x03's "Params Get", per a dispatch-table cross-check). Two of the three
-originally-launched fourth-wave efforts remain: Camera (cmd_set 0x02,
-190 commands) and the Wi-Fi/HD Link/Mono-Binocular/Gimbal bundle (159
-commands).
+0x03's "Params Get", per a dispatch-table cross-check). Fifth wave, the
+Wi-Fi/HD Link/Mono-Binocular Vision/Gimbal bundle (cmd_sets 0x07/0x09/
+0x0a/0x04, 159 commands): 15 decoded and merged (registry 177→192 full),
+9 explicitly refuted on adversarial reverify (2 of which still yielded
+new real command names recovered — `0x07/0x18`/`0x19` "WiFi Set/Get
+Country", previously only placeholder-named in the public dissector),
+133 `insufficient_evidence`/`no_payload`. Headline results, one per
+cmd_set: (1) cmd_set 0x07 (Wi-Fi) got its first-ever documented real
+handler daemon, `dji_network` — which turned out to be two unrelated
+codebases sharing one filename across the two firmware builds, each with
+its own dense, directly-indexed whole-cmd_set dispatch table; (2) cmd_set
+0x09 (HD Link) reconfirmed the "HD-Link MCU (air), firmware not present
+in this extraction" structural explanation already carried in this
+project's own dissector metadata, plus found that a shared 12-byte-record
+registration-loop helper (previously known in 2 binaries) is also present
+byte-identical in `dji_sys` on both architectures with zero callers
+anywhere — confirmed dead code, not just unexamined; (3) cmd_set 0x0a
+(Mono/Binocular Vision) found a hard, compile-time dispatch-size bound in
+`dji_perception` (`cmd_set < 0x20 && cmd_id < 0x42`) plus a dedicated
+PCIe-based DUML transport, both structural reasons this daemon can't
+locally dispatch most of this cmd_set; (4) cmd_set 0x04 (Gimbal) resolved
+`duss_event_register_dynamic_command`'s exact calling convention and
+backing hashtable/descriptor-array implementation inside `libduml_frwk.so`
+and `dji_sys`, for the first time at this level of detail. Also surfaced
+several previously-uncatalogued cmd_ids (0x07/0x41-0x61 range; 0x0a/0xDD,
+0xDE; 0x04/0xf1, 0xbb) as leads for future passes, and one more
+independent (18+ groups across two waves now) reconfirmation of the
+`dji_flight` dispatch-table correction (43 rows, `0xae040`) against a
+single straggler group in this wave still citing the old figure — see
+doc 21's bundle section for the per-cmd_set detail. This closes out all
+three originally-launched fourth/fifth-wave efforts except Camera (cmd_set
+0x02, 190 commands), which remains in progress.
 
 **Process notes:** `make -j4`/`make` alone does NOT rebuild
 `duml_c`'s test binaries (only `make test` does) — running stale
@@ -492,4 +520,12 @@ verify, leaving a "completed" task result with most refute-votes missing
 wave's `agents_error` count before trusting it, and `resumeFromRunId`
 after the limit resets rather than treating a high-error-count result as
 final (a usage-limit failure re-runs on resume; only genuinely finished
-calls are served from cache).
+calls are served from cache). A fourth hazard: `tools/export_master_list.py`
+writes its CSV to stdout only — it does not take an output-path argument
+and never touches `ALL_COMMANDS.csv` on its own. Piping its output through
+`tail`/`head`/`grep` for a quick look does NOT update the file; it must be
+invoked as `python3 DUML_PROTOCOL/tools/export_master_list.py >
+DUML_PROTOCOL/ALL_COMMANDS.csv`. Caught once mid-digestion via `git diff
+--stat` showing no change to the CSV despite new full decodes in the
+registry — always sanity-check with `git diff --stat` after regenerating
+it, before committing.

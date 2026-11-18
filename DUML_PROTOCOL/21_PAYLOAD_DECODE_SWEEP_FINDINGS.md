@@ -616,3 +616,218 @@ genuinely matching strings (`vp_motor_ext_err_register`,
 No relay/bridge code connecting DUML wire command `0x03`/`0xEA` to that
 MCU-side function was found. Flagged as an open catalog-naming question
 for whoever next revisits this command, not resolved here.
+
+## Bundle: cmd_set 0x07 (Wi-Fi, 59), 0x09 (HD Link, 45), 0x0a (Mono/Binocular Vision, 34), 0x04 (Gimbal, 21) — 159 commands
+
+**Result: 15 of 159 decoded and verified**, 9 decoded-but-refuted, 133
+`insufficient_evidence`/`no_payload`. Unlike the single-cmd_set waves,
+this bundle's 4 cmd_sets turned out to sit on 4 structurally different
+architectures, so the results are reported per cmd_set below.
+
+### cmd_set 0x07 (Wi-Fi) — 13 of 59 decoded and verified
+
+**Headline finding: identified this project's first-ever real handler
+daemon for cmd_set 0x07.** Neither `dji_sys`'s literal-immediate
+registrations nor `dji_wlm`/`dji_wlm_slave` (previously, and incorrectly,
+assumed to be the AP-config daemon by implication in earlier docs — now
+explicitly re-checked and ruled out: `dji_wlm` is an SDR/LTE/Wi-Fi
+hybrid-link bandwidth manager, with zero SSID/passphrase/channel/
+country-code strings anywhere in it) own this cmd_set. The real owner is
+`bin/dji_network` — but it is **two unrelated codebases sharing one
+filename** across the two firmware builds, not one binary ported across
+architectures:
+
+- **E1E (32-bit ARM):** `hardware/dji/service/network/src/net_wifi*.c` +
+  `states/wifi_{ap,sta}_states.c` (embedded source-path strings). Joins
+  the bus via `duss_mb_create_route_table("net_event", ...)` +
+  `duss_event_create_client` (`net_start_event` @ vaddr `0xa47c`) —
+  mechanism #2, not mechanism #1 (`duss_event_register_dynamic_command`
+  is confirmed entirely absent from its import table on this build). Real
+  handler names (`net_evt_*`) were recovered from debug-log calls that
+  pass their own function name as a literal string argument — a reusable
+  technique: PC-relative "`ldr rX,[pc,#n]; ...; add rX,pc`" string-xref
+  pairing on a fully-stripped, no-`.gnu_debugdata` Thumb-2 binary.
+- **E2 (AArch64):** a different, newer rewrite, `external/wm260_wms/
+  dji_network` (the "wms" — Wi-Fi Management Service — layer), with its
+  own clean `wms_evt_*`/`v1_proc_*` handler names. Registers as route
+  `"network_service"` / client `"wms_local"` (same mechanism #2). This
+  build also runs a second, unrelated Bluetooth test-harness sub-protocol
+  (`wms_ipc_bt_cmd_handle`) through the *same* route client but keyed by
+  its own tiny 0–12 opcode space, not by DUML `cmd_id` — flagged because
+  one investigating pass initially confused the two before the embedded
+  build-path strings clarified the real split.
+
+**A genuinely new dispatch-table shape, worth folding into this
+project's mechanism-#2 writeup:** in both builds, the one route/client
+call pair backs a dense, directly-indexed (`table_base + cmd_id*stride`)
+array covering the **entire** cmd_set-0x07 command surface in one static
+table — not just the commands a given investigating batch happened to
+check. E2: 24-byte `{evt_handler_ptr, ack_handler_ptr, flags}` entries at
+base vaddr `0x40008`/`0x3FFF8` (two groups independently located the
+table at adjacent-but-slightly-different bases — not reconciled in this
+pass, flagged for a follow-up). E1E: a 12-byte dense array (no stored
+`cmd_id` at all — the index *is* the `cmd_id`) at vaddr `0x00020840`,
+`{primary_handler_ptr (Thumb-tagged), secondary_ptr_or_0, flag}`. This
+"one call site + one known binding → whole-cmd_set table falls out
+arithmetically" pattern is a reusable recovery technique distinct from
+`app_echo`'s existing "registers zero commands" mechanism-#2 precedent.
+
+**Previously-uncatalogued cmd_ids found while reading these tables**
+(outside this wave's assigned 0x00–0x92 range and not independently
+investigated, but concrete leads for a future pass): `0x41`→
+`wms_evt_start_wifi`, `0x42`→`wms_evt_stop_wifi`, `0x44`→
+`wms_evt_get_band`, `0x45`→`wms_evt_wifi_connect_req`, `0x46`→
+`wms_evt_wifi_connect_resp(+ack)`, `0x4A`→`wms_evt_wifi_run_qcmbr`,
+`0x4B`→`wms_evt_bt_run_btdiag`, `0x51`→`wms_evt_switch_pcie`, `0x52`→
+`wms_evt_wifibt_get_status`, `0x60`→`wms_evt_wifi_cert_start`, `0x61`→
+`wms_evt_wifi_cert_iperf_run`.
+
+**The 13 verified decodes:** `0x03`/`0x04` Channel Set/Get, `0x07`/`0x08`
+SSID Get/Set, `0x0c` Mac Addr Get, `0x0f` Factory Reset, `0x10` Band Set,
+`0x28` Channel List Get/Push, `0x2b` Set Hw Mode, `0x2e`/`0x2f` Set/Get
+Usr Pref, `0x91` Rc Info Set, `0x92` Update Sw State — all byte-level
+fields pulled from direct disassembly of the `net_evt_*`/`wms_evt_*`
+handler bodies, not inferred from naming alone.
+
+**8 refuted on adversarial reverify**, 2 of them with a real research
+payoff despite the refutation: `0x18`/`0x19` had **new real names
+recovered** — `wms_evt_set_country`/`wms_evt_get_country` — where the
+public dissector only carried placeholder names ("WiFi Ap 18"/"WiFi Ap
+19"); the field-byte-offset claims for both didn't survive reverify, but
+the name recovery itself is preserved in `commands.json`'s note. The
+other 6 (`0x0a`, `0x0b`, `0x0d`, `0x0e`, `0x21`, `0x29`) had their
+handlers correctly identified but specific field claims rejected.
+
+### cmd_set 0x09 (HD Link) — 1 of 45 decoded and verified, mostly a structural negative result
+
+**Result confirms, rather than contradicts, this project's own existing
+dissector metadata:** every cmd_id in this cmd_set is already annotated
+`typical_receiver: HD-Link MCU (air)` — a physically separate embedded
+radio/SDR microcontroller whose own firmware is not present in either
+Linux system image this project has access to. 42 of 45 commands came
+back `insufficient_evidence` on this structural basis, each with its own
+negative-evidence trail (registration mechanisms checked and ruled out
+per-command), not a blanket "not found."
+
+**A significant negative finding, independently confirmed across 4
+binaries:** the generic 12-byte-record `duss_event_register_dynamic_
+command` registration-loop helper (previously known only in
+`dji_sdrs_agent`/`test_rtos_raw`) is also present, essentially
+byte-identical, in `dji_sys` on **both** architectures (`0x6fff4` ARM32,
+named local symbol `duss_register_cmd` in `.gnu_debugdata` on AArch64,
+24-byte records there). Across all 4 occurrences, an exhaustive caller
+search (branch-target scan, the PIC `ldr+add-pc` literal-pool idiom, and
+a raw absolute-pointer byte scan of the entire binary) found **zero
+callers anywhere** — this shared helper is unreachable dead code in this
+shipped firmware, a stronger and more specific finding than earlier
+docs' "data-driven, not statically recoverable."
+
+**A second, unrelated generic registration mechanism found on the
+camera/`dcam` side (E2/AArch64):** `cam_event_client_pool_register`
+(exported by `libdcam_event_client_pool.so`), wrapping `duss_event_
+register_dynamic_command_table_with_user_data` — a distinct framework
+API from the one above. Two callers: `cs_cam_duss_hms_init` in
+`libdcam_cs_cbb.so` with a 239-entry table (almost certainly a
+cross-subsystem Health-Management-System diagnostic table spanning many
+cmd_sets, not SDR/HD-Link-specific — flagged as worth a dedicated,
+larger-budget follow-up given its size), and `cs_external_module_ctrl_
+create` in `libdcam_topmode_comm.so` (registers nothing in the reached
+code path — its table descriptor is left at a calloc-zeroed count of 0).
+Neither resolves to any cmd_set-0x09 command in this batch.
+
+**The verified decode:** `0xAA` MIPI/HDVT Liveview Param Set, in
+`lib/libMipiHandshake.so` — cross-confirmed against its sibling
+`0xA9` (Liveview Pigeon State Heartbeat, in `libWorkModeLiveview.so`,
+refuted on reverify) via `LiveviewObjectPigeon::updatePigeonSdrLiveview`'s
+own internal width/height/third-param change-detection comparisons.
+
+### cmd_set 0x0a (Mono/Binocular Vision) — 0 of 34 decoded, all insufficient_evidence, with a structural explanation found
+
+**Headline finding: `dji_perception` cannot dispatch most of this
+cmd_set at all, by construction.** `dji_perception`'s single `duss_
+event_create_client` call site (confirmed as the *only* one, on both
+architectures) is instruction-identical on E1E/ARM32-Thumb2 and
+E2/AArch64 in one respect: it is gated by a hard, compile-time table-size
+bound — **`cmd_set < 0x20` AND `cmd_id < 0x42`**. This is structural
+evidence, not a search failure, for why commands with `cmd_id >= 0x42`
+(the bulk of this cmd_set's catalogued range) can never reach this
+daemon's primary DUML path in this build.
+
+**A second, complementary structural finding: `dji_perception` likely
+doesn't dispatch locally at all, on either build.** It imports a
+dedicated PCIe-based transport distinct from the normal `duss_event` bus
+— E1E: `duss_hal_pcie_sendv/recvv`, `duss_dsh_create_channel_handle` +
+friends; E2's recovered `.gnu_debugdata` local symbols spell it out
+directly: `ss_dbus_transport_duml_pcie_init`, `duml_pcie_recv_task_entry`,
+`duml_pcie_send_task_entry`, `duml_pcie_transport_submit`. This strongly
+suggests `dji_perception` is a separate vision-compute SoC/core that
+relays whole DUML frames over a dedicated PCIe shared-memory channel
+rather than registering individual `(cmd_set, cmd_id)` handlers locally
+— consistent with, and explaining, its confirmed absence of the normal
+registration import on both builds.
+
+**Previously-uncatalogued cmd_ids found in `dji_flight`'s corrected
+dispatch table** (see cmd_set 0x03's write-up above for the full
+43-row/`0xae040` correction, independently re-derived again in this wave
+by the groups working this cmd_set): `0xDD` (handler vaddr `0x1d9b5`/
+`0x1da05` — two groups read slightly different addresses for the same
+row, not reconciled) and `0xDE` (handler vaddr `0x1da55`) — both beyond
+this project's existing cmdset_0a doc's highest catalogued cmd_id
+(`0xA5`), and neither investigated further within this wave's budget.
+
+### cmd_set 0x04 (Gimbal) — 1 of 21 decoded and verified
+
+**Resolved, for the first time at this level of detail, the real
+calling convention and backing data structure behind `duss_event_
+register_dynamic_command`** (the "literal cmd_set/cmd_id immediate
+before the `bl`" convention this project has used to find dozens of
+bindings, without previously confirming what happens on the other side
+of the call): `r0`/`x0` = module/device context pointer, `r1`/`w1` =
+`cmd_set`, `r2`/`w2` = `cmd_id`, `r3`/`x3` = pointer to a 12-byte
+`{handler_fn_ptr, reserved, reserved}` descriptor. Inside `libduml_
+frwk.so`'s own implementation (disassembled directly, not inferred): a
+`calloc(1, 0x14)` plus a generic hashtable insert (`util_ht_set_if_not_
+exists`) keyed on the packed 32-bit word `(cmd_set << 16 | cmd_id)` —
+verified against 5 already-known ground-truth bindings.
+
+**Extended that finding to `dji_sys`'s own descriptor-slot array:** the
+4th argument passed at each `dji_sys` call site is a pointer into a
+per-daemon static descriptor-slot array in its writable data segment —
+one slot per registered command, stride 24 bytes (AArch64) / 12 bytes
+(ARMv7), i.e. scaling with pointer size, consistent with a
+`{ptr,ptr,ptr}` struct. The slot's first field holds the real handler
+address via an `R_AARCH64_RELATIVE`/`R_ARM_RELATIVE` relocation. Directly
+verified for this wave's one decode: cmd_id `0x69`'s registration call
+site (`dji_sys` E2 vaddr `0x68f68`) passes `x3 = table_base(0xf6b78) +
+0x18 = 0xf6b90`; `readelf -rW` shows an `R_AARCH64_RELATIVE` relocation
+at exactly that address whose addend (`0x68578`) is the entry point of
+`sys_event_input_report` in `dji_sys`'s own `.gnu_debugdata` symbol
+table. The immediately-preceding slot (for a different, already-known
+cmd_set-0x06 registration right before it in the same init routine) holds
+a *different* handler address — confirming this is a real dense array of
+per-command slots, not coincidence.
+
+**Previously-uncatalogued cmd_ids found in `dji_flight`'s corrected
+dispatch table** (same table as above): cmd_id `0xf1` (handler vaddr
+`0x1d875`, no recoverable symbol name — binary is stripped with no
+`.gnu_debugdata`) and cmd_id `0xbb` (found independently via ~18 separate
+`imss_link_v1_send` call sites across `at_gimbal_yaw.so` and
+`at_gimbalcali.so`, both E1E-only — no E2 equivalents of either plugin
+exist). Neither is in this project's existing cmdset_04 catalog; both are
+concrete leads for a future gimbal-focused pass.
+
+**The verified decode:** `0x69` Event Input Report, in `dji_sys`
+(`sys_event_input_report`) — the dispatch-table binding above is the
+byte-level evidence; the handler itself was reused from an existing
+pre-confirmed finding rather than re-derived from scratch.
+
+### Cross-cutting note: a minor disagreement on `dji_flight`'s dispatch-table bounds within this wave
+
+One group in this batch (working cmd_set 0x04) still reported the
+pre-correction figure ("44 rows through `0xae190`, rooted at `0xae038`")
+while two other groups (working cmd_sets 0x0a and 0x04) independently
+re-derived and confirmed the corrected figure from the Flight Control
+wave above (**43 rows, rooted at `0xae040`**, via the same relocation
+cross-check). The corrected figure is treated as authoritative here —
+it is now independently reproduced by a combined 18+ investigating
+groups across two separate waves, against the uncorrected figure's 1.

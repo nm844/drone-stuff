@@ -14526,7 +14526,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Name-only placeholder opcode; no description anywhere in this project's sources or the public dissector beyond the bare label \"Gimbal Reserved\". No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -14595,7 +14596,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_get_position_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, a query for the gimbal's current mechanical/attitude position (likely superseded in practice by the richer 0x05 'Gimbal Params Get' push, which this project has already fully decoded). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -14605,7 +14607,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_set_param_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, a generic parameter-set opcode for the gimbal (distinct from the later, more specific param commands such as 0x0F/0x10 User Params or 0x31/0x32 Robin Params). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -14615,7 +14618,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_get_param_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, the read-back counterpart to 0x03 Gimbal Set Param. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -15089,7 +15093,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_reserved2_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Second name-only placeholder opcode in this cmd_set (compare 0x00). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -15747,7 +15752,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_degree_info_subscription_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, a request to subscribe to/configure periodic push updates of gimbal angle ('degree') telemetry -- conceptually a sibling of the push-style commands this project has already decoded elsewhere in this cmd_set (e.g. 0x05 Gimbal Params Get / Push Position). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16832,7 +16838,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_tutorial_step_set_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, advances/sets the current step of an on-gimbal interactive setup/tutorial walkthrough (its sibling 0x2B 'Gimbal Tutorial Status Get' is already fully decoded in this project's docs with a step/flags bitmask). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16877,7 +16884,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_robin_params_set_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, sets parameters for a subsystem/product internally codenamed 'Robin' (likely a handheld-gimbal/grip accessory product line, paired with the sibling 'Gimbal Handle Params Set' at 0x34). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16887,7 +16895,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_robin_params_get_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Read-back counterpart to 0x31 Robin Params Set. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16920,7 +16929,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_handle_params_set_dissector",
-  "fields": null
+  "fields": null,
+  "note": "By name, sets parameters for a gimbal 'handle' (handheld grip) accessory -- conceptually adjacent to 0x31/0x32 'Robin Params'. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16930,7 +16940,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_handle_params_get_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Checked this project's own cmdset_04_Gimbal.md first: existing entry only names a placeholder dissector function (gimbal_handle_params_get_dissector) with zero byte-level fields - exactly the 'no decode at all' state this task describes. Per the task hint, fully decoded dji_flight's relocated dispatch array at vaddr 0xae038 (44 raw 8-byte {fn_ptr,cmd_word} rows through 0xae190, matching doc 21's reconciliation note exactly) by reading the raw relocation-backed .data bytes directly (file offset 0xad038 in dji_flight, .data vaddr 0xae000/fileoff 0xad000). Across all 44 rows, cmd_set 0x04 (Gimbal) appears in exactly 2 rows: cmd_id 0x1c (row 37, handler fn at vaddr 0x1b860/thumb - matches the project's already-known gimbal_type_dissector binding) and cmd_id 0xf1 (row 38, handler fn at vaddr 0x1d874/thumb - a previously-uncatalogued cmd_set 0x04 id, out of this batch's scope). 0x36 is not one of the 2 rows; the dji_flight table is ruled out as this command's source. Separately decoded every literal-immediate duss_event_register_dynamic_command call site in dji_sys on both builds (e1e/ARM32: 11 sites at 0x2db80, 0x498ae, 0x4a23e, 0x4ac16, 0x4ac5c, 0x4be12, 0x4be58, 0x503a8, 0x504a8, 0x51ba2, 0x70064; e2/AArch64: 12 sites at 0x3ebd0, 0x62c00, 0x63790, 0x643a8, 0x6440c, 0x65690, 0x656f4, 0x68dd4, 0x68f70, 0x6cf9c, 0x96f58, 0x96f8c) by reading the actual w1/r1 (cmd_set) and w2/r2 (cmd_id) immediates loaded immediately before each call. None register cmd_set 0x04 except the already-known 0x69 (Event Input Report, confirmed independently on both ISAs at e1e 0x504a8 and e2 0x68f70). Also checked the 2 other registration-function variants that any binary in either image imports: duss_event_register_dynamic_command_with_user_data (1 caller, libMipiHandshake.so's dji::MipiHsRecvV1::initEventClientCallback - registers cmd_set 0x09/cmd_id 0xaa, not 0x04) and duss_event_register_dynamic_command_table_with_user_data (1 caller, libdcam_event_client_pool.so's cam_event_client_pool_register - a large, complex camera-specific registration function whose static table contents were not traced to completion; name strongly suggests cmd_set 0x02 Camera, not Gimbal). No binary named dji_gimbal or similar exists in either extracted system_files tree; the two gimbal-named binaries present (at_gimbal_yaw.so, at_gimbalcali.so, both under lib/) are factory-autotest calibration plugins, not a command daemon. Most likely real explanation: this is a motor/actuator parameter-query command dispatched transparently to the flight-controller's own RTOS firmware (e1e_extracted/rtos_dec_RTOS.bin, a 4.5MB non-ELF blob, DJI container type=TRTS, declared entry point 0x4CF08000) rather than parsed by any Android/Linux-side DUML daemon - the same blob this project's own doc 21 already flagged as the likely home of other low-level actuator commands (cmd_set 0x01) not visible in these system images. Disassembling that blob requires first resolving its load address/ISA, which no pass (including this one) has done; flagged as a concrete, bounded lead rather than guessed at. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16940,7 +16951,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_timelapse_params_set_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as 0x36 (see that entry for the full method and address list): cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_timelapse_params_set_dissector, no fields). dji_flight's fully-decoded 44-row dispatch table (vaddr 0xae038-0xae190) contains only cmd_id 0x1c and 0xf1 under cmd_set 0x04 - not 0x37. All 11 (e1e) + 12 (e2) literal duss_event_register_dynamic_command call sites in dji_sys were individually disassembled; the only cmd_set-0x04 registration found on either architecture is the already-known 0x69. The duss_event_register_dynamic_command_with_user_data (libMipiHandshake.so, cmd_set 0x09/0xaa) and duss_event_register_dynamic_command_table_with_user_data (libdcam_event_client_pool.so, camera-pool-shaped) variants were also checked and do not match. No dedicated gimbal daemon ELF exists in either image. Likely real location: the un-disassembled flight-controller RTOS blob (rtos_dec_RTOS.bin) per this project's doc 21 lead - timelapse parameter configuration for a mechanical gimbal is exactly the class of real-time actuator/motion-profile traffic that would live there rather than in an Android-side DUML daemon. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16985,7 +16997,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_lock_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as 0x36/0x37 (full method and address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_lock_dissector, no fields). Ruled out via the fully-decoded dji_flight 44-row table (only 0x1c/0xf1 under cmd_set 0x04), all 23 literal dji_sys duss_event_register_dynamic_command call sites across both ARM32/e1e and AArch64/e2 builds (only 0x69 under cmd_set 0x04), the _with_user_data and _table_with_user_data variants in libMipiHandshake.so/libdcam_event_client_pool.so, and the absence of any dedicated gimbal daemon ELF. 'Gimbal Lock' is specifically a real-time axis-locking actuator command, the same class of traffic doc 21 already reasons is dispatched to the flight-controller RTOS blob (rtos_dec_RTOS.bin) rather than parsed Android-side - a concrete lead, not chased further this pass since its load address/ISA remain unresolved. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -16995,7 +17008,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_rotate_camera_x_axis_dissector",
-  "fields": null
+  "fields": null,
+  "note": "cmdset_04_Gimbal.md already flags this cmd_id as a documentation-renderer artifact (two un-deduplicated '## 0x3A' headings, both describing the same command): one 'no byte-level payload decoder' heading and one naming gimbal_rotate_camera_x_axis_dissector, neither with a field table. Same exhaustive check as the other batch members (full method/address list in the 0x36 entry): the fully-decoded dji_flight dispatch table (44 rows, vaddr 0xae038-0xae190) has only cmd_id 0x1c/0xf1 under cmd_set 0x04; all 23 literal dji_sys duss_event_register_dynamic_command call sites (11 e1e + 12 e2, individually disassembled on both ISAs) register only the already-known 0x69 under cmd_set 0x04; the _with_user_data and _table_with_user_data variants (libMipiHandshake.so, libdcam_event_client_pool.so) don't match either; no dedicated gimbal daemon ELF exists in either image. A direct camera-pan axis-rotation command is squarely in the real-time actuator-command class this project's doc 21 already attributes to the un-disassembled flight-controller RTOS blob (rtos_dec_RTOS.bin) rather than any Android-side DUML daemon. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17005,7 +17019,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_get_temp_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as the other batch members (full method/address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_get_temp_dissector, no fields). The fully-decoded dji_flight dispatch table (44 rows) contains only cmd_id 0x1c/0xf1 under cmd_set 0x04; all 23 literal dji_sys duss_event_register_dynamic_command call sites across e1e(ARM32)/e2(AArch64) register only the already-known 0x69 under cmd_set 0x04; the _with_user_data/_table_with_user_data variants and every gimbal-named binary (at_gimbal_yaw.so, at_gimbalcali.so) were also checked with no match. Unlike the motor/actuator commands in this same batch, a temperature read is plausibly a simple sensor query that COULD live Android-side, but no registration site for it was found anywhere duss_event_register_dynamic_command*-family calls were enumerated in either image - it was not possible to distinguish 'lives in the RTOS blob' from 'registered via a mechanism this pass didn't cover' for this specific command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17015,7 +17030,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_tbd_47_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as the other batch members (full method/address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_tbd_47_dissector, no fields - the dissector's own name literally flags it 'TBD', i.e. even the public dissector author never resolved it). Ruled out via the fully-decoded dji_flight dispatch table (only 0x1c/0xf1 under cmd_set 0x04) and all 23 literal dji_sys duss_event_register_dynamic_command call sites across both ISAs (only 0x69 under cmd_set 0x04), plus the _with_user_data/_table_with_user_data variants and every gimbal-named binary in both images. No further lead specific to this cmd_id was found beyond the general flight-controller-RTOS-blob hypothesis that applies to the batch's other actuator-shaped commands. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17060,7 +17076,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Per the task hint, checked BINARY_COVERAGE_TRACKER.md's existing note for this cmd_id before searching from scratch, and confirmed it directly against cmdset_04_Gimbal.md's '0x51' section (both already carry this finding from this project's prior round-2 sweep, 17_ROUND2_RESIDUAL_SWEEP_FINDINGS.md). Handler: gc_v1_gimbal_api_query_cali_result in at_gimbalcali.so (a factory/automated-test calibration plugin, not a core DUSS daemon). Mechanism: a 4th client-side DUML send pattern - a direct call to the imported imss_link_v1_send(cmd_set, cmd_id, ...) via libimss.so, with cmd_set/cmd_id loaded as literal immediates (movs r0,#4 / movs r1,#0x51) immediately before the call; the same convention at 7 other call sites in this binary reproduces already-catalogued (cmd_set, cmd_id) pairs by name/semantics. Purpose: sends no request payload; on success, copies up to 99 raw response bytes into a caller-supplied buffer - a query/response accessor for a gimbal calibration result. No byte-level response layout was recoverable by the prior pass (the response is treated as an opaque raw-byte copy, not parsed into fields), and this pass did not find new evidence to improve on that. As part of this pass's own independent work (not reused from the prior finding), I also checked at_gimbal_yaw.so - the only other binary in either image that imports imss_link_v1_send and has a gimbal-shaped name - and confirmed its gimbalyaw_entry function never actually calls that import; the only real callers of imss_link_v1_send in that .so are generic LED-indicator helper functions (led_ctrl_fc, led_set_mode_esc, etc., registering cmd_set 0x09-adjacent factory-test traffic), unrelated to gimbal calibration. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17070,7 +17087,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_notify_camera_id_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as the other batch members (full method/address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_notify_camera_id_dissector, no fields). The fully-decoded dji_flight dispatch table (44 rows) contains only cmd_id 0x1c/0xf1 under cmd_set 0x04. All 23 literal dji_sys duss_event_register_dynamic_command call sites across e1e(ARM32)/e2(AArch64) register only the already-known 0x69 under cmd_set 0x04. Given this command's name ('NotiFy Camera Id') suggested a camera<->gimbal coordination path, specifically checked libdcam_event_client_pool.so (E2/aarch64, the camera-side event-registration pool, which imports the 3rd registration variant duss_event_register_dynamic_command_table_with_user_data) and libMipiHandshake.so (which imports duss_event_register_dynamic_command_with_user_data and handles the camera<->gimbal MIPI handshake link specifically). libMipiHandshake.so's one call site (dji::MipiHsRecvV1::initEventClientCallback) registers cmd_set 0x09/cmd_id 0xaa - not 0x04/0x56. libdcam_event_client_pool.so's cam_event_client_pool_register is a large (3616-byte, 122-basic-block), highly conditional function that builds its registration table through extensive runtime branching rather than a flat static array; its name and complexity strongly suggest it is the camera cmd_set (0x02)'s own registration pool, and tracing its full control flow to find every registered (cmd_set,cmd_id) pair was beyond this pass's scope - flagged as a concrete, bounded lead for whoever revisits this specific command, rather than guessed at. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17080,7 +17098,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_handheld_stick_state_get_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as the other batch members (full method/address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_handheld_stick_state_get_dissector, no fields). Note: this project's docs separately discuss a DIFFERENT pair of cmd_ids also numbered 0x56/0x57 under cmd_set 0x06 (Remote Control) - 'Quiry Role'/'Quiry Ms Link Status', tentatively tied to dji_wlm - which 21_PAYLOAD_DECODE_SWEEP_FINDINGS.md explicitly flags as unresolved with available ARM32/Thumb2 tooling. That is a numerically coincidental, entirely separate command under a different cmd_set and was not conflated with this entry (cmd_set 0x04/cmd_id 0x57, 'Handheld Stick State'). The fully-decoded dji_flight dispatch table (44 rows) contains only cmd_id 0x1c/0xf1 under cmd_set 0x04; all 23 literal dji_sys duss_event_register_dynamic_command call sites across both ISAs register only the already-known 0x69 under cmd_set 0x04; the _with_user_data/_table_with_user_data variants and every gimbal-named binary in both images were also checked with no match. A handheld-grip joystick state push is exactly the kind of real-time control-stream traffic doc 21 already attributes to the flight-controller RTOS blob for other cmd_sets' stick/joystick commands. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
@@ -17090,17 +17109,127 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "gimbal_handheld_stick_control_set_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive check as the other batch members (full method/address list in the 0x36 entry). cmdset_04_Gimbal.md's existing entry is placeholder-only (gimbal_handheld_stick_control_set_dissector, no fields). The fully-decoded dji_flight dispatch table (44 rows) contains only cmd_id 0x1c/0xf1 under cmd_set 0x04; all 23 literal dji_sys duss_event_register_dynamic_command call sites across e1e(ARM32)/e2(AArch64) register only the already-known 0x69 under cmd_set 0x04; the _with_user_data/_table_with_user_data variants and every gimbal-named binary in both images were also checked with no match. A handheld-grip joystick control/deadzone configuration command is the same real-time control-stream traffic class as sibling command 0x57 (see that entry) and is likewise most plausibly dispatched to the un-disassembled flight-controller RTOS blob (rtos_dec_RTOS.bin) rather than parsed Android-side. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 4,
   "cmd_set_name": "Gimbal",
   "cmd_id": 105,
   "name": "Event Input Report",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: sys_event_input_report",
+  "fields": [
+   {
+    "name": "reserved_header",
+    "label": "Reserved/Unused Header",
+    "offset": 0,
+    "size": 2,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Always present at the start of the payload (struct offset 0x14-0x15) but never read by either disassembled code path (report_type==2 key-event or report_type==4 touch-event) on either architecture. Generic name used because the handler genuinely never consumes it, so no real semantic name could be recovered -- flagged as such rather than guessed; it may be a sub-device index or padding reserved for other report_type values this firmware's handler doesn't implement.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "report_type",
+    "label": "Input Report Type",
+    "offset": 2,
+    "size": 2,
+    "type": "uint16 (LE enum)",
+    "enum": null,
+    "mask": null,
+    "desc": "Top-level discriminator, built in the handler from two separate byte loads (struct offsets 0x16/0x17) bit-field-combined into one 16-bit value and compared against literal 2 and 4. Any value other than 2 or 4 is a silent no-op: the handler returns success (0) without reading any further payload bytes and without emitting any uinput event.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "key_value",
+    "label": "Key/Button Value",
+    "offset": 4,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when report_type==2. Read at struct offset 0x18 and used verbatim as the 'value' field of a synthesized Linux struct input_event with type=EV_KEY(1) and code=2 (the code is hardcoded by the handler to the same constant 2 that selected this branch -- it is NOT itself taken from the payload). By EV_KEY convention this is typically 0=release, 1=press, 2=autorepeat, though no explicit range check was observed in the disassembled code. Total payload length for this variant: 5 bytes (offsets 0-4).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "touch_phase",
+    "label": "Touch Event Sub-type",
+    "offset": 5,
+    "size": 1,
+    "type": "uint8 (enum)",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when report_type==4. Read at struct offset 0x19. Selects which of two touch-writer sub-functions runs; values other than 1/2/3 cause neither sub-function to run (no ABS_MT_* events emitted), but the handler still unconditionally emits one final EV_SYN(0,0,0) sync event afterward regardless of this value.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "tracking_id",
+    "label": "Multitouch Tracking ID",
+    "offset": 6,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when report_type==4 and touch_phase is 1 or 2 (the touch-up/release sub-function never reads this byte at all, even though it is still part of the fixed payload layout). Read at struct offset 0x1a (= data_ptr+0) and emitted verbatim as a Linux EV_ABS/ABS_MT_TRACKING_ID (type=3, code=0x39) event -- the standard Linux multitouch Type-B slot/contact identifier.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "pos_x",
+    "label": "Touch X Position",
+    "offset": 7,
+    "size": 2,
+    "type": "uint16 (LE)",
+    "enum": null,
+    "mask": null,
+    "desc": "Present whenever report_type==4 (read and used by touch_phase 1, 2, AND 3). Read at struct offset 0x1b (data_ptr+1, a 16-bit unaligned load) and emitted as EV_ABS/ABS_MT_POSITION_X (type=3, code=0x35).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "pos_y",
+    "label": "Touch Y Position",
+    "offset": 9,
+    "size": 2,
+    "type": "uint16 (LE)",
+    "enum": null,
+    "mask": null,
+    "desc": "Present whenever report_type==4 (read and used by touch_phase 1, 2, AND 3). Read at struct offset 0x1d (data_ptr+3) and emitted as EV_ABS/ABS_MT_POSITION_Y (type=3, code=0x36).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "width_major",
+    "label": "Touch Contact Width",
+    "offset": 11,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when report_type==4 and touch_phase is 1 or 2 (ignored/not read for touch_phase==3, which instead sends a hardcoded 0 for this field). Read at struct offset 0x1f (data_ptr+5) and emitted as EV_ABS/ABS_MT_WIDTH_MAJOR (type=3, code=0x32).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "touch_major",
+    "label": "Touch Contact Size",
+    "offset": 12,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when report_type==4 and touch_phase is 1 or 2 (ignored/not read for touch_phase==3, which instead sends a hardcoded 0 for this field). Read at struct offset 0x20 (data_ptr+6) and emitted as EV_ABS/ABS_MT_TOUCH_MAJOR (type=3, code=0x30). Total payload length for the touch_phase 1/2 variant: 13 bytes (offsets 0-12); the touch_phase==3 (release) variant only reads offsets 0-10 (11 bytes), though a sender may still pad the wire payload to the full 13 bytes.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 5,
@@ -19444,7 +19573,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Reserved/unused cmd_id; not expected to appear on the wire with a real payload. Confirmed no meaningful payload. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19454,7 +19584,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched the complete enumerated function-name list of dji_network/E2 (~60 wms_evt_*/v1_proc_* names, extracted via `strings` and cross-checked against the binary's own __func__ self-logging) - no scan_result/scan_push-named function exists. The only related artifact found is a literal path string '/tmp/scan_res' (vaddr 0x18913) surrounded by 'iw scan'-style parsing fragments (' freq: %d', ' signal: %d', ' * station count: %d', ' * channel utilisation:'), i.e. real evidence that dji_network/E2 DOES run and parse a Wi-Fi scan and stage results in a temp file, but no DUML payload-encoding function for that result set could be located or disassembled - the string reference itself could not be resolved to a specific function body within budget. dji_network/E1E's net_wifi*.c also contains generic 'ath_scan'-prefixed strings but nothing naming a push/result-encode function either. Given this is a device->app PUSH (one-way), it would plausibly be built by whatever function assembles the scan-result list into the wire frame, which I was not able to isolate. Reporting insufficient_evidence rather than guessing a layout for a variable-length, multi-record structure with no observed encoder. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19464,27 +19595,66 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "dji_network/E1E (the net_wifi*.c codebase, NOT the E2 'wms' codebase) contains a full SNR/noise subsystem by name: net_evt_req_channel_noise (0x1eea0), net_push_snr (0x1f138), get_single_chan_noise (0x1f5e0), net_start_snr_timer (0x1ef78), net_suspend_snr_timer (0x1efe8), plus loose strings 'starting snr pushing thread as request', 'w_ctrl snr push cmd: %s', 'w_ctrl: pushing SNR to APP: %u bytes', 'w_ctrl_ch: freq %d, noise %d' - net_evt_req_channel_noise in particular is an extremely strong name match for an inbound 'request channel noise/SNR' handler. However, I could NOT resolve these strings' containing function bodies: ARM32/Thumb2 -fpic string references use a 'ldr rD,[pc,#imm]; add rD,pc' PC-relative idiom with no R_ARM_RELATIVE relocation on the literal (same as the aarch64 adrp+add idiom, but harder to scan correctly), and both (a) a custom capstone-based simulator I wrote for that idiom and (b) a direct `arm-linux-gnueabi-objdump -d` disassembly (which annotates literal-pool PC-relative loads with their resolved target in a comment, as verified against known-good PLT entries in the same binary) found zero references to any of these 5 string addresses anywhere in .text - the same 'orphaned string' phenomenon documented for the E2 wms_evt_*/v1_proc_* functions in shared_infrastructure_found, but here I additionally could not even get as far as identifying which bytes constitute the function body (unlike the E2 cases, where I did fully disassemble the handler bodies via other, successfully-resolved xrefs). Given the task's explicit instruction not to invent a layout without real evidence, and genuinely not having located the function body (only its name), this is reported as insufficient_evidence rather than a guessed single-byte-enum SNR-get payload. This is a concrete, named lead for a future pass with more ARM32-PIC tooling budget. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 3,
   "name": "WiFi Ap Channel Set",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: inner handler at vaddr 0xfae8 (self-logs as __func__ 'v1_proc_set_chan' at 0xfb14/0xfb8c), called via direct `bl` from a per-command wrapper at vaddr 0x7010",
+  "fields": [
+   {
+    "name": "wifi_ap_set_channel_channel",
+    "label": "Channel",
+    "offset": 0,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Target Wi-Fi channel number, little-endian. Handler only checks value < 256 (0x100) at this layer; a deeper call (vaddr 0xb080, not further traced) presumably validates against the real regulatory/band channel list.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 4,
   "name": "WiFi Ap Channel Get",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: inner handler at vaddr 0xfc10 (self-logs as __func__ 'v1_proc_get_chan' at 0xfc60/0xfc98), called via direct `bl` from a per-command wrapper at vaddr 0x71f8",
+  "fields": [
+   {
+    "name": "wifi_ap_get_channel_status",
+    "label": "Status",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Always 0x00 on this code path; no error branch was observed in the disassembled handler.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "wifi_ap_get_channel_channel",
+    "label": "Channel",
+    "offset": 1,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Current configured Wi-Fi channel number.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19494,7 +19664,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Checked the complete enumerated v1_proc_*/wms_evt_* function-name list in dji_network/E2 (the module that cleanly implements set_chan/get_chan/set_ssid/get_ssid/get_rssi/set_band/set_country/etc. for this cmd_set) - no tx-power/txpwr/tx_pwr/power-level-named set function exists anywhere in that list. Also grepped dji_network/E1E (net_wifi*.c codebase) for 'txpwr'/'tx_pwr'/'tx_power'/'get_power'/'set_power' - no match. Not ruling out that the aircraft's actual Wi-Fi tx-power control lives in a third binary not yet identified for this cmd_set (e.g. a radio-calibration-specific daemon), but within this pass's scope (dji_network, the only binary found exposing a Wi-Fi-AP-management-shaped DUML-adjacent API for this cmd_set) nothing matched. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19504,27 +19675,90 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive name-list check as 0x05 (Tx Pwr Set) - no tx-power-get-named function found in either dji_network build. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 7,
   "name": "WiFi Ap SSID Get",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: inner handler at vaddr 0xf148 (self-logged by its own wrapper chain as 'wms_evt_get_ssid'), called via direct `bl` from a per-command wrapper starting at vaddr 0x56e0-ish (confirmed call site 0x573c -> bl #0xf148)",
+  "fields": [
+   {
+    "name": "wifi_ap_get_ssid_status",
+    "label": "Status",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Always 0x00 on this code path (no error branch observed).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "wifi_ap_get_ssid_len",
+    "label": "SSID Length",
+    "offset": 1,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Length N of the SSID string that follows.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "wifi_ap_get_ssid_ssid",
+    "label": "SSID",
+    "offset": 2,
+    "size": -1,
+    "type": "string",
+    "enum": null,
+    "mask": null,
+    "desc": "N raw ASCII bytes (length given by the preceding field), not separately null-terminated on the wire.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 8,
   "name": "WiFi Ap SSID Set",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: inner handler at vaddr 0xf1f8 (self-logs as __func__ 'v1_proc_set_ssid' at 0xf22c/0xf288/0xf300/0xf368), called via direct `bl` from a per-command wrapper starting at vaddr 0x59cc (confirmed call site 0x5a90 -> bl #0xf1f8)",
+  "fields": [
+   {
+    "name": "wifi_ap_set_ssid_len",
+    "label": "SSID Length",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Length N of the SSID that follows; must satisfy 1<=N<=32, and total payload length must equal N+1 or the request is rejected.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "wifi_ap_set_ssid_ssid",
+    "label": "SSID",
+    "offset": 1,
+    "size": -1,
+    "type": "string",
+    "enum": null,
+    "mask": null,
+    "desc": "N raw ASCII bytes of the new SSID (length given by the preceding field).",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19557,7 +19791,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Directly disassembled. The handler calls bl #0xa470(&local_u16) to fetch a 16-bit value, then unconditionally writes resp_buf[0]=0x00 (status), resp_buf[1..2]=the FIXED constant 0x0200 (little-endian, written via a hardcoded `mov w8,#0x200; sturh w8,[x21,#1]` - not derived from any input or measurement), and resp_buf[3..4]=the fetched 16-bit value (little-endian). Response length is computed as fixed = 5 bytes. The function name 'wms_evt_get_rssi' (no 'bt_' prefix, unlike the explicitly Bluetooth-scoped 'v1_proc_bt_*' functions in the same binary, and distinct from the separately-logged 'wms: get bt test: rx pakects %d, rssi %d' BT-test string) is why I attribute this to the Wi-Fi-side antenna RSSI command rather than the BT RSSI test path, but I could not confirm this split any further, and I could NOT determine what the fixed 0x0200 field actually represents (a type/capability tag seems most likely given it never varies, but this is not confirmed), nor the real unit/scale of the fetched value at vaddr 0xa470 (not traced further within budget) - both are flagged below as unresolved rather than asserted. Handler correctly identified (inner handler at vaddr 0x11010 (self-logged by its own wrapper chain as 'wms_evt_get_rssi'), called via direct `bl` from a per-command wrapper starting at vaddr ~0x5bf8 (confirmed call site 0x5c6c -> bl #0x11010)), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19567,17 +19802,31 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "App/RC sets the AP's hardware MAC address. Handler correctly identified (wms_evt_set_mac @0x5df0 -> v1_proc_set_macaddr @0xf3f0 -> wifi_mgmt_set_mac @0xaf08), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 12,
   "name": "WiFi Ap Mac Addr Get",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: wms_evt_get_mac @0x5fc8 -> v1_proc_get_macaddr @0xf558 -> wifi_mgmt_get_mac @0xaf18",
+  "fields": [
+   {
+    "name": "wifi_ap_mac_addr_get_mac",
+    "label": "MAC Address",
+    "offset": 0,
+    "size": 6,
+    "type": "ether",
+    "enum": null,
+    "mask": null,
+    "desc": "Response-only field; request payload is empty/unparsed. Current AP MAC address, raw 6 bytes.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19587,7 +19836,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "App/RC sets the AP's WPA2-PSK passphrase. Handler correctly identified (wms_evt_set_psk @0x6240 -> v1_proc_set_passwd @0xf7f0 (v1_interface/v1_proc.c) -> check_input_validity @0xc0f0, then wifi_mgmt_set_passwd @0xafe0), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19597,27 +19847,54 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "App/RC reads back the AP's current WPA2-PSK passphrase. Handler correctly identified (wms_evt_get_psk @0x6418 -> v1_proc_get_passwd @0xf750 -> wifi_mgmt_get_passwd @0xafd8), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 15,
   "name": "WiFi Ap Factory Reset",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: wms_evt_restore_default @0x6690 -> v1_proc_restore_default @0xf998 (v1_interface/v1_proc.c) -> either wifi_mgmt_restore_default @0xb078 or _run_sys_cmd @0xb718",
+  "fields": [
+   {
+    "name": "wifi_ap_factory_reset_sub_id",
+    "label": "Sub ID",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Optional; if the payload is empty, treated as 0.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 16,
   "name": "WiFi Ap Band Set",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: wms_evt_set_band @0x6790 -> v1_proc_set_band @0xffd0 (validation only) -> wifi_mgmt_set_band @0xb178 -> set_band_config @0xd638 / device_set_band @0x160c0",
+  "fields": [
+   {
+    "name": "wifi_ap_band_set_band",
+    "label": "Band",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Wi-Fi band selector.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19673,7 +19950,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumed: sets some Wi-Fi power-related mode (RF transmit power profile, or CE/FCC/SRRC-style regulatory power mode, by analogy with cmd_set 0x06's documented-but-undecoded 'RC Power Mode CE/FCC Set/Get' commands) -- not confirmed. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19683,7 +19961,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumed: triggers some RF/antenna calibration routine for the Wi-Fi radio -- not confirmed. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19693,7 +19972,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "App/RC requests the aircraft restart its Wi-Fi (hostapd/supplicant) stack, e.g. to apply a changed SSID/passphrase/channel/band without a full reboot. Confirmed no meaningful payload. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19703,7 +19983,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumed: sets how the AP selects something (channel/band auto-selection mode, or master/slave Wi-Fi-vs-SDR link selection, by loose analogy with the already-documented cmd 0x17 'WiFi Ap Selection Mode Get' and the 'load_acs_selection_info'/'save_acs_selection_info' strings seen in dji_network) -- not confirmed to be the same subsystem. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19713,7 +19994,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Public dissector name only; no payload semantics known going in. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19723,7 +20005,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "A genuinely new finding, not just a byte layout for an already-named command: cmd_id 0x18 is a real, implemented command whose actual purpose is setting the aircraft's Wi-Fi regulatory country/region using a plain 2-character ISO-3166-1 alpha-2 code -- distinct from the already-documented cmd_id 0x30 ('WiFi Ap Set Country Code'), which this same binary implements separately via wms_evt_set_country_ext/v1_proc_set_country_ext using a different payload shape (two 4-byte region strings + a uint16, per the existing cmdset_07_Wi-Fi.md decode). 0x18 is the simpler, non-'ext' sibling. Typical use: ground-station app sets the drone's operating region to 'US' before first flight in a new country, which constrains legal channel/power limits. Handler correctly identified (wms_evt_set_country (vaddr 0x6be0, the per-cmd_id event-table entry for cmd_id 0x18) -> v1_proc_set_country (vaddr 0x100f8) -> check_country_alpha2 (vaddr 0xbe98) / wifi_mgmt_get_country (vaddr 0xb2e8) on the fallback path), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19733,7 +20016,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "The read counterpart to 0x18: queries the aircraft's currently-configured Wi-Fi regulatory country as a plain 2-character code. A genuinely new command purpose, not previously named anywhere in the public dissector (there is no existing 'country get' of any kind in the cmd_set 0x07 catalog prior to this finding). Typical use: app reads back the current region setting to display it in a settings screen, with no input needed. Handler correctly identified (wms_evt_get_country (vaddr 0x6e28, the per-cmd_id event-table entry for cmd_id 0x19) -> v1_proc_get_country (vaddr 0x104f0) -> wifi_mgmt_get_country (vaddr 0xb2e8)), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19743,7 +20027,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No name or payload semantics known. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19753,7 +20038,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No name or payload semantics known. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19763,7 +20049,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No name or payload semantics known. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19773,7 +20060,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No name or payload semantics known. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19783,7 +20071,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Public dissector name suggests this duplicates/overlaps already-decoded cmd_id 0x07 'WiFi Ap SSID Get' (which dji_network's table DOES implement, via v1_proc_get_ssid at vaddr 0xf148). No separate implementation of 0x1E itself was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19793,7 +20082,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No name or payload semantics known. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19803,7 +20093,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Public dissector name implies a 2.4/5GHz band or exact-frequency query, plausibly overlapping already-decoded cmd_id 0x10 'Band Set' (which the table DOES implement, handler wms_evt_set_band / v1_proc_set_band) or the unimplemented 0x2C/0x2D code-rate pair -- but no separate implementation of 0x20 itself was found in the one confirmed handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19813,7 +20104,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Operator app requests a specific Wi-Fi AP channel-bandwidth mode. Handler reads device-ready state (device_ctx+0x314==1 required, else immediate error ack), then reads 1 payload byte. Value 3 is accepted and acked without reconfiguration (acts like a recognized sentinel, plausibly 'unchanged'/'auto-managed'); value 0 is accepted, acked, AND triggers an actual reconfiguration (builds a shell command string via __sprintf_chk using the AP's current channel and executes it via a run-command helper, i.e. a real hostapd/driver bandwidth reconfig). Values 1 and 2 are not individually checked by this function and fall through a branch that neither acks nor errors (silently dropped) - a real, evidenced finding, not a guess. Handler correctly identified (net_evt_set_bw, entry at file/vaddr 0x000089a0 (self-logs its own name \"net_evt_set_bw\" at entry via duss_log_gen_head)), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19823,7 +20115,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown - no live handler located on either firmware image via any of the four documented mechanisms plus the newly-confirmed dense dispatch-table variant. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19833,7 +20126,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown - no live handler located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19843,7 +20137,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown - no live handler located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19853,7 +20148,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown - no live handler located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19863,7 +20159,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown wire payload - the real ACS engine was located and named with high confidence as a subsystem, but no evidence ties it to this specific cmd_id's wire format. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19873,17 +20170,115 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unknown wire payload for cmd_id 0x27 itself; a plausible but unconfirmed internal relative (net_ack_do_wifi_mode_switch) was found and is documented as a lead, not a decode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 40,
   "name": "WiFi Ap Channel List Get/Push",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_push_channel_list, entry at file/vaddr 0x00008608",
+  "fields": [
+   {
+    "name": "total_len",
+    "label": "Total payload length",
+    "offset": 0,
+    "size": 4,
+    "type": "uint32",
+    "enum": null,
+    "mask": null,
+    "desc": "Computed as (end_of_buffer - start_of_buffer); i.e. self-describing total byte length of this Push payload.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "current_channel",
+    "label": "Current operating channel",
+    "offset": 4,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Read from device_ctx+0x298.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "band_mode",
+    "label": "Band mode flag",
+    "offset": 5,
+    "size": 4,
+    "type": "uint32",
+    "enum": null,
+    "mask": null,
+    "desc": "1 if device_ctx+0x548==0 (single-band/2.4GHz-only), else 2 (dual-band). Stored as a 4-byte int (`str.w`), not a byte.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "reserved_9_c",
+    "label": "Reserved/flag bytes",
+    "offset": 9,
+    "size": 4,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Four individually-written bytes: offset 9 is always 1, offsets 0xa/0xb/0xc are always 0 in the disassembled construction path. Exact per-byte semantics beyond their constant values were not resolved - flagged explicitly as unconfirmed, not invented.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "count_2g",
+    "label": "2.4GHz channel count",
+    "offset": 13,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Read from device_ctx+0x425; number of entries in the channel_2g array that follows.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "reserved_e_10",
+    "label": "Reserved/padding",
+    "offset": 14,
+    "size": 3,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Not observed being explicitly written in the traced construction path between the count field and the array; best-effort assumption of 3 reserved/pad bytes based on the array's observed start offset (0x11) - flagged as unconfirmed.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "channel_2g",
+    "label": "2.4GHz channel list",
+    "offset": 17,
+    "size": -1,
+    "type": "uint16[count_2g]",
+    "enum": null,
+    "mask": null,
+    "desc": "count_2g little-endian uint16 channel numbers, each copied from a per-record source table at device_ctx+0x399 (stride 10 bytes/record).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "band5_block",
+    "label": "5GHz block (conditional)",
+    "offset": -1,
+    "size": -1,
+    "type": "struct (conditional)",
+    "enum": null,
+    "mask": null,
+    "desc": "Present only when device_ctx+0x548 != 0: a second small header (count/flags, including a byte sourced from device_ctx+0x548 again and state checks against device_ctx+0x314/0x324) immediately followed by its own uint16 channel array sourced from a table near device_ctx+0x426. Confirmed present in disassembly (two nested loops, mirrored structure to the 2.4GHz block) but exact header-byte semantics were not individually resolved to the same confidence as the 2.4GHz block - reported as a confirmed-to-exist, partially-resolved structure rather than invented detail.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19893,7 +20288,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "App asks the aircraft to start or stop its periodic per-channel noise/SNR measurement (whose results are reported asynchronously via the already-documented sibling Push command 0x2A 'WiFi Ap Channel Noise/SNR Push', which this starts/feeds). Handler reads 1 payload byte, always immediately ACKs, then starts the SNR measurement timer if the byte is 0, or suspends it for any other value. Handler correctly identified (net_evt_req_channel_noise, entry at file/vaddr 0x000087c0), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19923,10 +20319,35 @@
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 43,
   "name": "WiFi Ap Set Hw Mode",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_set_hw_mode, entry at file/vaddr 0x000092f8",
+  "fields": [
+   {
+    "name": "reserved_or_unused_0",
+    "label": "Unresolved byte 0",
+    "offset": 0,
+    "size": 1,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Not observed being read anywhere in the disassembled code path for this handler. Explicitly flagged as unconfirmed rather than guessed - may be a reserved/padding byte, or consumed only by a separate branch (vaddr 0x966c) not disassembled in this pass.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "hw_mode",
+    "label": "New HW/PHY mode",
+    "offset": 1,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Read via unaligned `ldrh.w r1,[msg,0x15]`. Compared against the current value cached at device_ctx+0x33c (skip-if-unchanged fast path) and, when different, gated by a region/capability byte-pair check at device_ctx+0x291/0x292 before being applied. No enum table for its numeric values was recovered in this pass - reporting the field's existence, size and role, not invented value names.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -19936,7 +20357,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No dedicated handler found. Method: exhaustively enumerated dji_network's (E1E) complete net_evt_* debug-log function-name inventory via the __FUNCTION__-string-xref technique (17 names total, listed in shared_infrastructure_found) \u2014 none named code_rate/coderate/set_rate. grep for 'code_rate'/'coderate' across every file in both firmware roots: zero matches. The closest related real code is dji_network's MCS/rate-adaptation subsystem (/cali/wifi/mcs.conf, debug strings 'fixed_mcs=', 'mcs_mode=%d', functions load_mcs_config/mcs_set_grade/adjust_mcs_grade), but that subsystem is driven internally by live RSSI (string 'MCS_Adjust rssi %d, prev_mcs %d, curr_mcs %d'), not by an external DUML setter, and none of its functions carry a net_evt_* wrapper or any other literal-immediate cmd_set/cmd_id registration evidence. Also checked: all 12 of dji_sys's (E2) and all 11 of dji_sys's (E1E) literal duss_event_register_dynamic_command call sites (fully disassembled) \u2014 none register cmd_set 7. No other Wi-Fi-AP-management binary found in either firmware root (bin/lib listings of both e1e_extracted and e2_extracted fully enumerated; only generic hostapd/wpa_supplicant/iw and dji_network/dji_wlm found). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -19946,27 +20368,54 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Counterpart getter to 0x2c; same negative result for the same reasons (no net_evt_get_code_rate/cur_code_rate name in dji_network's exhaustive function-name inventory, no 'code_rate' string anywhere in either firmware root, no dji_sys literal registration for cmd_set 7). The MCS-adaptation internals (mcs_set_grade/adjust_mcs_grade, driven by RSSI) are the closest related real code but are not wired to any external get-style DUML command we could find. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 46,
   "name": "WiFi Ap Set Usr Pref",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_set_user_pref",
+  "fields": [
+   {
+    "name": "wifi_user_pref",
+    "label": "User Preference",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "New Wi-Fi rate/MCS preference value, written into the network-context 'user_pref' field. Confirmed behavior: 1 = apply the secondary stored MCS-table snapshot as the active one; any other value = reset both the active and stored MCS-table fields to 0 (effectively 'auto/default'). No-op (ack with no state change) if it equals the value already stored.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 47,
   "name": "WiFi Ap Get Usr Pref",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_get_user_pref",
+  "fields": [
+   {
+    "name": "wifi_user_pref",
+    "label": "User Preference",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Current Wi-Fi rate/MCS preference value (response payload), read directly from the same network-context field (struct+0x32c) that WiFi Ap Set Usr Pref (0x2e) writes. See 0x2e for the confirmed value-1-vs-other branch semantics.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
@@ -20023,7 +20472,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No dedicated handler found. Full net_evt_* name inventory of dji_network (E1E) has no reset_freq/freq_reset entry; grep for 'reset.?freq'/'freq.?reset' across the whole binary and both firmware roots: zero matches. The closest related real code examined was inside net_evt_set_country_code (cmd 0x30, already documented) itself: when that command's own 3rd payload byte (a mode/flag field at event-ctx+28) is >=2, the handler force-writes a literal 'K3' country code and stores the raw flag value into struct+0x298 (the same field 0x2e/0x2f's MCS-snapshot logic reads from) \u2014 a sub-behavior of 0x30, not a separate 0x31 wire command. No distinct standalone 'reset frequency/channel' handler was found. Also checked: dji_sys's literal duss_event_register_dynamic_command call sites (all 23 across E1E+E2 builds) \u2014 none for cmd_set 7. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20033,7 +20483,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No dedicated handler found. The country-code-related real functions recovered from dji_network's __FUNCTION__-string inventory are exactly three: net_evt_set_country_code (cmd 0x30, already documented), net_get_country_code, and net_alpha2_to_country_code \u2014 all fully disassembled; none implement a delete/clear operation distinct from the existing set path. grep for 'del_country'/'delete_cc'/'clear_country'/'rm_country' and generic 'del'+'country' co-occurrence across dji_network and the whole firmware tree: no matching function-name evidence beyond the shell helper set_country_code.sh (E2 bin/, a factory/production script, not a DUML handler) and the /factory_data/wifi/country.txt config file reader already covered by net_get_country_code. No separate 0x32 handler located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20043,7 +20494,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No dedicated handler found. grep for 'verify' anywhere in dji_network: zero matches. The three real country-code functions (net_evt_set_country_code, net_get_country_code, net_alpha2_to_country_code \u2014 all disassembled for the 0x30/0x31/0x32 investigation above) contain validation-adjacent logic (e.g. net_evt_set_country_code's memcmp against a stored 2-byte reference at struct+0x291/+0x292 to detect a no-op 'unchanged' set), but no distinct 'verify/validate country code without applying it' entry point or function name was found. No other candidate binary found in either firmware root. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20053,7 +20505,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No dedicated handler found. Full net_evt_* inventory of dji_network has no get_work_mode/get_mode entry. grep for 'work_mode'/'workmode' across dji_network and the whole firmware tree: zero matches. dji_network does have a real AP-vs-STA operating-mode concept (source files states/wifi_ap_states.c and states/wifi_sta_states.c, and debug strings 'Wifi Connected (AP)'/'Wifi Connected (STA)'/'rc info gathered, switch to station mode'/'w_ctrl:switch to app mode'), but it is implemented as an internal state machine with no net_evt_*-named external getter found; could not establish that this cmd_id reads that state machine's current mode. No other candidate binary found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20063,7 +20516,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Counterpart setter to 0x39; same negative result (no net_evt_set_work_mode/set_mode name, no 'work_mode' string anywhere in either firmware root). Note: dji_sys's (E1E) literal duss_event_register_dynamic_command call site at vaddr 0x503a8 registers cmd_set=6/cmd_id=0x3a ('RC 2014 Usb Mode Set', already flagged elsewhere in this project as board-specific/dead on this image per 21_PAYLOAD_DECODE_SWEEP_FINDINGS.md) \u2014 a numerically coincidental but confirmed-unrelated different cmd_set (6, not 7); re-verified this is not a mismatch in our own transcription. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20073,7 +20527,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No handler found anywhere, and no Wi-Fi-provisioning-relevant QR-code code at all in either firmware root. A content grep (via strings, not filename) for 'qrcode'/'qr_code' across every file in both bin/ and lib/ (and lib64/) of both e1e_extracted and e2_extracted turned up exactly: bin/dji_autoflight, bin/dji_ml, and a cluster of unrelated 'at_*.so' manufacturing/calibration self-test shared libraries (at_imubias.so, at_compass.so, at_sdr.so, at_imucali.so, at_vision_sensor_test.so, at_gimbal_yaw.so, at_gimbalcali.so, at_v1trigger.so, at_cleardata.so, at_barotest.so, at_systimer.so, at_checkcb.so, at_qrcode.so, at_imubiastemp.so) plus libimss.so (E1E) and libopencv_java3.so (E2, dji_ml only). This is itself a notable finding: these AT ('Aging Test') modules all share a common literal table of manufacturing self-test module names \u2014 at_qrcode.so is a physical QR-sticker scanner used during production hardware calibration (unrelated to end-user Wi-Fi provisioning), and its name only coincidentally overlaps with this command's name. No net_evt_*-named handler, no dji_network string, and no dji_sys/dji_sdrs_agent literal or table-driven registration evidence ties any code to this cmd_id. Genuinely plausible that 'WiFi Config By Qrcode' on this product is implemented entirely app/phone-side (the app decodes the QR code into an SSID+passphrase pair and simply issues the ordinary SSID/passphrase Set commands), with cmd_id 0x3b itself unimplemented/reserved on this aircraft firmware build. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20083,7 +20538,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Aircraft -> App/RC periodic push of Wi-Fi link MAC-layer statistics (retry rate, byte/packet counters, signal metrics) while a Wi-Fi link (AP or STA) is active. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20093,7 +20549,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: status push/query of the aircraft's or RC's role (master/slave) in a dual-link-role or dual-RC pairing scenario (DJI's proprietary 802.11p ad-hoc link master/slave roles, or dji_wlm's dual-remote-controller flight-control-handoff arbitration -- both real, named subsystems found in these binaries, neither confirmed as this cmd_id's actual handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20103,7 +20560,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: sets the shared pairing/authentication code used by DJI's proprietary 802.11p ad-hoc master/slave Wi-Fi link (candidate subsystem only, not a confirmed handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20113,7 +20571,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: returns/pushes the list of nearby 802.11p-ad-hoc 'master' broadcasters (or candidate master remote controllers) discovered during a scan, for subsequent pairing via cmd_id 0x85 (candidate subsystem only, not a confirmed handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20123,7 +20582,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: instructs the device to join a specific, previously-scanned 802.11p-ad-hoc 'master' identified by an id, authenticating with the pairing auth code (candidate subsystem only, not a confirmed handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20133,7 +20593,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: returns the current pairing/authentication code for the 802.11p ad-hoc master/slave Wi-Fi link (candidate subsystem only, not a confirmed handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
@@ -20143,27 +20604,102 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely: pushes or returns an error/failure code for the master/slave pairing subsystem (candidate subsystem only, not a confirmed handler). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 145,
   "name": "WiFi Rc Info Set",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_set_rc_info @ 0x7ad0",
+  "fields": [
+   {
+    "name": "reserved_or_subtype",
+    "label": "Reserved / Sub-type (unresolved)",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Present in the payload by struct-offset arithmetic (raw struct offset 0x14, one byte before the first byte this handler actually reads at raw 0x15), but never read anywhere in the traced net_evt_set_rc_info body. Could be a reserved/padding byte, or a sub-type/role selector consumed by an outer dispatch layer before reaching this specific sub-handler. Reported honestly as unresolved rather than guessed.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "ssid_len",
+    "label": "RC Wi-Fi SSID Length",
+    "offset": 1,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Length in bytes of the following rc_wifi_ssid field. Read via ldrb at raw struct offset 0x15 (= wire offset 1). Destination buffer is 0x40 (64) bytes, so the practical maximum is 63 (the memset pre-zeroes the full buffer, so a shorter string is implicitly NUL-padded).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "rc_wifi_ssid",
+    "label": "RC Wi-Fi SSID",
+    "offset": 2,
+    "size": 12,
+    "type": "ascii_string",
+    "enum": null,
+    "mask": null,
+    "desc": "ssid_len bytes of ASCII, memcpy'd into a 64-byte buffer in the Wi-Fi context struct (ctx+0xa6c -> +0x2c1). Named by inferred purpose/ordering (see handler_evidence) -- not an explicit string match in the binary. Size shown (12) is the example value below, not a fixed field size; the field is length-prefixed and variable (0-63 bytes).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "password_len",
+    "label": "RC Wi-Fi Password Length",
+    "offset": 14,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Length in bytes of the following rc_wifi_password field, located immediately after rc_wifi_ssid's data (raw offset = r5+0x16+ssid_len). Destination buffer is 0x21 (33) bytes, so the practical maximum is 32 -- the canonical size for a WPA/WPA2-PSK ASCII passphrase.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "rc_wifi_password",
+    "label": "RC Wi-Fi Password",
+    "offset": 15,
+    "size": 11,
+    "type": "ascii_string",
+    "enum": null,
+    "mask": null,
+    "desc": "password_len bytes of ASCII, memcpy'd into a 33-byte buffer (ctx+0xa6c -> +0x2a0, which sits immediately before the SSID buffer in the struct, i.e. struct field order is {password[33], ssid[64]} even though the SSID arrives first on the wire). Named by inferred purpose/ordering, not an explicit string match. Size shown (11) is the example value below; the field is length-prefixed and variable (0-32 bytes).",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 7,
   "cmd_set_name": "Wi-Fi",
   "cmd_id": 146,
   "name": "WiFi Update Sw State",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: net_evt_update_sw_state @ 0x9dfe (ARM32/e1e); wms_evt_update_sw_state @ 0x8f1c (AArch64/e2)",
+  "fields": [
+   {
+    "name": "sw_state",
+    "label": "Wi-Fi Switch State",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Read via ldrb at raw struct offset 0x14 (= wire offset 0) in both independently-analyzed implementations. The value is compared for equality against 1 to pick the enable vs. disable code path; only 0 and 1 are meaningfully exercised in the disassembly (anything else falls through to the 'disable' branch, so is not a distinct state in practice).",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 8,
@@ -21680,7 +22216,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. Checked all binaries importing duss_event_register_dynamic_command (dji_sdrs_agent, test_rtos_raw, dji_sys ARM32+AArch64) for a literal cmd_set=0x09 registration -- none exists (the only literal sites found anywhere were cmd_set 0x22/id 0x60 x3, cmd_set 0x00/id 0xa3 x2, cmd_set 0x06/id 0x3a x2, cmd_set 0x04/id 0x69 x1). Grepped both firmware trees for 'baseband' -- the only hit in a DUML-relevant binary (bin/dji_sys) is the string 'baseband_1090' in an ADS-B 1090MHz-receiver status message, unrelated to the OcuSync radio baseband. ALL_COMMANDS.csv (this project's own import of the public dissector) tags this cmd_set's typical_receiver as 'HD-Link MCU (air)' for essentially every row, consistent with this command being handled entirely on the separate air-unit radio MCU, outside this Linux filesystem extraction. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -21690,7 +22227,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. Grepped both firmware trees for 'fpga' (case-insensitive): hits are bin/dji_perception, lib_test_cases.sh, test_mdev, test_dsp/test_dsp_e1e, lib/modules/vmipi_acc.ko, lib/modules/vision_acc.ko, lib/libOmxCore.so, lib/libLLVM.so, lib/libdsp_frwk.so, lib/libimss.so, lib/libduml_frwk.so -- all generic DSP/video-codec/GPU FPGA-acceleration references (camera/vision pipeline), none naming the OcuSync radio FPGA or carrying a cmd_set-0x09 registration. Same negative result as 0x03 for every known DUML-registration mechanism in this firmware. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -21700,7 +22238,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same disposition and same search as 0x04 (FPGA Write) -- no native Linux-side implementation found, 'fpga' string hits are all unrelated vision/DSP-pipeline code, no cmd_set=0x09 registration anywhere. Given 0x04/0x05 are almost certainly a matched write/read pair implemented identically to the already-decoded 0x06/0x07 'TCX Hardware Reg Write/Read' pair (register addr + value, per the public dissector's hd_link_write_hardware_reg_dissector/hd_link_read_hardware_reg_dissector), the most defensible inference is that they target a different chip (the radio-link FPGA rather than the AD9363 TCX) via the same request/response shape, but this is an architectural analogy, not a byte-level finding confirmed by disassembly of a real handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -21827,7 +22366,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. The sibling PUSH/GET direction (0x0A 'HDLnk Sweep Frequency Get/Push') already has a public-dissector decode but only as 32 raw unparsed bytes (hd_link_push_freq_energy_dissector, field name 'unknown0') -- i.e. even the public community RE effort never resolved this family's byte layout. The SDR-era sweep commands in the same cmd_set (0x20 'SDR Downward Sweep Frequency', 0x29 'SDR Upward Sweep Frequency') are likewise undecoded by the public dissector and had no Linux-side owner found either during this pass. No binary in either firmware image registers cmd_set=0x09/cmd_id=0x09. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22026,7 +22566,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. The sibling GET/PUSH direction (0x0C 'HDLnk VT Config Info Get/Push') has a real public-dissector byte layout (16-byte struct: channel u8@0, unknown u8@1, is_auto u8@2, is_master u8@3, 5 unknown bytes@4, mcs u8@9, single_or_double u8@10, bandwidth_percent u8@11, 3 unknown bytes@12, working_freq u8@15), which is strong structural evidence for what the SET direction's request payload likely mirrors (a SET typically carries the same fields the GET/PUSH reports back), but this project found no native Linux handler for either 0x0C or 0x0D to confirm that inference against real code, and 'VT' commands throughout this cmd_set are consistently HD-Link-MCU-side per ALL_COMMANDS.csv. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22036,7 +22577,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Got further than most of this batch on a real lead that ultimately did not close: bin/dji_sys (e1e, ARM32) imports init_libusb and usbsocket_init from lib/libduml_hal.so, called from a function at vaddr 0x52114 that does nothing but log + init_libusb() + usbsocket_init() (a USB-socket bring-up, no DUML dispatch visible inside it). That function's identity was confirmed via a {flags, name_ptr, fn_ptr} thread-descriptor table found in dji_sys's own .data.rel.ro (entry at file/vaddr 0xa26b8): the name string at 0x79267 is literally 'sys_platform_zv900_init', one of three mutually-exclusive hardware-platform bring-up threads (siblings 'sys_platform_wm169_init' at 0xa269c/0x79233 and 'sys_platform_e1e_wm162_init' at 0xa26a8/0x7924b). 'zv900' is therefore the hardware-platform codename that uses a USB-attached Cy68013 bridge chip for the HD-Link radio. However, no register_dynamic_command call (literal or data-driven) was found anywhere near this code, so there is no confirmed link from DUML cmd_id 0x0e specifically to any USB-interface-switch logic in this thread or elsewhere -- it may simply never surface as a distinct Linux-visible command (the interface change could be entirely internal to the MCU/bridge firmware). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22046,7 +22588,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Strongest circumstantial lead in this batch, still unconfirmed. lib/libduml_hal.so exports a real function literally named Reset_68013 (vaddr 0x23600/128 bytes) that is fully disassembled and semantically exact for this command's name: duss_log_gen_head/print('reset 68013'), sleep(2), then two system() calls with the literal shell commands 'devgpio -n 60 -w 0' then 'devgpio -n 60 -w 1' -- i.e. a GPIO-60 reset pulse (drive low, then high) to the Cy68013 (Cypress EZ-USB FX2) chip. It takes no arguments (pure trigger, consistent with this command needing no payload). However, exhaustive search (every direct branch target in the whole libduml_hal.so disassembly, plus a raw 4-byte-aligned byte scan of the entire file for both the Thumb-bit-set and plain forms of its address) found zero callers anywhere in the file, and no external binary in either firmware image imports Reset_68013 via dynamic relocation (checked across every file in both trees). So the function exists and is semantically on-point, but its link to the DUML cmd_set=0x09/cmd_id=0x0f dispatch path could not be statically confirmed -- it may be reached only via a runtime-populated dispatch table (as seen elsewhere in this cmd_set's investigation) or may be dead/vestigial code. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22056,7 +22599,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. Checked the firmware-upgrade orchestration chain this project already catalogued (12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md Sec.7 dji_upgrade; 20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md's A/B-OTA tracks): dji_upgrade is a JSON-config-driven orchestrator (/system/etc/upgrade.json, fallback dji.json) that dlopen()s product-specific plugins and drives a fixed register_init/.../post_init sequence -- a config/orchestration client, not a DUML command registrar (consistent with doc12's own characterization). No register_dynamic_command site for cmd_set 0x09 exists in dji_upgrade or any libupgrade_*.so (none of those import duss_event_register_dynamic_command at all). The name plausibly means 'tell the HD-Link MCU an upgrade is about to happen, show a UI tip/LED pattern' rather than carrying actual firmware bytes, but no Linux-side code implementing that was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22148,7 +22692,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. The sibling SET direction (0x12 'HDLnk Factory Test Set') has a real public-dissector 4-byte layout naming an AD9363 TX-attenuation register plus 3 flag bytes, strongly implying this chip (AD9363, a Linux-invisible radio IC on the HD-Link board) is configured only from the MCU side. Searched both firmware trees for 'AD9363'/'atten' (case-insensitive): the only non-trivial hit, lib/libfactory_cali.so, is a false positive -- the matched substring 'atten' is inside an unrelated C++-mangled symbol ('...FlattenMembershipMap...'), and libfactory_cali.so is not linked by any binary in bin/ at all. No evidence of a Linux-side factory-test GET handler exists for this or the sibling SET command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22158,7 +22703,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No Linux-userspace handler found. The sibling GET/PUSH direction (0x15 'HDLnk Max Video Bandwidth Get/Push') has a public-dissector 1-byte layout (max_mcs u8@0), which is a plausible template for this SET command's request payload (a single MCS-index byte), but no native handler was found for either direction in this firmware to confirm it. No binary registers cmd_set=0x09/cmd_id=0x14 via any known mechanism. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22214,7 +22760,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "hd_link_push_sdr_dl_freq_energy_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Architectural finding, not a resolved handler: cmd_set 0x09's already-decoded siblings in this same 0x20-0x3a neighborhood are almost all the RESULT/PUSH half of a sweep/auto-channel feature (0x0A 'Sweep Frequency Get/Push', 0x22 'Dl Auto Vt Info Get/Push', 0x2A 'Upward Select Channel', 0x30 'Wireless Env State', 0x3A 'Dl Freq Energy Push') -- all already have real byte-level layouts from this project's existing work. The 'Set'/trigger half (0x20) has no corresponding code anywhere in dji_sdrs_agent (the one daemon that plausibly bridges to the SDR hardware) beyond a generic, non-cmd-id-aware relay layer (sa_relay.c/sa_relay_core.c/sa_relay_bulk.c) that builds fixed, opaque wrapper frames via duss_event_send_sync with zero visible per-command branching. This firmware download also contains only 3 modules total (0105/LCPU, 1502/E1E1, 0802/E2, per the DJI Firmware Signer .ini headers at the package root) -- no separate OcuSync/HD-Link baseband module image is present anywhere in it. The most likely explanation is that the actual sweep state machine runs on a physically separate SDR/baseband chip whose firmware isn't part of this image at all; dji_sdrs_agent only relays the trigger opaquely. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22224,7 +22771,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "The already-decoded, non-SDR sibling 0x0C 'VT Config Info Get/Push' (hd_link_get_vt_config_info_dissector, a 16-byte struct: channel/is_auto/is_master/mcs/single_or_double/band_width_percent/working_freq) is a strong structural precedent for what 0x21's reply likely looks like, since 'SDR Vt Config Info Get' reads as the SDR-specific analogue of the already-documented non-SDR 0x0C. But no code in dji_sdrs_agent (or dji_sys, whose 11 literal registrations never touch cmd_set 0x09) implements or even references VT-config-like fields, and the same 'no separate SDR module firmware in this package' architectural gap applies here as for 0x20/0x29. Reusing 0x0C's layout for 0x21 without any firmware-side confirmation would be inventing a layout, not deriving one -- declined per the task's instructions. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22305,7 +22853,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Explicitly refuted lead, reported with the same rigor as a 'refuted' finding rather than left as a misleadingly-plausible one: the one function that looks exactly like a 'set a named status by name' handler is real and disassembled, but its only confirmed callers are unrelated local config-driven channel setup, not cmd_set 0x09 dispatch. No other candidate code, and no literal cmp against 0x23 in a dispatch-like context, was found anywhere in dji_sdrs_agent or dji_sys. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22385,7 +22934,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "The single strongest lead found in this whole investigation (concrete named function, concrete byte-level field semantics, strong name/behavior match), but the cmd_id/cmd_set binding -- and even basic reachability -- could not be confirmed on either architecture after an unusually thorough search. Per the task's instructions this is reported as insufficient_evidence with full detail rather than asserted as decoded. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22395,7 +22945,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Paired with 0x26: the read and write operations are two branches of the exact same function, gated on one mode byte, so whatever uncertainty applies to the cmd_id binding for 0x26 applies identically here. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22405,7 +22956,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "'Start Log Set' most plausibly triggers logging on the physically separate SDR module itself (the module whose log bytes dji_sdrs_agent's sdrs_log subsystem subsequently captures over USB/UART), rather than being a DUML command this daemon parses and acts on directly -- consistent with the same 'generic relay, no per-cmd-id branching' pattern found for sa_relay*.c, and with the absence of any separate SDR-module firmware image anywhere in this firmware package. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22415,7 +22967,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "hd_link_push_sdr_ul_freq_energy_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Identical architectural situation to 0x20 -- see that entry. 0x20/0x29 are plausibly the trigger/request half of the same sweep feature whose result/push half (0x0A, 0x22, 0x2A, 0x30, 0x3A) is already decoded elsewhere in this cmd_set; the actual sweep logic most likely runs on the physically separate SDR/baseband chip. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22460,7 +23013,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "'Role' strongly suggests the OcuSync/HD-Link master-slave link-role model. This project's own prior work (12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md \u00a76) documents `dji_wlm` as the daemon with an explicit Master/Slave role model, and a later pass (21_PAYLOAD_DECODE_SWEEP_FINDINGS.md) already flagged two cmd_set-0x06 commands ('Quiry Role'/'Quiry Ms Link Status') as plausibly dji_wlm-owned but unresolved due to ARM32/Thumb2 tooling limits. 'Revert Role' (cmd_set 0x09) looks like a sibling of that same family, but on the SDR/HD-Link side rather than dji_wlm specifically -- dji_wlm itself was not re-disassembled in this pass (out of this batch's primary candidate, dji_sdrs_agent, which shows no trace of it). This is a concrete lead for a future pass with a dedicated dji_wlm deep-dive, not a resolved finding here. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22470,7 +23024,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "'Amt' plausibly refers to the same AMT (Activation Management Tool) subsystem this project's own doc 18 (18_ACTIVATION_TA_FINDINGS.md) already maps in detail via libamt_util.so and the e91c9402 TEE TA, which that doc independently notes is reached on the DUML bus under the route name/tag 'amt_service'/'AMT'. 'Amt Process' may be a trigger for an AMT-side processing/challenge step distinct from the NVRAM read/write pair (0x26/0x27), but dji_sdrs_agent's own sa_event_amt_nvram_rw has no confirmed caller (see 0x26/0x27), and libamt_util.so itself was not re-disassembled in this pass -- it is the clear next candidate for a future pass given doc 18's existing deep-dive into its activation/secure-debug command-ID table. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22480,7 +23035,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "LBT (Listen-Before-Talk) is a radio-regulatory channel-occupancy-sensing feature intrinsic to the SDR/OcuSync PHY itself, reinforcing the same 'implemented on physically separate radio hardware, relayed opaquely by dji_sdrs_agent' conclusion documented for the sweep-frequency commands (0x20/0x29) and the firmware-package-level finding that no separate SDR/baseband module image exists anywhere in this download. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22490,7 +23046,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "LBT = \"Listen Before Talk\", a regulatory transmit-gating requirement in several ISM-band jurisdictions (EU/Japan 5.8GHz rules in particular) that DJI's own public dissector metadata already names this cmd_id's Get counterpart (0x2d) for. 0x2e is almost certainly the paired Set: enabling/disabling (or configuring parameters of) LBT compliance mode on the OcuSync/SDR radio. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22500,7 +23057,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a diagnostic trigger that runs a radio link self-test on the SDR module (possibly minimal/trigger-only payload, e.g. a single start/stop byte), analogous to other 'Factory Test'/'Link Test' style commands elsewhere in this cmd_set (0x12/0x13). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22533,7 +23091,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely configures parameters (range/step/dwell) for the SDR's automatic frequency-scanning behavior, complementing the already-documented 0x20/0x29 sweep-frequency push commands and the 0x2A channel-selection command in this same cmd_set. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22543,7 +23102,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely enables/disables a factory or engineering test mode on the SDR radio module, conceptually adjacent to the already-documented 0x12/0x13 'Factory Test' Set/Get pair. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22553,7 +23113,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "An 'Ind' (indication/push) rather than a Set/Get -- given its position between SDR Factory Mode Set (0x32) and SDR Liveview Mode Set/Get (0x34/0x35), and the fact every neighboring cmd_id in this stretch is an SDR-radio-internal control, this is most plausibly a push of the SDR link's own tracking/lock state (frequency or timing-lock acquired/lost on the demodulator), not a visual subject-tracking indicator from an unrelated vision subsystem -- though this is an inference from naming and position only, not confirmed by any disassembled handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22563,7 +23124,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Sets the liveview (video) transmission mode over the SDR/OcuSync link (e.g. single- vs dual-channel transport, or a bandwidth-tier selector), paired with the Get at 0x35. This is the one cmd_id in the batch where the task hint's suspicion of a separate video-pipeline-daemon owner (by analogy with 0xa9/0xaa) seemed most plausible, so I specifically traced that possibility. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22573,7 +23135,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "The Get counterpart of 0x34 (HDLnk SDR Liveview Mode Set) -- queries the SDR link's current liveview transmission mode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22641,7 +23204,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely sets a transmission rate / modulation-coding-scheme parameter for the SDR link, conceptually adjacent to the already-documented 0x36 'SDR Liveview Rate Ind' push (a float code-rate value) in this same cmd_set -- this Set is plausibly the command that drives that indication. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22651,7 +23215,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "A broader liveview configuration command than 0x34's 'Mode' Set -- plausibly bundles multiple related fields (e.g. resolution/bitrate/channel-count) into one packed struct. Checked for a video-pipeline-daemon owner given the name, same as 0x34/0x35. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22827,7 +23392,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Plausibly tied to firmware-upgrade-time RF power control of the SDR module (e.g. forcing the radio to a safe/low-power RF state while the HD-Link MCU's own firmware is being reflashed) -- this would connect naturally to the USB-hotplug-triggered brload/fastboot flashing path dji_sdrs_agent's sa_bootctrl module already implements (doc 12 Sec.5), though no direct call-site link between that flashing logic and this specific cmd_id was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22837,7 +23403,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Searched for a direct literal-immediate registration (cmd_set=9 + cmd_id=0x3e) across every binary in both firmware trees that imports any duss_event_register_dynamic_command* variant (dji_sys e1e/e2, dji_sdrs_agent, test_rtos_raw, duml_googletest, libMipiHandshake.so, libWorkModeLiveview.so, libdcam_event_client_pool.so \u2014 confirmed to be the complete set via readelf -sW UND-symbol scan on both trees). None registers cmd_set=9 with this cmd_id via a literal immediate. The only remaining candidates are two confirmed-present but statically-unresolvable data-driven dispatch mechanisms inside dji_sdrs_agent and dji_sys (see shared_infrastructure_found) whose backing arrays could not be located despite brute-force branch-target scanning (validated against this project's own doc15 baseline for test_rtos_raw) and exhaustive literal-pointer scanning of every data section plus inline .text literal pools. dji_sdrs_agent exports a suggestively-named but unconfirmed candidate handler string, `sa_event_rt_control_by_name` (no direct cross-reference to a numeric cmd_id was found \u2014 the name match to \"RT Status\" is coincidental-strength only, not evidence). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22847,7 +23414,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive sweep as 0x3e (all 8 binaries importing the registration family checked; none has a literal cmd_set=9/cmd_id=0x3f call site). Also specifically checked dji_network (doc12 \u00a74's 'Wi-Fi/SDR link-management daemon', the most plausible owner by name) for both the registration import and any 'rc_conn'/'conn_status' strings \u2014 it imports neither duss_event_register_dynamic_command nor duss_event_modify_dynamic_command at all, ruling it out as a direct DUML registrant for this or any new cmd_set-0x09 command (it must relay through a separate IPC path not examined here). dji_wlm was also checked and ruled out: it imports only duss_event_modify_dynamic_command, and its one confirmed literal call site overrides cmd_set 0x51/cmd_id 5 (already documented) \u2014 it registers nothing new. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22857,7 +23425,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal registration found in the exhaustive 8-binary sweep. Independent architectural evidence makes this plausibly a pass-through to a physically separate SDR/modem coprocessor rather than a locally-parsed command: the on-device QA script `/system_files/bin/modem_info.sh` (hardware/dji/service/sdrs_agent tree) issues real `dji_mb_ctrl -g 9 -t 0 -s 9 -c 0x55 <payload>` DUML frames \u2014 confirmed cmd_set=9 (the `-s` flag, per dji_mb_ctrl's own usage string `-s cmd_set`) with payload bytes selecting a modem sub-operation (0000=reverse, 0001=reboot, 0002=cps/status-query) \u2014 and dji_sdrs_agent's own export strings include `sa_relay_reset_pigeon`, `sa_relay_shutdown_pigeon`, `sa_hold_modem_reset`, confirming it manages a USB-attached 'pigeon' modem/SDR chip whose own firmware is not present under system_files. cmd_id 0x55 itself is not even in this project's known 69-command list for cmd_set 0x09 (a new finding, out of this batch's scope but corroborating context). This does not prove 0x41 specifically routes the same way, but it is the strongest available lead and was not resolvable further with static analysis of the binaries actually present. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22867,7 +23436,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same search and same architectural reasoning as 0x41 (its paired Set/Get sibling). No literal registration found in the 8-binary sweep; no numeric cross-reference to 0x42 found in any string table, disassembly, or shell script on the filesystem. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22877,7 +23447,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal cmd_set=9/cmd_id=0x50 registration found in the 8-binary sweep. A tempting-looking lead turned out to be a false match and was explicitly ruled out: `/system_files/bin/fc_led_ctrl.sh` and string hits for `fc_led_set_type`/`net_fc_led_set_action_id` (in libupgrade_product.so, dji_sys, dji_network) all belong to a *different*, already-distinguishable LED mechanism \u2014 the Flight Controller's own status-LED registration/action API, which runs on cmd_set 0x03 (FC) with cmd_ids 0xBC (register)/0xBD (unregister)/0xBE (set action), confirmed directly from the script's own `FC_CMDSET=3` / `REGISTER_LED_CMDID=0xbc` / `SET_LED_CMDID=0xbe` constants. That family is unrelated to cmd_set 0x09's own, presumably OcuSync-air-unit-or-RC-side, LED indicator. No alternative handler for the real cmd_set-0x09 LED Set was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22887,7 +23458,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal cmd_set=9/cmd_id=0x51 registration found in the 8-binary sweep. Notably, this cmd_id's sibling Get/Push command, 0x52 'HDLnk Power Status Get/Push', already HAS a documented byte-level decode in cmdset_09_HD_Link.md (`hd_link_power_status_info_dissector`: offset0 u8 power_status, offset1 u8 get_is_power_off) sourced from the public Wireshark dissector \u2014 but that dissector has zero field data for 0x51 itself (name-only), and this pass's own binary search (registration-call-site scan across all 8 relevant binaries, plus the generic-loop/module-descriptor mechanisms in dji_sdrs_agent/dji_sys, both unresolved) could not independently recover 0x51's handler or payload layout either. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22932,7 +23504,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal cmd_set=9/cmd_id=0x53 registration found in the 8-binary sweep. Strong architectural (but not numerically confirmed) evidence ties this family to dji_sdrs_agent's modem/'pigeon'-chip management role: the on-device QA script modem_info.sh's `cps` command (literally 'CP status', matching this cmd_id's name almost exactly) sends cmd_set=9/cmd_id=0x55 (NOT 0x53) with a 2-byte sub-opcode payload of 0x0002, and parses a 3-byte response: byte0=ret_code (hex, \"00\"=success), byte1=role (00=UAV,01=GND,02=GLASS), byte2=state (00=Idle,01=Pair,02=Connected,03=Loss,04=CPA7_ERR,05=DSP_ERR,06=AMT). cmd_id 0x55 is not itself in this project's known 69-entry command list for cmd_set 0x09, so it is evidently a distinct, closely-related sibling command (a generic multi-function 'modem control' op whose sub-function is chosen by payload) rather than 0x53 itself. Given the name 'Cp Status Get' (vs. 0x55's multi-purpose control-with-subop shape), 0x53 is plausibly a dedicated, payload-less or near-payload-less accessor that returns the same {role, state} shape directly \u2014 but this is architectural inference from a *sibling* command's live traffic, not a disassembly-confirmed decode of 0x53 itself, and is reported as such rather than as a found layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22977,7 +23550,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal cmd_set=9/cmd_id=0x57 registration found in the 8-binary sweep. One lead was checked and found unconvincing: libdcam_audio_frwk.so (and its several linking consumers \u2014 stream-writer plugins, dji_pbt, dji_cht) contains a `main_mic_gain_ctl` struct field, but none of libdcam_audio_frwk.so's linking consumers is a DUML-bus registrant (none imports any duss_event_register_dynamic_command* symbol), and the naming/consumer set (camera stream writers, playback/camhal-test tools) points to the camera's own recording microphone, not the RC/air-unit intercom microphone cmd_set 0x09's 'HD Link' commands would plausibly cover \u2014 i.e. this is very likely a different 'mic' subsystem entirely, not confirmed as unrelated but not a positive match either. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -22987,7 +23561,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same search and same inconclusive libdcam_audio_frwk.so lead as its Set sibling (0x57). No literal cmd_set=9/cmd_id=0x58 registration found anywhere in the 8-binary sweep. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -23044,7 +23619,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "No literal cmd_set=9/cmd_id=0x62 registration found in the 8-binary sweep. No distinct lead (beyond the same inconclusive libdcam_audio_frwk.so mic-gain struct noted for 0x57/0x58) was found specifically for the enable/disable toggle; its sibling 0x63 'HDLnk Mic Enable Set' and 0x59 'HDLnk Mic Info Get/Push' are both adjacent in the command space and 0x59 already has a real dissector-sourced decode (`hd_link_mic_info_dissector`: a single packed byte with a 1-bit mic_type field at mask 0x01 and a 7-bit mic_volume field at mask 0xfe) suggesting the whole 0x57-0x63 mic cluster is a coherent small family, but that existing decode covers 0x59 only, not 0x62, and this pass's binary search could not independently locate 0x62's own handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -23054,7 +23630,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumably toggles the HD-Link audio/mic-passthrough channel on or off (sibling of the already-documented 0x09/0x62 'Mic Enable Get' and 0x09/0x59 'Mic Info Get/Push'), but no handler could be located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -23064,7 +23641,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumably sets what percentage of the total OcuSync/HD-Link video bitrate budget is allocated to the main (vs. auxiliary/FPV) camera stream \u2014 a natural sibling of libwlm.so's libwlm_share_liveview_bandwidth(_v2) exports and dji_wlm's multi-link bandwidth-fusion role, but no concrete (cmd_set,cmd_id)-to-handler binding was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -23074,7 +23652,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Presumably the paired Get for 0x71 (reads back the current main-camera bandwidth-percent allocation). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
@@ -23084,17 +23663,91 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "A periodic push of SDR liveview resolution/rate parameters from the OcuSync 'Pigeon' video-link object into the receiving device's cached state, used to detect and react to a resolution/rate change. Handler correctly identified (_ZN3dji32_on_event_pigeon_state_heartbeatEP17duss_event_clientP10duss_eventPv (dji::_on_event_pigeon_state_heartbeat), registered at vaddr 0x8440 inside dji::LiveviewObjectPigeon::initEventCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xA9 [movs r2,#169], handler=&_on_event_pigeon_state_heartbeat, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple).), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 9,
   "cmd_set_name": "HD Link",
   "cmd_id": 170,
   "name": "MIPI/HDVT Liveview Param Set",
-  "decode_status": "none",
-  "source": null,
-  "dissector_fn": null,
-  "fields": null
+  "decode_status": "full",
+  "source": "binary_re",
+  "dissector_fn": "binary RE: _ZN3dji26hu_hdvt_set_liveview_paramEP17duss_event_clientP10duss_eventPv (dji::hu_hdvt_set_liveview_param), registered at vaddr 0x296c inside dji::MipiHsRecvV1::initEventClientCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xAA [movs r2,#170], handler=&hu_hdvt_set_liveview_param, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple, same registering function name).",
+  "fields": [
+   {
+    "name": "mipi_lv_param_reserved0",
+    "label": "Reserved/Header Byte",
+    "offset": 0,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Copied into the validated buffer but never read by any instruction in this handler -- not used for any branch or forwarded field. Present purely because the wire format is a fixed 21-byte block.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mipi_lv_param_width",
+    "label": "Liveview Width",
+    "offset": 1,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Must be nonzero or the handler rejects the request (duss_event_resp_err, code 0xE6). Forwarded (after validation) into the MipiConfig struct passed to MipiHsRecvBase::sendNewConfigCmdToQueue.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mipi_lv_param_height",
+    "label": "Liveview Height",
+    "offset": 3,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Same nonzero validation and forwarding as width.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mipi_lv_param_dim3",
+    "label": "Third Dimension Parameter (unit not confirmed; candidate: frame rate or stride)",
+    "offset": 5,
+    "size": 2,
+    "type": "uint16",
+    "enum": null,
+    "mask": null,
+    "desc": "Validated nonzero exactly like width/height and forwarded into the same MipiConfig struct, so it is clearly a third required dimension of the video configuration, but no instruction in this handler reveals its unit -- named conservatively per the task's own guidance to flag genuinely uncertain fields.",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mipi_lv_param_color_fmt",
+    "label": "Pixel/Color Format Code",
+    "offset": 7,
+    "size": 1,
+    "type": "uint8",
+    "enum": null,
+    "mask": null,
+    "desc": "Passed directly to the exported getOmxColor() helper to resolve an OMX_COLOR_FORMATTYPE value; that resolved value must be nonzero or the request is rejected (0xE6). Confirmed to be a color/pixel-format selector by this direct call, exact enum-value table not extracted (getOmxColor's own body was not disassembled).",
+    "comment": null,
+    "branch": null
+   },
+   {
+    "name": "mipi_lv_param_unused_tail",
+    "label": "Unused Tail Bytes",
+    "offset": 8,
+    "size": 13,
+    "type": "bytes",
+    "enum": null,
+    "mask": null,
+    "desc": "Part of the fixed 21-byte wire length this handler requires, copied into the local buffer, but never read by any instruction after the copy -- confirmed unused by this specific handler.",
+    "comment": null,
+    "branch": null
+   }
+  ]
  },
  {
   "cmd_set": 10,
@@ -23104,7 +23757,8 @@
   "decode_status": "none",
   "source": "dissector",
   "dissector_fn": "mbino_bino_info_dissector",
-  "fields": null
+  "fields": null,
+  "note": "Likely a periodic PUSH of binocular (stereo pair) vision-module status/health from the vision daemon outward; by naming convention and position this sits alongside the already-decoded 0x06/0x07/0x08/0x23/0x26/0x2a/0x2f family (all PUSH-type telemetry decoded previously from the public dissector source, not binary RE). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23114,7 +23768,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely the monocular-sensor counterpart PUSH to 0x01's binocular info (single-camera vision-module status), following the same family naming pattern as the already-decoded 0x06-0x08/0x2f sensor-status pushes. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23124,7 +23779,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a PUSH of ultrasonic-rangefinder sensor status/readings, part of the same sensor-telemetry family as the already-decoded 0x2f 'Eye Sensor Status Push' (which itself only covers image/vision sensors, not ultrasonic specifically -- consistent with 0x03 being a separate, still-undecoded ultrasonic-specific push). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23134,7 +23790,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "'Oa' most plausibly abbreviates Obstacle Avoidance -- likely a summary/aggregate obstacle-avoidance status PUSH, distinct from the already-decoded per-direction detail pushes at 0x06 ('Eye Avoidance Param'), 0x07 ('Eye Obstacle Info'), and 0x08 ('Eye TapGo Obst Avo Info'). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23144,7 +23801,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Likely a PUSH of the vision system's relative-position estimate (e.g. relative to a tracked target, takeoff point, or precision-landing marker) -- an output of the vision daemon's pose-estimation pipeline. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23571,7 +24229,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Explicitly named as a PUSH -- a debug/diagnostic telemetry stream from the vision pipeline (likely feature counts, frame-processing stats, or algorithm internal state) sent outward for app-side diagnostics/logging, not a request-response command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23581,7 +24240,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Explicitly named as a PUSH -- likely a diagnostic stream of the vision-driven control-loop internals (e.g. the obstacle-avoidance/tracking control outputs that feed into flight commands), paired conceptually with 0x0a's vision-side debug push. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23637,7 +24297,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Explicitly named as a PUSH -- plausibly the vision daemon forwarding/echoing an SDK-originated control command (e.g. a payload SDK gimbal/vision control instruction) outward for logging or app-side confirmation, analogous in spirit to the already-catalogued cmd_set 0x01 'SDK Ctrl' bridge commands (which this project's most recent sweep, 21_PAYLOAD_DECODE_SWEEP_FINDINGS.md, also could not resolve -- all 10 of that cmd_set's SDK-bridge commands came back insufficient_evidence after an equally thorough pass). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23647,7 +24308,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Unlike the rest of this batch, the name has no 'Push' qualifier -- this is most plausibly an INBOUND app/SDK-to-aircraft command (an app toggling TapFly/'tap-to-go' subject tracking on or off), conceptually adjacent to the already-decoded 0x08 'Eye TapGo Obst Avo Info' and 0x26 'Eye TapGo Status Push', both of which came from the public dissector source rather than binary RE. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23657,7 +24319,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Explicitly named as a PUSH -- likely a periodic report of a tracked target's estimated speed and position (from the tracking/TapFly pipeline), conceptually adjacent to the already-decoded 0x23 'Eye Tracking Status Push' and 0x26 'Eye TapGo Status Push' (both decoded from the public dissector, which already documents target_type/target_action/center_x/y/width/height-style fields for the sibling tracking-status command). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23667,7 +24330,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Checked this project's own docs first (21_PAYLOAD_DECODE_SWEEP_FINDINGS.md, 04/06/11/14_*.md) \u2014 no prior handler for this cmd_id. Independently re-dumped dji_flight's relocated dispatch table at vaddr 0xae038 byte-for-byte (confirmed 44 raw 8-byte rows through 0xae190, matching this project's prior count) and decoded its cmd_word packing (low byte of the 16-bit word = cmd_set, high byte = cmd_id; cross-validated against this project's own previously-confirmed cmd_set-0x22 rows 0x06/0x07/0x08/0x44, which decode correctly under this scheme). The table's only two cmd_set-0x0a rows are cmd_id 0xDD and 0xDE (vaddr 0xae188/0xae190) \u2014 0x12 is not among them, ruling out dji_flight. Confirmed via `readelf -rW` on both dji_perception builds that neither imports any duss_event_register_dynamic_command-family symbol (re-confirms doc 04 independently). Resolved dji_perception E1E's real call sites to duss_mb_create_route_table/duss_event_create_client/duss_event_send/duss_event_send_sync via PLT-stub address arithmetic plus .ARM.exidx-anchored per-function disassembly (a naive linear Thumb sweep across this 20MB stripped binary desyncs after ~128KB and stops finding real calls \u2014 exidx-anchored per-function restart was needed for reliability). The real duss_event_send wrapper functions found (vaddr 0x63d0d8/0x63d268/0x63d428/0x63d728) build their packet entirely from a caller-supplied struct (a 16-bit cmd_word field at a fixed struct offset, plus payload ptr/len), so the literal cmd_id is set by a still-unidentified deeper caller. A literal-immediate scan for the packed cmd_word 0x120a found 2 hits in dji_perception E1E (vaddr 0x99e8da/0x99e8e4), but disassembling the surrounding code proved this is a rate-limited internal error/status-code logger (shared helper at vaddr 0x99e2cc, called identically from 3 unrelated functions elsewhere) whose internal module/error-tag namespace happens to also end in byte 0x0a \u2014 explicitly refuted as a DUML cmd_word, not a real handler. Searched the entire decrypted firmware tree (both E1E and E2 roots, every file, case-insensitive) for 'target_pos'/'push_target_pos'/'targetpos' \u2014 only hits are generic homing-planner/camera-tracking 'target_pos_x/y/z' fields (dji_flightsystem_msgs ROS-style schema strings), already characterized by doc 04 as perception-internal telemetry schema unrelated to DUML cmd_id dispatch (none of those string addresses is referenced by dispatch code). Reporting insufficient_evidence rather than a guessed layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23677,7 +24341,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12 (see that entry / shared_infrastructure_found): cmd_id 0x13 is not among the table's only two cmd_set-0x0a rows (0xDD, 0xDE), ruling out dji_flight. Same import-table confirmation (readelf -rW, both architectures): dji_perception imports no duss_event_register_dynamic_command-family symbol. A literal-immediate scan for the packed cmd_word 0x130a found 3 hits in dji_perception E1E, all inside one function at vaddr 0x99d8f8 (movw at 0x99da10, 0x99dc20, 0x99dc26). Disassembling that function's surrounding code shows the same shared rate-limited log helper (bl to vaddr 0x99e2cc) seen for 0x12, inside what is structurally a generic circular-buffer/queue read routine (wraparound arithmetic, memcpy via an internal vtable pointer, a sibling 0x150a code path a few hundred bytes later in the same function \u2014 see 0x15 below) \u2014 this is the same internal ring-buffer/queue module error-code namespace (low byte 0x0a as a module tag), not a DUML cmd_word; explicitly refuted. Zero hits for the same literal in the E2 (aarch64) build. The project's existing docs (04_WM260_DAEMON_FINDINGS.md) already document that dji_perception's many embedded 'trajectory' strings (homing/MPC path-planning, hyperlapse waypoint logic) are a self-describing ROS-style telemetry schema used for black-box logging, not DUML cmd dispatch \u2014 re-confirmed here by a fresh full-tree string search turning up only the same category of hits (homing_local_planner, mpc_follower, HyperlapseWaypointBack, etc.), none of which resolve to a DUML wire parser for this specific cmd_id. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23687,7 +24352,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x14 is not among the table's two cmd_set-0x0a rows (0xDD, 0xDE). Same import-table confirmation: dji_perception imports no duss_event_register_dynamic_command-family symbol on either architecture. A full-tree case-insensitive string search (both E1E and E2 roots, every file) for 'expected_speed', 'expectedspeed', and 'expected speed angle' produced zero hits anywhere in the firmware \u2014 not even an unrelated/generic false-positive, unlike several of the other commands in this batch. A literal-immediate scan for the packed cmd_word 0x140a across all 43,286 exidx-delimited functions in dji_perception E1E, and across the full linearly-disassembled .text of the E2 (aarch64) build, found zero matches in either architecture. No lead of any kind found; this is the cleanest 'nothing found' result in the batch, not a near-miss. Reporting insufficient_evidence, not a guessed layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23697,7 +24363,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x15 is not among the table's two cmd_set-0x0a rows. Same import-table confirmation (no duss_event_register_dynamic_command on either architecture). A literal-immediate scan for the packed cmd_word 0x150a found 2 hits, both in the SAME function as the 0x13 hits above (dji_perception E1E, vaddr 0x99d8f8; movw at 0x99dbd6 and 0x99dbdc). Disassembly confirms this is the identical ring-buffer/queue-module error-code path (same shared log helper at vaddr 0x99e2cc) described for 0x13 \u2014 explicitly refuted as a DUML cmd_word. A full-tree string search for 'frame_info'/'frameinfo' does hit many files on both images, but every hit traces to generic OMX/video-codec struct naming (libOmxCamCapEngSource.so, libOmxVideoPyramidGen.so, libduml_hal.so, etc.) \u2014 a 'VFrameInfo'/frame-metadata struct used throughout the camera/video pipeline, unrelated to the DUML wire protocol by name collision only. No evidence connects any of these string hits to a cmd_set-0x0a/cmd_id-0x15 dispatcher. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23730,7 +24397,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x1D is not among the table's two cmd_set-0x0a rows. Same import-table confirmation on both dji_perception architectures. A full-tree case-insensitive string search (both E1E and E2 roots, every file on both images) for 'fixed_wing', 'fixedwing', and 'FixedWing' found ZERO hits anywhere in the entire decrypted firmware \u2014 the strongest negative result in this batch. A literal-immediate scan for the packed cmd_word 0x1d0a found zero matches in either architecture build of dji_perception. Given the Mavic 3 is a quadcopter, not a fixed-wing aircraft, this is consistent with (though not proof of) this being a fixed-wing-product-specific DUML command with no live code path compiled into this product's firmware image at all \u2014 the same category of finding this project previously made for DM36x-specific commands ('confirmed not implemented on this firmware generation'), though that prior case had direct device-type-string evidence of hardware retirement and this one does not, so it is reported here as insufficient_evidence with the zero-string-hit result called out explicitly rather than upgraded to a 'confirmed not implemented' verdict. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23740,7 +24408,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same checks and same result as 0x1D immediately above: not in dji_flight's dispatch table (not among its two cmd_set-0x0a rows, 0xDD/0xDE); dji_perception imports no duss_event_register_dynamic_command on either architecture; zero string hits anywhere in either firmware tree for fixed_wing/fixedwing/FixedWing; zero literal-immediate hits for the packed cmd_word 0x1e0a in either architecture build. As with 0x1D, this is consistent with a fixed-wing-aircraft-specific command with no live code path on this quadcopter product, but that is not independently confirmed (no device-type string evidence as in the DM36x precedent), so reported as insufficient_evidence rather than 'confirmed not implemented'. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23750,7 +24419,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x20 is not among the table's two cmd_set-0x0a rows. Same import-table confirmation (no duss_event_register_dynamic_command on either architecture). A full-tree string search for 'marquee' (both E1E and E2 roots, every file) found zero hits anywhere in the firmware. A literal-immediate scan for the packed cmd_word 0x200a found zero hits in dji_perception E1E but 2 hits in the E2 (aarch64) build (vaddr 0x180218 and 0x1802e0, both inside the same function). Disassembling that AArch64 code (`mov w9, #0x200a` immediately followed by `movk w9, #0x2020, lsl #16`, forming the full 32-bit word 0x2020200a, stored via `str w9, [x3]`) shows this is not a 16-bit cmd_word at all \u2014 0x2020200a decodes byte-by-byte (little-endian) as the ASCII bytes `0a 20 20 20`, i.e. a newline followed by three spaces, built inside what is structurally a string-tokenizing/field-splitting routine (adjacent code compares extracted substrings of length 6 and 9 against literal pool strings via a memcmp-like call). This is an explicitly refuted false positive: the apparent 'cmd_word' match is a coincidental collision between the DUML cmd_set byte (0x0a) and the ASCII newline byte, not a real DUML cmd_word construction site. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23760,7 +24430,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x21 is not among the table's two cmd_set-0x0a rows. Same import-table confirmation on both dji_perception architectures. A full-tree string search for 'tracking_cnf', 'trackingcnf', and 'cancel_tracking' found zero hits anywhere in either firmware tree. A literal-immediate scan for the packed cmd_word 0x210a found 1 hit in dji_perception E1E (vaddr 0x99cffe, `movw r0, #0x210a`), inside a function (vaddr 0x99cedc) that is structurally the same kind of circular-buffer peek/consume routine seen for 0x12/0x13/0x15 (wraparound pointer arithmetic, a memcpy call, an internal read-like syscall wrapper at vaddr 0x89e08, and the same family of sibling return/error constants 0x10a/0x20a/0x30a/0x60a appearing a few dozen bytes away in the same function) \u2014 all sharing the low byte 0x0a as what is evidently this ring-buffer module's own error/status-code tag, not the DUML cmd_set byte. Explicitly refuted as a DUML cmd_word for the same reason as 0x12/0x13/0x15. Zero hits for the same literal in the E2 build. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23770,7 +24441,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x22 is not among the table's two cmd_set-0x0a rows. Same import-table confirmation on both dji_perception architectures. A full-tree string search for 'move_marquee' and 'moveMarquee' found zero hits anywhere (consistent with the zero hits for plain 'marquee' under 0x20 above \u2014 the whole Marquee feature name is entirely absent from both firmware images' strings). A literal-immediate scan for the packed cmd_word 0x220a found zero matches in either dji_perception architecture build. No lead of any kind found. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23947,7 +24619,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same dji_flight dispatch-table check as 0x12: cmd_id 0x24 is not among the table's two cmd_set-0x0a rows. Same import-table confirmation on both dji_perception architectures. A full-tree string search for 'position_push' and 'eye_position' found zero hits anywhere in either firmware tree. A literal-immediate scan for the packed cmd_word 0x240a found zero matches in either architecture build. Note on adjacency: the immediately preceding cmd_id, 0x23 ('Eye Tracking Status Push'), already has a full public-dissector-sourced decode in this project's cmdset_0a doc, and the immediately following cmd_id, 0x25 ('Eye Fly Ctl Push'), is itself undecoded \u2014 no structural or textual link was found connecting 0x24 specifically to either neighbor's handling. Reporting insufficient_evidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -23957,7 +24630,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Checked cmdset_0a_Mono-Binocular_(Vision).md and commands.json (decode_status none, note null) -- confirmed fresh. dji_flight's relocated {fnptr,cmd_word} dispatch table at vaddr 0xae038 (E1E/32-bit ARM only; no E2 dji_flight exists) was dumped byte-for-byte (44 rows, 0xae038-0xae190 inclusive, cross-checked against R_ARM_RELATIVE relocations at every 8-byte boundary) -- it contains exactly 2 cmd_set 0x0a rows (cmd_id 0xdd, 0xde), neither matching 0x25. dji_perception (both E1E 32-bit ARM and E2 aarch64 builds) imports zero duss_event_register_dynamic_command-family symbols (readelf --wide --dyn-syms, both builds), ruling out the project's primary literal-immediate registration mechanism for this daemon directly. Strings search for 'fly_ctl'/'flyctl'/'FlyCtl' (case-insensitive) across both dji_perception builds and dji_flight returned nothing. A literal-immediate (r1=cmd_set/r2=cmd_id per doc 04's w1/w2 convention) scan of dji_sys (E1E) for cmd_set=0x0a + this cmd_id found no hits, but this method could not be validated against a known-positive control case (0x00/0xa3) either -- the control's real registration path turned out to be a struct-descriptor table filled by sys_platform_e2_wm260_init, not a literal-immediate-before-bl in that function -- so this specific negative result is not fully trustworthy and is reported as a lead tried, not a confirmed exclusion. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -24314,7 +24988,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same baseline checks as 0x25 (doc/commands.json confirmed fresh; dji_flight's 0xae038 table checked and ruled out -- its only cmd_set 0x0a rows are 0xdd/0xde; dji_perception's absent duss_event_register_dynamic_command import confirmed on both builds). Strings search for 'common_ctl'/'CommonCtl' across both dji_perception builds and dji_flight returned nothing. Given the generic name ('Common Ctl Cmd' mirrors the generic-control-command naming pattern seen in other cmd_sets, e.g. cmd_set 0x03's many '*_ctl' commands), this is plausibly a catch-all vision-subsystem control opcode multiplexed by an internal sub-type byte, but no disassembled evidence of such a sub-dispatch was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -24324,7 +24999,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json, dji_flight 0xae038 table, dji_perception register_dynamic_command import) as for 0x25/0x27, all negative/ruled-out the same way. A concrete lead was chased: E2 dji_perception's recovered .gnu_debugdata local symbol table has 'api_usr_get_param_by_index_handler' (vaddr 0x100388) and 'api_usr_get_param_by_index_func' (0xffc5c), names that plausibly match 'Get Para Cmd'. Disassembled both (AArch64, capstone) -- api_usr_get_param_by_index_func is itself never reached by any direct BL in .text (zero callers found), but IS referenced by an R_AARCH64_RELATIVE relocation inside a 24-byte-stride table at vaddr 0x390a98 (handler_ptr, a shared secondary ptr 0xff5e4, and a per-row id word). Dumping that table's id words (0xe00003, 0xe10003, 0xe20003, 0xe30003, 0xe40003, 0x400001, 0x410001, 0x420001, ...) shows sequential internal parameter-index values with no byte equal to the DUML cmd_set byte 0x0a anywhere in the pattern -- this looks like DJI's generic internal 'app_get_param'/'ss_get_param' parameter-store API (also attested by plaintext strings 'api_usr_get_param', '/device/terminal/0/request/app_get_param', 'TerminalRequestAppGetParam' in these binaries), not a binding keyed on DUML (cmd_set,cmd_id). Per this project's own established caution (doc 21: dji_perception's embedded message-schema strings have previously been a false lead for an unrelated 'waypoint' case), this lead is recorded but NOT asserted as the real handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -24334,7 +25010,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Mirror of 0x28's investigation: E2 dji_perception's 'api_usr_set_param_by_index_handler' (0x10040c) / 'api_usr_set_param_by_index_func' (0xffd18) were disassembled and found referenced from the same 24-byte-stride relocated table (row at vaddr 0x390ab0, id word 0xe30003, directly adjacent to the get-param row). Same conclusion as 0x28: this is DJI's generic internal parameter-store API (also attested by 'api_usr_set_param', '/device/terminal/0/request/app_set_param', 'TerminalRequestAppSetParam' strings), with no byte 0x0a anywhere in its sequential internal id scheme -- plausible but unconfirmed, not asserted as the DUML handler for this cmd_id. Baseline dji_flight-table / dji_perception-import checks as in 0x25/0x27/0x28 all ruled out the same way. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -24811,7 +25488,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table's only cmd_set 0x0a rows are 0xdd/0xde, not 0x2c; dji_perception imports no duss_event_register_dynamic_command-family symbol on either build) all negative. 'Ta' most plausibly abbreviates 'Target' (cf. already-decoded sibling 0x23 'Eye Tracking Status Push' which has target_type/target_action enum fields) -- a byte-pattern scan for a {fnptr; cmd_set=0x0a; cmd_id=0x2c; pad} 8-byte table row (mirroring dji_flight's confirmed table format) across dji_perception (both builds), dji_flight, and dji_sys (both builds) surfaced a few raw coincidental byte matches (e.g. in dji_perception's large OpenCV/data-heavy text/data regions) but none corresponded to an ELF relocation at that offset, i.e. none are confirmed real pointer table rows -- discarded as noise, not evidence. Strings search for 'ta_lock'/'TaLock' across both dji_perception builds and dji_flight returned nothing. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -24821,7 +25499,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table ruled out for 0x2d; dji_perception register_dynamic_command import absent on both builds) all negative. Strings search for 'smart_land'/'SmartLand'/'SmartLanding' across both dji_perception builds and dji_flight returned nothing -- notably different from 'Eye Self Calibration' (0x30) and 'Eye Precise Landing Energy' (0x3a, already decoded), where real plaintext leads exist; no comparable lead surfaced for this cmd_id specifically. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25513,7 +26192,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table ruled out for 0x30; dji_perception register_dynamic_command import absent on both builds) all negative. A real, substantive lead exists in E1E dji_perception: a 'PnpSelfcaliBase' C++ class and numerous debug strings ('CALI_SELFCALE_FAIL', 'CALI_UPDATE_SELFCALI_ERR', '[%d] pnp selfcali finish fail...', '[%d] save result, all selfcali update num is [%d]'), and E2 dji_perception embeds a ROS-style self-describing message schema named 'dji_flightsystem_msgs/CalibrationSelfcaliInput'. However, per this project's own established finding (21_PAYLOAD_DECODE_SWEEP_FINDINGS.md), dji_perception's embedded dji_flightsystem_msgs schema strings are confirmed (for an unrelated waypoint case, by exhaustive capstone/relocation/hex-operand cross-check) to be field names of an internal black-box/bag telemetry-logging schema, not DUML wire-command field names -- the same caution applies here: no instruction anywhere in either binary was found to reference 'CalibrationSelfcaliInput' or treat it as an incoming DUML payload, so this is a real architectural lead (self-calibration genuinely exists and is logged) but not evidence of the wire-level byte layout, and is not asserted as a decode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25570,7 +26250,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table ruled out for 0x37; dji_perception register_dynamic_command import absent on both builds) all negative. Strings search for 'qrcode'/'QRCode'/'qr_code' (case-insensitive) across both dji_perception builds and dji_flight returned nothing -- no plaintext trace of QR-code precision-landing functionality in either binary. A byte-pattern scan for an {fnptr; cmd_set=0x0a; cmd_id=0x37; pad} table row produced many hits in E2 dji_perception, but all were a single recurring coincidental byte sequence scattered through large binary/data regions (no corresponding ELF relocation at any hit offset), confirmed as noise rather than a real table. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25662,7 +26343,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table ruled out for 0x46; dji_perception register_dynamic_command import absent on both builds) all negative. Strings search for 'rc_packet'/'RcPacket' across both dji_perception builds and dji_flight returned nothing. Given this project's prior finding that cmd_set 0x06 (Remote Control) traffic is almost entirely opaque to this firmware extraction (handled in the physical RC's own MCU or relayed byte-blind), and that the already-decoded sibling cmd_id 0x26 ('RC AETR Value Push', aileron/elevator/throttle/rudder int16 struct) was only inferable by analogy via dji_perception's embedded message schema rather than a disassembled parser, 'Eye RC Packet' is plausibly a similar RC-stick-relay structure consumed by the vision/avoidance pipeline, but no disassembled command-specific parser or matching embedded struct definition was found for cmd_id 0x46 specifically. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25672,7 +26354,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Baseline checks (doc/commands.json fresh; dji_flight 0xae038 table ruled out for 0x47; dji_perception register_dynamic_command import absent on both builds) all negative. Strings search for 'buffer_config'/'BufferConfig'/'buf_config' across both dji_perception builds and dji_flight returned nothing. E2 dji_perception does contain a distinct, generic byte-ring-buffer API (ss_byte_buffer_init/_get_head/_get_tail/_commit_read/_commit_write/_get_read_block/_get_write_block) used by its internal ss_dbus/duml_pcie transport layer, but no evidence ties any of those functions to a DUML-facing (cmd_set 0x0a, cmd_id 0x47) entry point specifically -- the name correspondence ('buffer config') is suggestive but not disassembly-confirmed, so not asserted as a decode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25682,7 +26365,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Checked every known DUML registration mechanism on BOTH architectures and found no handler. (1) dji_flight's relocated .data dispatch table: re-derived it directly from raw bytes using the actual R_ARM_RELATIVE relocation offsets (44 relocations, stride 8, vaddr 0xae040..0xae198) rather than trusting the prior doc's byte alignment -- this corrects the row format to {cmd_word:u16 at row-4, cmd_set=byte0, cmd_id=byte1; fn_ptr:u32 reloc'd at row+0}. Decoded all 44 rows; exactly 2 are cmd_set 0x0a (cmd_id 0xDD, fn 0x1da05; cmd_id 0xDE, fn 0x1da55) -- neither is 0x48. Note dji_flight exists ONLY in the E1E (32-bit ARM) image; it is entirely absent from the E2 (aarch64) bin/ directory, so this check is necessarily E1E-only. (2) dji_sys literal duss_event_register_dynamic_command call sites: found via a capstone-based scanner that locates the PLT/import stub address and then brute-force decodes every 2-byte-aligned Thumb/A64 instruction in .text looking for bl/blx targeting it (not a text grep, which is unreliable on stripped ARM32). Found 11 call sites on E1E (vaddrs 0x2db80, 0x498ae, 0x4a23e, 0x4ac16, 0x4ac5c, 0x4be12, 0x4be58, 0x503a8, 0x504a8, 0x51ba2, 0x70064) and 12 on E2 (0x3ebd0, 0x62c00, 0x63790, 0x643a8, 0x6440c, 0x65690, 0x656f4, 0x68dd4, 0x68f70, 0x6cf9c, 0x96f58, 0x96f8c), decoded the preceding literal r1/r2 (cmd_set/cmd_id) operands at each: the full set resolves to cmd_set/cmd_id {0x22/0x60 x4, 0x00/0xa3 x2, 0x06/0x3a x2, 0x04/0x69 x1} plus 2-3 data-driven ('Param Manager') sites with no literal cmd_set/cmd_id -- identical on both architectures, confirming completeness. None is cmd_set 0x0a. (3) dji_perception: imports exactly ONE per-cmd registration primitive in either build -- duss_event_create_client -- and calls it from exactly ONE call site in its entire .text (E1E vaddr 0x63d98c, E2 vaddr 0xe2e3c), confirmed by the same brute-force BL/BLX-target scan. That single call site is reached only for JSON-config route entries whose 16-bit cmd_word passes two hard bound checks, confirmed instruction-identical on both architectures: high byte (cmd_set) < 0x20 (`cmp w1,#0x2000;b.hs reject` / `ldrh.w r1...;cmp.w r1,#0x2000;bhs reject`) AND low byte (cmd_id) < 0x42 (`and w8,w1,#0xfe;cmp w8,#0x42;b.hs reject` / `uxtb r0,r1;cmp r0,#0x42;bhs reject`), backing a compiled-in handler table only 66 slots wide per cmd_set (confirmed by the table stride, 0x210 bytes = 66*8). cmd_id 0x48 (72) exceeds this bound -- dji_perception's build cannot dispatch it via its own primary DUML entry point, regardless of JSON config content. (4) dji_sys also exports a batch-registration helper, duss_register_cmd (E2 vaddr 0x96ef0; this independently reproduces, exactly, a vaddr 0x6fff4 helper already flagged in this project's own commands.json note for an unrelated cmd_set-0x00 command on E1E) that walks an externally-supplied {cmd_set:u16,cmd_id:u16,...,handler:u64} array calling register_dynamic_command per row -- but a full .text BL/BLX-target scan of dji_sys found ZERO internal callers of it on either architecture, and no other binary in either firmware tree imports it either: it is dead code in this build, so it cannot be the actual route for 0x0a. (5) Every other binary across both e1e_extracted and e2_extracted trees that imports any register_dynamic_command/create_client-family symbol was enumerated and checked: dji_sdrs_agent (E1E, 1 data-driven call site, 'SDRS'-prefixed log/USB-diagnostic strings, unrelated to vision), test_rtos_raw (a dji_perception Parameter-Manager QA harness already documented by this project as covering only cmd_set 0x03/0x01), libMipiHandshake.so and libWorkModeLiveview.so (register literal cmd_set 0x09/cmd_id 0xaa, cmd_set 0x09/cmd_id 0xa9, cmd_set 0x02/cmd_id 0xec -- camera/MIPI pipeline, not vision), duml_googletest (E2 test harness, not inspected further as a production registrant). No handler for 0x48 found anywhere. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25692,7 +26376,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Identical exhaustive search as cmd_id 0x48 (see that entry for full method/addresses -- same dji_flight table re-derivation, same dji_sys 11/12-call-site literal-immediate enumeration, same dji_perception single-call-site bound-check analysis, same duss_register_cmd dead-code check, same sweep of the 6 other register_dynamic_command/create_client-importing binaries). cmd_id 0xA3 (163) is additionally far outside dji_perception's compiled 0x00-0x41 handler-table range (confirmed on both architectures by the identical `cmp r0/w8,#0x42;bhs reject` bound), and does not match any of dji_sys's literal cmd_ids (0x60, 0xa3-under-cmd_set-0x00-not-0x0a, 0x3a, 0x69) or dji_flight's two cmd_set-0x0a rows (0xDD, 0xDE). One specific false-lead ruled out: cmd_set 0x00 ALSO has a cmd_id 0xA3 ('USB State Report', handler sys_wm260_usb_state_handle, already fully documented in this project) -- confirmed by direct argument decoding (r1/w1=0 for that registration) that this is cmd_set 0x00, not cmd_set 0x0a; the two are a real naming/numbering coincidence, not the same wire command. No handler for cmd_set 0x0a/cmd_id 0xA3 found anywhere. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25702,7 +26387,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Same exhaustive registration-mechanism search as 0x48/0xA3 (dji_flight table, dji_sys's 11/12 literal register_dynamic_command call sites, dji_perception's single bound-limited duss_event_create_client call site on each architecture, duss_register_cmd's zero-callers dead-code status, and the 6 other binaries importing any register/create_client symbol) -- no receive-side handler found, and 0xA4 (164) exceeds dji_perception's compiled 0x00-0x41 table range on both architectures exactly like the other three commands. Because the name ('... Msg Push') marks this as a one-way device-to-app PUSH rather than an app-to-device request, also specifically checked the SENDER side, following this project's own established method for push-type commands (as used for cmd_set 0x00's 0x5C/0x58/0x62): grepped the E2 disassembly of dji_perception for the combined 16-bit cmd_word patterns a push would plausibly embed as a literal (0x0aa4 / 0xa40a, in either byte order) near any instruction, and found zero occurrences anywhere in .text. Did not exhaustively trace dji_perception's or dji_sys's dozens of duss_event_send/duss_event_send_sync call sites' argument-construction paths (each push's cmd_set/cmd_id is typically written into a locally-built request struct by pointer, not passed as a literal register argument to the send call itself, per this project's own prior experience on cmd_set 0x00/0x58 and 0x5C, where that same search path was tried at length and still came back inconclusive) -- that remains a concrete, bounded lead for a future pass with more time budget, not something this pass completed. No handler or sender found with confidence. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 10,
@@ -25712,7 +26398,8 @@
   "decode_status": "none",
   "source": null,
   "dissector_fn": null,
-  "fields": null
+  "fields": null,
+  "note": "Identical exhaustive search as cmd_id 0x48/0xA3 (see those entries for full method/addresses). cmd_id 0xA5 (165) is, like its siblings, far outside dji_perception's compiled 0x00-0x41 handler-table range on both architectures (same `cmp r0/w8,#0x42;bhs reject` bound), does not match any of dji_sys's 11/12 literal register_dynamic_command call sites on either architecture, and does not match either of dji_flight's two cmd_set-0x0a rows (0xDD, 0xDE; dji_flight is E1E-only, absent from the E2 image). duss_register_cmd (the 5th, batch-table registration mechanism) remains confirmed dead code (zero callers, both architectures) and so cannot be the real route either. No handler found for cmd_set 0x0a/cmd_id 0xA5 by any mechanism on either architecture. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology."
  },
  {
   "cmd_set": 11,

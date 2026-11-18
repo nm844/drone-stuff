@@ -540,7 +540,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x04,Gimbal,0x56,86,Gimbal NotiFy Camera Id,none,Gimbal,APP / RC,gimbal_notify_camera_id_dissector,0,
 0x04,Gimbal,0x57,87,Handheld Stick State Get/Push,none,Gimbal,APP / RC,gimbal_handheld_stick_state_get_dissector,0,
 0x04,Gimbal,0x58,88,Handheld Stick Control Set,none,Gimbal,APP / RC,gimbal_handheld_stick_control_set_dissector,0,
-0x04,Gimbal,0x69,105,Event Input Report,none,Gimbal,APP / RC,,0,
+0x04,Gimbal,0x69,105,Event Input Report,full,Gimbal,APP / RC,binary RE: sys_event_input_report,9,0:2:bytes:reserved_header | 2:2:uint16 (LE enum):report_type | 4:1:uint8:key_value | 5:1:uint8 (enum):touch_phase | 6:1:uint8:tracking_id | 7:2:uint16 (LE):pos_x | 9:2:uint16 (LE):pos_y | 11:1:uint8:width_major | 12:1:uint8:touch_major
 0x05,Center Board,0x00,0,Center Open/Close Virtual RC,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x01,1,Center Virtual RC Data,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x02,2,Center Push Batt Dynamic Info,full,Center Board,internal (FC/PMU),"binary RE: sys_battery_get_dynamic_info (generic request handler) -> per-board-model callback at offset +0xb0 of a device-context struct -> duss_event_resp_data (confirmed real PLT import, resolved by name) sends the 32-byte result back",3,0:20:bytes:reserved_0 | 20:1:uint8:remaining_capacity_percent | 21:11:bytes:reserved_1
@@ -646,20 +646,20 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x00,0,WiFi Reserved,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x01,1,WiFi Ap Scan Results Push,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x02,2,WiFi Ap Channel SNR Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x03,3,WiFi Ap Channel Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x04,4,WiFi Ap Channel Get,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x03,3,WiFi Ap Channel Set,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xfae8 (self-logs as __func__ 'v1_proc_set_chan' at 0xfb14/0xfb8c), called via direct `bl` from a per-command wrapper at vaddr 0x7010",1,0:2:uint16:wifi_ap_set_channel_channel
+0x07,Wi-Fi,0x04,4,WiFi Ap Channel Get,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xfc10 (self-logs as __func__ 'v1_proc_get_chan' at 0xfc60/0xfc98), called via direct `bl` from a per-command wrapper at vaddr 0x71f8",2,0:1:uint8:wifi_ap_get_channel_status | 1:1:uint8:wifi_ap_get_channel_channel
 0x07,Wi-Fi,0x05,5,WiFi Ap Tx Pwr Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x06,6,WiFi Ap Tx Pwr Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x07,7,WiFi Ap SSID Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x08,8,WiFi Ap SSID Set,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x07,7,WiFi Ap SSID Get,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xf148 (self-logged by its own wrapper chain as 'wms_evt_get_ssid'), called via direct `bl` from a per-command wrapper starting at vaddr 0x56e0-ish (confirmed call site 0x573c -> bl #0xf148)",3,0:1:uint8:wifi_ap_get_ssid_status | 1:1:uint8:wifi_ap_get_ssid_len | 2:-1:string:wifi_ap_get_ssid_ssid
+0x07,Wi-Fi,0x08,8,WiFi Ap SSID Set,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xf1f8 (self-logs as __func__ 'v1_proc_set_ssid' at 0xf22c/0xf288/0xf300/0xf368), called via direct `bl` from a per-command wrapper starting at vaddr 0x59cc (confirmed call site 0x5a90 -> bl #0xf1f8)",2,0:1:uint8:wifi_ap_set_ssid_len | 1:-1:string:wifi_ap_set_ssid_ssid
 0x07,Wi-Fi,0x09,9,WiFi Ap RSSI Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_rssi_dissector,1,0:1:uint8:wifi_ap_push_rssi_signal
 0x07,Wi-Fi,0x0a,10,WiFi Ap Ant RSSI Get,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x0b,11,WiFi Ap Mac Addr Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x0c,12,WiFi Ap Mac Addr Get,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x0c,12,WiFi Ap Mac Addr Get,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_get_mac @0x5fc8 -> v1_proc_get_macaddr @0xf558 -> wifi_mgmt_get_mac @0xaf18,1,0:6:ether:wifi_ap_mac_addr_get_mac
 0x07,Wi-Fi,0x0d,13,WiFi Ap Passphrase Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x0e,14,WiFi Ap Passphrase Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x0f,15,WiFi Ap Factory Reset,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x10,16,WiFi Ap Band Set,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x0f,15,WiFi Ap Factory Reset,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_restore_default @0x6690 -> v1_proc_restore_default @0xf998 (v1_interface/v1_proc.c) -> either wifi_mgmt_restore_default @0xb078 or _run_sys_cmd @0xb718,1,0:1:uint8:wifi_ap_factory_reset_sub_id
+0x07,Wi-Fi,0x10,16,WiFi Ap Band Set,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_set_band @0x6790 -> v1_proc_set_band @0xffd0 (validation only) -> wifi_mgmt_set_band @0xb178 -> set_band_config @0xd638 / device_set_band @0x160c0,1,0:1:uint8:wifi_ap_band_set_band
 0x07,Wi-Fi,0x11,17,WiFi Ap Sta MAC Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_sta_mac_dissector,1,0:6:ether:wifi_ap_push_sta_mac_mac
 0x07,Wi-Fi,0x12,18,WiFi Ap Phy Param Get,full,Wi-Fi (air),APP / PC,wifi_ap_get_phy_param_dissector,1,0:1:uint8:wifi_ap_get_phy_param_signal_status
 0x07,Wi-Fi,0x13,19,WiFi Ap Power Mode Set,none,Wi-Fi (air),APP / PC,,0,
@@ -683,14 +683,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x25,37,WiFi Ap 25,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x26,38,WiFi Ap Realtime Acs,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x27,39,WiFi Ap Manual Switch SDR,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x28,40,WiFi Ap Channel List Get/Push,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x28,40,WiFi Ap Channel List Get/Push,full,Wi-Fi (air),APP / PC,"binary RE: net_evt_push_channel_list, entry at file/vaddr 0x00008608",8,0:4:uint32:total_len | 4:1:uint8:current_channel | 5:4:uint32:band_mode | 9:4:bytes:reserved_9_c | 13:1:uint8:count_2g | 14:3:bytes:reserved_e_10 | 17:-1:uint16[count_2g]:channel_2g | -1:-1:struct (conditional):band5_block
 0x07,Wi-Fi,0x29,41,WiFi Ap Channel Noise/SNR Req,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x2a,42,WiFi Ap Channel Noise/SNR Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_chan_noise_dissector,1,0:4:uint32:wifi_ap_push_chan_noise_total
-0x07,Wi-Fi,0x2b,43,WiFi Ap Set Hw Mode,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x2b,43,WiFi Ap Set Hw Mode,full,Wi-Fi (air),APP / PC,"binary RE: net_evt_set_hw_mode, entry at file/vaddr 0x000092f8",2,0:1:bytes:reserved_or_unused_0 | 1:2:uint16:hw_mode
 0x07,Wi-Fi,0x2c,44,Wifi Ap Code Rate Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x2d,45,Wifi Ap Cur Code Rate Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x2e,46,WiFi Ap Set Usr Pref,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x2f,47,WiFi Ap Get Usr Pref,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x2e,46,WiFi Ap Set Usr Pref,full,Wi-Fi (air),APP / PC,binary RE: net_evt_set_user_pref,1,0:1:uint8:wifi_user_pref
+0x07,Wi-Fi,0x2f,47,WiFi Ap Get Usr Pref,full,Wi-Fi (air),APP / PC,binary RE: net_evt_get_user_pref,1,0:1:uint8:wifi_user_pref
 0x07,Wi-Fi,0x30,48,WiFi Ap Set Country Code,full,Wi-Fi (air),APP / PC,wifi_ap_set_country_code_dissector,3,0:4:string:wifi_set_country_code_str1 | 4:4:string:wifi_set_country_code_str2 | 8:2:uint16:wifi_set_country_code_unkn8
 0x07,Wi-Fi,0x31,49,WiFi Ap Reset Freq,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x32,50,WiFi Ap Del Country Code,none,Wi-Fi (air),APP / PC,,0,
@@ -705,8 +705,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x85,133,WiFi Connect Master With Id AuthCode,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x89,137,WiFi AuthCode Get,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x8b,139,WiFi MS Error Info Get/Push,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x91,145,WiFi Rc Info Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x92,146,WiFi Update Sw State,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x91,145,WiFi Rc Info Set,full,Wi-Fi (air),APP / PC,binary RE: net_evt_set_rc_info @ 0x7ad0,5,0:1:uint8:reserved_or_subtype | 1:1:uint8:ssid_len | 2:12:ascii_string:rc_wifi_ssid | 14:1:uint8:password_len | 15:11:ascii_string:rc_wifi_password
+0x07,Wi-Fi,0x92,146,WiFi Update Sw State,full,Wi-Fi (air),APP / PC,binary RE: net_evt_update_sw_state @ 0x9dfe (ARM32/e1e); wms_evt_update_sw_state @ 0x8f1c (AArch64/e2),1,0:1:uint8:sw_state
 0x08,DM36x,0x00,0,DM36x Reserved,none,DM36x (air),internal (air link),,0,
 0x08,DM36x,0x01,1,DM36x Gnd Ctrl Info Send,full,DM36x (air),internal (air link),dm36x_send_gnd_ctrl_info_dissector,3,0:1:uint8:dm36x_gnd_ctrl_info_param_id | 1:1:uint8:dm36x_gnd_ctrl_info_param_len | 2:1:uint8:dm36x_gnd_ctrl_info_param_val8
 0x08,DM36x,0x02,2,DM36x Gnd Ctrl Info Recv,full,DM36x (air),internal (air link),dm36x_recv_gnd_ctrl_info_dissector,1,0:1:uint8:dm36x_gnd_ctrl_info_param_id
@@ -790,7 +790,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x09,HD Link,0x71,113,HDLnk Main Camera Bandwidth Percent Set,none,HD-Link MCU (air),internal (air link),,0,
 0x09,HD Link,0x72,114,HDLnk Main Camera Bandwidth Percent Get,none,HD-Link MCU (air),internal (air link),,0,
 0x09,HD Link,0xa9,169,Liveview Pigeon State Heartbeat,none,HD-Link MCU (air),internal (air link),,0,
-0x09,HD Link,0xaa,170,MIPI/HDVT Liveview Param Set,none,HD-Link MCU (air),internal (air link),,0,
+0x09,HD Link,0xaa,170,MIPI/HDVT Liveview Param Set,full,HD-Link MCU (air),internal (air link),"binary RE: _ZN3dji26hu_hdvt_set_liveview_paramEP17duss_event_clientP10duss_eventPv (dji::hu_hdvt_set_liveview_param), registered at vaddr 0x296c inside dji::MipiHsRecvV1::initEventClientCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xAA [movs r2,#170], handler=&hu_hdvt_set_liveview_param, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple, same registering function name).",6,0:1:uint8:mipi_lv_param_reserved0 | 1:2:uint16:mipi_lv_param_width | 3:2:uint16:mipi_lv_param_height | 5:2:uint16:mipi_lv_param_dim3 | 7:1:uint8:mipi_lv_param_color_fmt | 8:13:bytes:mipi_lv_param_unused_tail
 0x0a,Mono/Binocular (Vision),0x01,1,Eye Bino Info,none,Mono/Binocular (Vision),Flight Controller,mbino_bino_info_dissector,0,
 0x0a,Mono/Binocular (Vision),0x02,2,Eye Mono Info,none,Mono/Binocular (Vision),Flight Controller,,0,
 0x0a,Mono/Binocular (Vision),0x03,3,Eye Ultrasonic Info,none,Mono/Binocular (Vision),Flight Controller,,0,
