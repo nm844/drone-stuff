@@ -15,6 +15,12 @@ import re
 import sys
 
 PLACEHOLDER = "_No byte-level payload decoder in source dissector (name-only / unparsed payload)._"
+# Some sections carry a hand-edited variant of the placeholder (e.g. appending
+# "-- but independently binary-confirmed live on this firmware" from a prior,
+# pre-payload-decode-sweep pass, sometimes line-wrapped) -- match on the
+# stable prefix through the closing "_" rather than requiring an exact string
+# match of the canonical form, so those sections aren't silently skipped.
+PLACEHOLDER_RE = re.compile(r'_No byte-level payload decoder in source dissector.*?_\n', re.S)
 
 
 def render_full(entry):
@@ -73,7 +79,8 @@ def main():
             continue
         cmd_id = int(m.group(1), 16)
         entry = by_id.get(cmd_id)
-        if entry is None or PLACEHOLDER not in sec:
+        ph_match = PLACEHOLDER_RE.search(sec)
+        if entry is None or ph_match is None:
             out.append(sec)
             n_skip += 1
             continue
@@ -88,7 +95,7 @@ def main():
             out.append(sec)
             n_skip += 1
             continue
-        sec = sec.replace(PLACEHOLDER + '\n', replacement)
+        sec = sec[:ph_match.start()] + replacement + sec[ph_match.end():]
         out.append(sec)
 
     open(doc_path, 'w').write(''.join(out))

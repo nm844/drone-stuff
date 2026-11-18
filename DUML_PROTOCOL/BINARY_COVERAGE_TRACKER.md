@@ -427,13 +427,39 @@ was mis-stated as rooted at vaddr `0xae0f8`; it's actually rooted at
 `0xae038` (`0xae0f8` is just one row, 24 in), confirmed by directly
 re-deriving the raw bytes — see doc 21 for the full reconciliation
 (partial — a separate "20 records" figure from elsewhere doesn't fully
-agree and wasn't force-resolved). A third wave (cmd_set 0x00 General, 70
-commands) was launched the same day and is digested separately as it
-lands. Reusable tooling
+agree and wasn't force-resolved). Third wave: cmd_set 0x00 (General, 70
+commands) — 10 decoded (registry 164→174 full; among them, completing
+`libduml_frwk.so`'s one built-in dynamic-command table to all 6 rows,
+only 4 of which were previously catalogued), 10 more where the handler was
+correctly identified but the specific field-layout claim was explicitly
+refuted on adversarial reverify (real proof the reverify step catches
+overreach even against an already-correct lead), 1 confirmed `no_payload`,
+48 `insufficient_evidence` — including a genuinely new architecture
+finding worth flagging on its own: a previously-undocumented "Param
+Manager" subsystem inside `dji_sys` (three dedicated ELF sections,
+~40 hash-keyed-parameter debug strings) that the 5-command "parameter
+bus" family almost certainly routes through, without a confirmed byte
+layout. See doc 21's "cmd_set 0x00" section for detail. A fourth, much
+larger pair of waves (cmd_set 0x02 Camera, 190 commands; cmd_set 0x03
+Flight Control, 155 commands) plus a bundle of the remaining mid-size sets
+(Wi-Fi/HD Link/Mono-Binocular/Gimbal, 159 commands) are launched next —
+this closes out the small/medium cmd_sets and leaves only those three
+large ones (504 commands) before all 744 originally-undecoded commands
+have been attempted at least once. Reusable tooling
 added this round: `tools/merge_payload_decode_wave.py` (applies a wave's
-result JSON into `commands.json`), `tools/apply_notes_to_cmdset_doc.py`
-(mirrors that into the hand-maintained `cmdset_XX_*.md` doc).
-**Process note:** `make -j4`/`make` alone does NOT rebuild
+result JSON into `commands.json` — now prefers `handler_evidence` over an
+often-empty `scenario_description` when building a research note, fixed
+after the General-wave digestion initially lost real research detail this
+way), `tools/apply_notes_to_cmdset_doc.py` (mirrors that into the
+hand-maintained `cmdset_XX_*.md` doc).
+**Process notes:** `make -j4`/`make` alone does NOT rebuild
 `duml_c`'s test binaries (only `make test` does) — running stale
 `build/tests/test_*` binaries without it can silently report a false
-pass; always use `make test` when verifying a registry change.
+pass; always use `make test` when verifying a registry change. Separately,
+a container restart mid-digestion once left `registry_data.cpp` corrupted
+to a single stray stdout line (`tools/gen_cpp_registry.py`'s own status
+message, from some prior invocation that redirected the script's stdout
+over its own output file) — always regenerate via the script's own `out`
+argument, never `> `-redirect its stdout to the same path, and always
+re-run `make test` after a restart before trusting any registry file's
+on-disk state.

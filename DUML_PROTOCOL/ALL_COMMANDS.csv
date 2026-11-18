@@ -1,15 +1,15 @@
 cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiver,typical_request_sender,dissector_fn,num_fields,payload_fields (offset:size:type:name[branch])
-0x00,General,0x00,0,Ping,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x00,0,Ping,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: duss_event_ping (vaddr 0x87d08, E1E/ARM32 build)",1,0:0:bytes:echo_payload
 0x00,General,0x01,1,Version Inquiry,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_version_inquiry_dissector,1,0:1:uint8:general_version_inquiry_rq_unknown0 [if (payload:len() >= 1) then]
 0x00,General,0x02,2,Push Param Set,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x03,3,Push Param Get,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x04,4,Push Param Start,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x05,5,Multi Param Set,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x06,6,Multi Param Get,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x07,7,Enter Loader,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_enter_loader_dissector,0,
-0x00,General,0x08,8,Update Confirm,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_confirm_dissector,0,
+0x00,General,0x07,7,Enter Loader,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_entry (sender-side, vaddr 0x2d04); receiving dji_sys-side parser not independently located (same gap this project's own prior docs -- cmdset_00_General.md / 14_FOLLOWUP_DEEPDIVE_FINDINGS.md Track E / 20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md -- already flagged for 0x07-0x0A)",1,0:9:bytes:reserved0_8
+0x00,General,0x08,8,Update Confirm,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_start (sender-side, vaddr 0x2e4c); receiving dji_sys-side parser not independently located (same gap already flagged in this project's prior docs for 0x07-0x0A)",5,0:1:uint8:reserved0 | 1:4:uint32:file_size | 5:6:bytes:reserved5_10 | 11:1:uint8:format_flag | 12:1:uint8:image_type
 0x00,General,0x09,9,Update Transmit,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_transmit_dissector,0,
-0x00,General,0x0a,10,Update Finish,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_finish_dissector,0,
+0x00,General,0x0a,10,Update Finish,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_finish (sender-side, vaddr 0x347c); receiving dji_sys-side parser not independently located (same gap already flagged in this project's prior docs for 0x07-0x0A)",2,0:1:uint8:reserved0 | 1:16:bytes:md5_digest
 0x00,General,0x0b,11,Reboot Chip,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_reboot_chip_dissector,3,0:2:uint16:general_reboot_chip_unknown0 [if (payload:len() >= 6) then] | 2:4:uint32:general_reboot_chip_sleep_time [if (payload:len() >= 6) then] | 0:1:uint8:general_reboot_chip_response [elseif (payload:len() >= 1) then]
 0x00,General,0x0c,12,Get Device State,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_get_device_state_dissector,3,0:1:uint8:general_get_device_state_status [else] | 1:1:uint8:general_get_device_state_unknown1 [else] | 2:4:uint32:general_get_device_state_state [else]
 0x00,General,0x0d,13,Set Device Version,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_set_device_version_dissector,8,0:1:uint8:general_set_device_version_unknown0 [if pack_type == 0 then] | 1:4:bytes:general_set_device_version_hw_ver [if pack_type == 0 then] | 5:4:bytes:general_set_device_version_ldr_ver [if pack_type == 0 then] | 9:4:bytes:general_set_device_version_app_ver [if pack_type == 0 then] | 13:4:bytes:general_set_device_version_unk4_ver [if pack_type == 0 then] | 0:1:uint8:general_set_device_version_status [else] | 1:1:uint8:general_set_device_version_flags1 [else] | 2:16:bytes:general_set_device_version_unknown2 [else]
@@ -39,14 +39,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x00,General,0x46,70,Shutdown Notification,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x47,71,Power State,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_power_state_dissector,2,0:1:uint8:general_power_state_a | 1:2:uint16:general_power_state_b
 0x00,General,0x48,72,LED Control,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4a,74,Set Date/Time,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4b,75,Get Date/Time,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4c,76,Get Module Sys Status,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x4a,74,Set Date/Time,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: sys_event_set_date (request handler, builds/validates a struct tm and calls mktime()); sys_event_set_date_ack (logs the 1-byte ack payload when dji_sys itself receives a response)",7,0:2:uint16:year | 2:1:uint8:month | 3:1:uint8:day | 4:1:uint8:hour | 5:1:uint8:minute | 6:1:uint8:second | 7:2:int16:tz_offset_min
+0x00,General,0x4b,75,Get Date/Time,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_rtc_get_date (builds and sends the response from the live system clock); sys_event_get_date_ack (logs the response if dji_sys itself is the one receiving an ack),7,0:1:uint8:hour | 1:1:uint8:minute | 2:1:uint8:second | 3:1:uint8:year_low | 4:1:uint8:year_high | 5:1:uint8:month | 6:1:uint8:day
+0x00,General,0x4c,76,Get Module Sys Status,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_report_status,2,0:1:uint8:module_id | 0:1:uint8:query_index
 0x00,General,0x4d,77,Set RT,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x4e,78,Get RT,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x4f,79,Get Cfg File,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x50,80,Set Serial Number,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x51,81,Get Serial Number,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x51,81,Get Serial Number,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_get_serial_number (vaddr 0x3fb00),1,0:1:uint8 (enum):serial_type
 0x00,General,0x52,82,Set Gps Push Config,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_set_gps_push_config_dissector,2,0:1:uint8:general_set_gps_push_config_is_start | 1:4:uint32:general_set_gps_push_config_get_push_interval
 0x00,General,0x53,83,Push Gps Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x54,84,Get Temperature Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
@@ -78,12 +78,12 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x00,General,0xf6,246,Test Query Result,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xf7,247,Push Test Result,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xf8,248,Get Metadata,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0xfa,250,Log Control,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0xfa,250,Log Control,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: duss_event_log_control,2,"0:1:uint8:module | 1:1:uint8 (module 0) / uint16 little-endian (module 6, 2 bytes) / absent (modules 1,2,5,7,9):level"
 0x00,General,0xfb,251,Selftest State,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfc,252,Selftest State Count,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfd,253,Dump Frame Buffer,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfe,254,Self Define,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0xff,255,Query Device Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_query_device_info_dissector,0,
+0x00,General,0xff,255,Query Device Info,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_query_device_info,1,"0:26:string (ASCII, NOT NUL-terminated on the wire -- length is passed explicitly as strlen()):device_info_string"
 0x01,Special,0x00,0,Sdk Ctrl Mode Open/Close Nav,none,Flight Controller,APP / PC,,0,
 0x01,Special,0x01,1,Old Special App Control,full,Flight Controller,APP / PC,special_old_special_app_control_dissector,9,0:1:uint8:special_old_special_app_control_unknown0 [if pack_type == 0 then] | 1:1:uint8:special_old_special_app_control_unknown1 [if pack_type == 0 then] | 2:2:uint8:special_old_special_app_control_unknown2 [if pack_type == 0 then] | 4:1:uint8:special_old_special_app_control_unknown4 [if pack_type == 0 then] | 5:1:uint8:special_old_special_app_control_unknown5 [if pack_type == 0 then] | 6:1:uint8:special_old_special_app_control_unknown6 [if pack_type == 0 then] | 7:2:uint8:special_old_special_app_control_unknown7 [if pack_type == 0 then] | 9:1:uint8:special_old_special_app_control_checksum [if pack_type == 0 then] | 0:1:uint8:special_old_special_app_control_status [else]
 0x01,Special,0x02,2,Old Special Remote Control,none,Flight Controller,APP / PC,,0,
@@ -900,5 +900,3 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x23,Smart,0x21,33,Calling For Smart Owner,none,"Any (camera-pipeline DSP-arbitration participants -- ss_dsp_manager, libhyperlapse_eis.so -- binary-confirmed, not from a public dissector)",internal (camera-pipeline peer process arbitrating DSP ownership),,0,
 0x23,Smart,0x22,34,Finish Working On Smart,none,"Any (camera-pipeline DSP-arbitration participants -- ss_dsp_manager, libhyperlapse_eis.so -- binary-confirmed, not from a public dissector)",internal (camera-pipeline peer process arbitrating DSP ownership),,0,
 0x51,Route Switch,0x05,5,Route Switch,full,"Any (framework built-in, libduml_frwk.so -- binary-confirmed, not from a public dissector)",internal (framework/system),binary RE: duss_event_route_switch,7,"0:1:uint8 (enum):operation | 1:1:uint8 (boolean-like flag):inverted | 2:1:uint8:old_link_mode | 3:1:uint8:new_link_mode | 4:1:uint8:type | 5:1:uint8:host_id_count | 6:2:uint16[] (little-endian, 2 bytes per element, repeated host_id_count times):host_id_list"
-# cmd_sets with zero catalogued commands: ['0xc', '0x10']
-# 901 commands total, 164 with full payload decode, 737 name-only (sendable/receivable as raw bytes)

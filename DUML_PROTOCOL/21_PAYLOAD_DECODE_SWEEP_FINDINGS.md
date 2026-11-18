@@ -394,3 +394,102 @@ reconciles with, and essentially confirms, this project's original
 records, cmd_sets `{0x02,0x04,0x0a,0x1f,0x22}`" figure reported elsewhere
 (possibly a different subset or counting convention) — that discrepancy
 is recorded, not resolved, here.
+
+---
+
+## cmd_set 0x00 (General, 70 commands)
+
+Of 70 targets: **10 decoded and added to the registry** (900→... no new
+rows — this wave only enriches existing `(cmd_set, cmd_id)` entries that
+were already catalogued name-only, so the registry's *total* stays 901;
+its `full` count grows), **10 more where the HANDLER was correctly
+identified but the proposed field layout was explicitly refuted** on
+3-way adversarial reverify, **1 confirmed `no_payload`**, and **48
+`insufficient_evidence`**.
+
+**Decoded** (all `source: "binary_re"`, `dissector_fn` naming the real
+handler, in `commands.json`/`cmdset_00_General.md`):
+
+| `cmd_id` | Name | Handler |
+|---|---|---|
+| `0x00` | Ping | `duss_event_ping` (`libduml_frwk.so`) — a 3-instruction trampoline that echoes the request payload back verbatim via `duss_event_resp_data_v2`; no fixed fields, genuinely request/response |
+| `0x07` | Enter Loader | `check_fw_entry` (sender-side only; the receiving `dji_sys`-side parser was not independently located — same gap already flagged in this project's prior docs for `0x07`-`0x0A`) |
+| `0x08` | Update Confirm | `check_fw_start` (sender-side only, same receiver gap) |
+| `0x0A` | Update Finish | `check_fw_finish` (sender-side only, same receiver gap) |
+| `0x4A` | Set Date/Time | `sys_event_set_date` (builds/validates a `struct tm`, calls `mktime()`) |
+| `0x4B` | Get Date/Time | `sys_event_rtc_get_date` (builds the response from the live system clock) |
+| `0x4C` | Get Module Sys Status | `sys_event_report_status` |
+| `0x51` | Get Serial Number | `sys_event_get_serial_number` |
+| `0xFA` | Log Control | `duss_event_log_control` |
+| `0xFF` | Query Device Info | `sys_event_query_device_info` |
+
+Two of these (`0x00` Ping, `0xFA` Log Control) came from re-reading
+`libduml_frwk.so`'s one built-in 6-entry dynamic-command table
+(`duss_event_create_dynamic_cmd_tbl`) directly from its raw `.data`
+bytes — this project's prior docs had only catalogued 4 of its 6 rows
+(`0x00/0x2f`, `0x00/0x89`, `0x00/0xaa`, `0x51/0x05`); **all 6 rows are
+now known**: `{0x00/0x00, 0x00/0x2f, 0x00/0x89, 0x00/0xaa, 0x00/0xfa,
+0x51/0x05}`.
+
+**Decoded-then-refuted** (handler identification survives, the specific
+byte-offset/size/type claims do not — `commands.json`'s `note` field says
+so explicitly for each, distinguishing this from a plain miss):
+
+| `cmd_id` | Name | Handler (correctly identified) |
+|---|---|---|
+| `0x09` | Update Transmit | `check_fw_transmit` (sender-side only) |
+| `0x2F` | Trans Diag Event | `duss_trans_diag_event` (already known from doc 04) |
+| `0x54` | Get Temperature Info | `sys_event_get_temp_info` |
+| `0x5A` | Play Sound | `sys_event_play_sound` |
+| `0x60` | Auto Test Info | `sys_event_auto_test_info` |
+| `0x89` | Shell Command | `duss_event_shell` (already known from doc 04) |
+| `0x93` | Begin Single Module Upgrade | a local static `send_fn` helper inside `upgrade_test` → `duss_event_send_sync` |
+| `0x94` | Set Upgrade Flag | same `upgrade_test` `send_fn` helper |
+| `0xA3` | USB State Report | `sys_wm260_usb_state_handle` (already known from doc 04) |
+| `0xAA` | Node Sniffer Request | `duss_event_node_sniffer_req` (already known from doc 04) |
+
+Notably, 4 of these 10 (`0x2F`, `0x89`, `0xA3`, `0xAA`) were specifically
+given a head start pointing at their already-confirmed doc-04 handlers —
+proof the adversarial reverify step is doing real work: an already-correct
+handler identification didn't save an unsupported field-layout guess from
+being caught and rejected.
+
+**No payload:** `0x59` (Test Mode) — disassembly of `sys_event_test_mode`
+is two instructions, `b duss_event_resp_ok; udf #0` (unreachable padding)
+— it unconditionally acks without reading the request payload at all.
+
+**Headline architecture finding from the 48 `insufficient_evidence`
+commands — a previously-undocumented "Param Manager" subsystem inside
+`dji_sys`:** the 5-command "parameter bus" family (`0x02` Push Param Set,
+`0x03` Push Param Get, `0x04` Push Param Start, `0x05` Multi Param Set,
+`0x06` Multi Param Get) could not be pinned to a specific handler, but the
+search for one surfaced something genuinely new: three custom ELF sections
+literally named `param_manager_local` (56 bytes), `param_manager_buf_local`
+(32 bytes), and `param_manager_remote` (12 bytes) inside `dji_sys`, backing
+~40 `"PM:"`-prefixed debug strings that describe a real, hash-keyed
+named-parameter protocol with push-frequency subscriptions — e.g.
+`"PM:register remote param item err, name: %s, freq: %d"`,
+`"PM:recieved push remote param hash was not register, hash: %u"`,
+`"PM:[%s]param is out of range,%s"`. Two of `dji_sys`'s registration call
+sites are data-driven (reading `cmd_set`/`cmd_id` from a runtime-populated
+table rather than a literal immediate) and trace back to this same
+`param_manager_*` global state, strongly suggesting this family is a real,
+live subsystem — just not one this pass could resolve to literal
+`(cmd_set, cmd_id)`-to-handler bindings or exact wire-payload offsets with
+confidence. **Not added to the registry** (no confirmed byte layout), but
+recorded prominently here and in each of the 5 commands' `commands.json`
+`note` fields, since this is a genuine, reusable lead for a future pass —
+whoever revisits this family should start from these three section names
+and string literals rather than re-deriving them.
+
+**Process note — a lost-then-recovered digestion detail:** this wave's
+first digestion pass initially let several `insufficient_evidence`
+commands' rich, per-command research text (including the Param Manager
+finding above) get replaced by `merge_payload_decode_wave.py`'s generic
+fallback note, because the tool preferred an (often-empty, for
+`insufficient_evidence` commands) `scenario_description` field over the
+richer `handler_evidence` field. Caught and fixed in the same digestion,
+both for this wave's 33 affected commands (notes rebuilt from
+`handler_evidence` directly) and in the tool itself (now falls back to
+`handler_evidence` when `scenario_description` is empty) so future waves
+don't lose this kind of detail by default.
