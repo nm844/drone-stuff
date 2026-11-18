@@ -452,6 +452,29 @@ often-empty `scenario_description` when building a research note, fixed
 after the General-wave digestion initially lost real research detail this
 way), `tools/apply_notes_to_cmdset_doc.py` (mirrors that into the
 hand-maintained `cmdset_XX_*.md` doc).
+Fourth wave, Flight Control (cmd_set 0x03, 155 commands): 3 decoded and
+merged (registry 174→177 full), 1 explicitly refuted on adversarial
+reverify (handler correctly identified; one specific safety-relevant
+field claim was wrong — see doc 21), 151 `insufficient_evidence`. This
+wave's single biggest architecture result: all 16 investigating groups
+independently re-derived and corrected `dji_flight`'s relocated
+`{fn_ptr,cmd_word}` dispatch array's exact bounds — rooted at vaddr
+`0xae040` (not `0xae038`), 43 real rows (not 44) — closing the "20 vs
+44 records" ambiguity doc 21 had left open, and confirming only 5 of
+cmd_set 0x03's 155 commands are reachable through that table at all. The
+rest are gated behind a second mechanism (a JSON-config-driven
+`[cmd_set][cmd_id]` dispatch table, loaded at runtime from
+`/system/etc/dji.json`, confirmed present in `dji_flight`'s and
+`libduml_frwk.so`'s own code but with the JSON file itself absent from
+both firmware extractions) — identified as the single most actionable
+structural blocker for this and 9 other cmd_sets `dji_flight` serves.
+Also caught and explicitly disproved one strong-looking name-based false
+lead (`FC_PARAM:` strings belong to cmd_set 0x11/ADS-B, not cmd_set
+0x03's "Params Get", per a dispatch-table cross-check). Two of the three
+originally-launched fourth-wave efforts remain: Camera (cmd_set 0x02,
+190 commands) and the Wi-Fi/HD Link/Mono-Binocular/Gimbal bundle (159
+commands).
+
 **Process notes:** `make -j4`/`make` alone does NOT rebuild
 `duml_c`'s test binaries (only `make test` does) — running stale
 `build/tests/test_*` binaries without it can silently report a false
@@ -462,4 +485,11 @@ message, from some prior invocation that redirected the script's stdout
 over its own output file) — always regenerate via the script's own `out`
 argument, never `> `-redirect its stdout to the same path, and always
 re-run `make test` after a restart before trusting any registry file's
-on-disk state.
+on-disk state. A third hazard surfaced this round: large Workflow sweeps
+can run headlong into an account-wide 5-hour usage limit mid-adversarial-
+verify, leaving a "completed" task result with most refute-votes missing
+(not absent findings — failed tool calls); always check a completed
+wave's `agents_error` count before trusting it, and `resumeFromRunId`
+after the limit resets rather than treating a high-error-count result as
+final (a usage-limit failure re-runs on resume; only genuinely finished
+calls are served from cache).

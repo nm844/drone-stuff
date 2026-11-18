@@ -493,3 +493,126 @@ both for this wave's 33 affected commands (notes rebuilt from
 `handler_evidence` directly) and in the tool itself (now falls back to
 `handler_evidence` when `scenario_description` is empty) so future waves
 don't lose this kind of detail by default.
+
+## cmd_set 0x03 (Flight Control, 155 commands)
+
+**Result: 3 of 155 decoded and verified** (`0x31` UAV Home Point Set,
+`0xA5` App Ctrl Fly Sweep Ctrl, `0xCD` Update Nofly Area), 1 decoded-but-
+refuted (`0xEA`), 151 `insufficient_evidence`. All in `dji_flight`
+(`e1e_extracted`, 32-bit ARM/Thumb-2 — confirmed, by exhaustive filename
+search across both firmware trees, that `dji_flight` does not exist at
+all in the `e2_extracted`/AArch64 build, so there is no cross-arch check
+possible for this cmd_set; every finding below is single-build).
+
+**Headline architecture correction — the `dji_flight` dispatch table's
+exact bounds, now pinned down.** All 16 investigating groups in this wave
+independently re-derived the relocated `{fn_ptr, cmd_word}` array doc 21
+previously described as "rooted at vaddr `0xae038`, 44 raw 8-byte rows
+through `0xae190`" — and all 16 converged on the same correction:
+
+- The true, relocation-backed table starts 8 bytes later, at vaddr
+  **`0xae040`**, and runs exactly **43** valid rows through `0xae190`
+  inclusive. The 8 bytes at `0xae038`/`0xae03c` (raw value `64 00 00 00
+  00 01 00 00`) carry **no** `R_ARM_RELATIVE` relocation entry at all
+  (every one of the 43 real rows does, confirmed via `readelf -rW`), and
+  `0x64` is far too small to be a valid `.text` address (`.text` spans
+  `0xa390`-`0x8f3f4`) — so it cannot be a real function pointer. It is
+  leftover/boundary data from an adjacent, unrelated structure, not a
+  44th registration.
+- Row layout: `{u32 fn_ptr (Thumb-tagged, bit0 set); u8 cmd_set; u8
+  cmd_id; u16 reserved=0}`. The decode is independently cross-validated
+  (not just byte-counted) against 4 of this project's own already-known
+  bindings (`0x22/0x06` `set_global_cruise_vel`, `0x22/0x07`
+  `get_global_cruise_vel`, `0x22/0x08` `pause_recovery`, `0x22/0x44`
+  `break_restore_waypoint_fly`), which a wrong row-alignment could not
+  reproduce by chance.
+- The 43 rows span exactly the 8 cmd_sets doc 21 already expected —
+  `{0x00, 0x02, 0x03, 0x04, 0x0a, 0x11, 0x1f, 0x22}` — with only **5**
+  cmd_set-0x03 rows in it: `0xEA`, `0x3F`, `0xC1`, `0xCD`, `0xDB`. This is
+  why 150 of 155 Flight Control commands hit a wall: the direct-dispatch
+  array only ever covered a handful of cmd_set-0x03 commands, not the
+  whole cmd_set.
+- This is a precision refinement, not a reversal, of doc 21's prior
+  "0xae038, 44 rows" note (itself already a reconciliation of two earlier,
+  even-more-wrong readings) — recorded here as the now-settled answer.
+
+**Headline architecture finding — why almost nothing else in `dji_flight`
+could be resolved.** One group traced `dji_flight`'s *other* registration
+mechanism (`duss_mb_create_route_table` + `duss_event_create_client`,
+single call site at vaddr `0x22b96`/`0x22c1a`) all the way to its root
+cause. The route table is built from `path="/system/etc/dji.json"`,
+`service_name="flight_service"`, and the client is tagged
+`"flight_srv_fmu"` (all three strings resolved via PC-relative
+literal-pool cross-reference). A second, literal 10-byte array at vaddr
+`0xae490` (`00 02 03 04 05 11 1f 22 0a 3c`) lists the cmd_sets this JSON-
+driven path serves: `{0x00, 0x02, 0x03, 0x04, 0x05, 0x11, 0x1f, 0x22,
+0x0a, 0x3c}`. `libduml_frwk.so`'s own strings confirm the real mechanism
+behind it: a `static_cmd_tbl[cmd_set]` array of `cmd_desc_tbl` structs
+(gated by `cmd_id >= cmd_desc_num` and a null `req_cb` check) — a genuine
+two-level `[cmd_set][cmd_id]` dispatch table, populated **at runtime**
+from that JSON file. `dji.json` is absent from this entire firmware
+extraction (confirmed across both `e1e_extracted` and `e2_extracted`),
+which is the real, structural reason almost all of cmd_set 0x03's
+(and the other 9 served cmd_sets') individual `cmd_id`-to-handler
+bindings cannot be recovered from the ELF alone — not a gap in search
+effort. Flagged as the single most actionable lead for any future pass:
+recovering (or being handed) `/system/etc/dji.json` would likely unlock
+most of the still-`insufficient_evidence` commands in all 10 of those
+cmd_sets at once.
+
+**A genuine false lead, explicitly disproven rather than left dangling:**
+`dji_flight` contains a convincing-looking `FC_PARAM:`-prefixed debug-
+string cluster (`"FC_PARAM: rcv undefine cmd:%d"`, `"FC_PARAM: invalid
+data len:%d"`) backing a real sub-command dispatcher at vaddr `0x1a5c0`
+that name-matches cmd_id `0x02` ("FlyC Params Get") well. Cross-checked
+against the dispatch array instead of trusting the name match: the
+function's own address (`0x1a5c1`) is exactly dispatch-array row 14
+(vaddr `0xae0b0`) — and that row's `cmd_word` decodes to cmd_set
+**`0x11` (ADS-B)**, cmd_id `0x01`, not cmd_set 0x03. `FC_PARAM` is a
+cmd_set-0x11 ADS-B parameter sub-protocol, not cmd_set-0x03's "Params
+Get" — the registration-table cross-check actively disproved the
+name-based lead rather than confirming it.
+
+**An unbound-but-promising lead, recorded for a future pass:** a real,
+named NFZ-origin subsystem — `update_nfz_gps_origin` (validates a live
+telemetry struct's lat/lon doubles before committing an origin record,
+logging `"[%s]:update nfz origin[%f %f %f] elevation:%f"`), plus
+`fc_event_cb_nfz_dynamic_update`, `fc_event_cb_nfz_fc_dynamic_update`, and
+`fc_event_cb_nfz_enquery` — is the best-shaped candidate for `0x03` Origin
+GPS Set / `0x04` Origin GPS Get (the `_cb`/`_enquery` naming matches this
+project's established convention for a registered event callback). None
+of these three functions appear in the 43-row dispatch array, and the
+JSON-config path's internal dispatch could not be recovered (see above),
+so no byte offsets are asserted — named-but-unbound, not decoded.
+
+**The 3 verified decodes:**
+
+| `cmd_id` | Name | Handler | Notes |
+|---|---|---|---|
+| `0x31` | UAV Home Point Set | `nav_v1_flight_api_set_homepoint` (name recovered from its own embedded debug string) | 18-byte payload: mode byte + 4 float32 params + trailing flag byte. Byte offsets/sizes high-confidence (reproduced in two separately-compiled sender implementations); exact physical meaning of the 4 float params (lat/lon/alt-shaped) explicitly flagged as unconfirmed — notably does NOT match the double-precision lat/lon layout of the sibling command `0x44` OSD Home Point Get. |
+| `0xA5` | App Ctrl Fly Sweep Ctrl | `nav_v1_afqt_sweep_req` in `dji_autoflight` (a different binary from `dji_flight`), reached via an AFQT/factory-tuning-test state machine | 11-byte payload: 2 internal envelope-tag bytes, a mode byte, 3 x10-fixed-point uint16 sweep params, an unscaled param byte, and a packed 3-field bitfield byte. Field roles plausibly map to the AFQT JSON config keys `start_freq`/`end_freq`/`duration`/`inj_point`/`inj_loop` by order and scaling, not by direct 1:1 proof. |
+| `0xCD` | Update Nofly Area | outer dispatcher @ `0x1144c` (one of the 5 cmd_set-0x03 dispatch-array rows), fanning out to 4 sub-handlers by a leading `operation_type` byte | 21-byte payload for `operation_type=0` (other 3 operation types exist but weren't independently decoded this pass): zone/secondary 64-bit-shaped IDs, a revision field, a sub-type byte, and a 2-field duration pair fed through a confirmed `/100` division idiom. Several field names are deliberately generic (`secondary_id_lo/hi`, `revision_or_level`) because no stronger evidence for their specific semantics was found — reported honestly rather than guessed. |
+
+**The 1 refuted decode, with a nuance worth keeping:** `0xEA` (catalogued
+as "Register Open Motor Error Action") was traced to a real, fully-
+disassembled handler at `dji_flight+0x20e14` — but all 3 adversarial
+reviewers, after independently reproducing the entire byte-level layout,
+the dispatch-table row, and the literal path/mode strings, found the same
+concrete, falsifiable error: the claim asserted `read_length` was "not
+clamped" and could overrun the handler's stack buffer, but the
+disassembly shows an explicit `cmp.w r8,#270; bls.n ...` bounds check
+immediately before the file is ever opened — the overrun the claim warned
+about is not reachable through this handler at all. Per `build_note()`'s
+"decoded but refuted" convention, the *handler* is correctly identified;
+only that one safety-relevant field-note was wrong, so `commands.json`'s
+note says this explicitly rather than reading as a plain miss. Separately
+— and not re-asserted as fact, since it wasn't the reason for the
+refutation — the handler's actual observed behavior (reading a chunk of
+`/nfz_data/NFZ/nfz.bin`, the on-aircraft geofence database) doesn't
+resemble "Register Open Motor Error Action" at all, while the flight-
+controller MCU's own RTOS firmware blob (`rtos_dec_RTOS.bin`) contains
+genuinely matching strings (`vp_motor_ext_err_register`,
+`"Register motor external error result: %u..."`) for that catalog name.
+No relay/bridge code connecting DUML wire command `0x03`/`0xEA` to that
+MCU-side function was found. Flagged as an open catalog-naming question
+for whoever next revisits this command, not resolved here.

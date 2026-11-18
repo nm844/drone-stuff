@@ -342,7 +342,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0x2e,46,Limit Params Get,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x2f,47,Battery Voltage Alarm Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x30,48,Battery Voltage Alarm Get,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0x31,49,UAV Home Point Set,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0x31,49,UAV Home Point Set,full,Flight Controller,APP / RC / PC,"binary RE: nav_v1_flight_api_set_homepoint (name recovered from its own embedded debug string, not a surviving symbol)",6,0:1:uint8:set_homepoint_mode | 1:4:float32:set_homepoint_param_a_f32 | 5:4:float32:set_homepoint_param_b_f32 | 9:4:float32:set_homepoint_param_c_f32 | 13:4:float32:set_homepoint_param_d_f32 | 17:1:uint8:set_homepoint_flag
 0x03,Flight Control,0x32,50,FlyC Deform Status Get,full,Flight Controller,APP / RC / PC,flyc_flyc_deform_status_dissector,4,0:1:uint8:flyc_flyc_deform_status_masked00 | 0:1:uint8:flyc_flyc_deform_status_deform_protected | 0:1:uint8:flyc_flyc_deform_status_deform_status | 0:1:uint8:flyc_flyc_deform_status_deform_mode
 0x03,Flight Control,0x33,51,UAV User String Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x34,52,UAV User String Get,none,Flight Controller,APP / RC / PC,,0,
@@ -434,7 +434,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0xa2,162,Race Drone OSD Push,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xa3,163,Miss. WP: Get BreakPoint Info,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xa4,164,Miss. WP: Return To Cur Line,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0xa5,165,App Ctrl Fly Sweep Ctrl,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0xa5,165,App Ctrl Fly Sweep Ctrl,full,Flight Controller,APP / RC / PC,"binary RE: nav_v1_afqt_sweep_req (internal symbol-like string, vaddr 0xc6328), at code address 0x463fc-0x46528 in dji_autoflight; invoked (via a tail-call thunk at 0x4dc84) from the 'case_afqt_sweep' AFQT (AutoFlight Quality Test / factory tuning test) state machine starting at 0x2fbd0, whose config is loaded from a cJSON object with keys start_freq/end_freq/duration/amp (floats, offsets 0/4/8/12 of an 18-byte config struct) and inj_point/inj_loop (bytes, offsets 16/17) -- function at 0x2fb28, xref-resolved from the 'sweep config %.2f' and case_afqt_sweep debug strings.",8,0:1:uint8:sweep_msg_tag_a | 1:1:uint8:sweep_msg_tag_b | 2:1:uint8:sweep_mode | 3:2:uint16:sweep_param_a_x10 | 5:2:uint16:sweep_param_b_x10 | 7:2:uint16:sweep_param_c_x10 | 9:1:uint8:sweep_param_d | 10:1:uint8:sweep_flags_packed
 0x03,Flight Control,0xa6,166,Set RKT Homepoint,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xaa,170,Sbus Packet,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xab,171,Ctrl Attitude Data Send,none,Flight Controller,APP / RC / PC,,0,
@@ -455,7 +455,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0xbe,190,Open Led Action Status Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xbf,191,Flight Push,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xc6,198,Shell Test,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0xcd,205,Update Nofly Area,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0xcd,205,Update Nofly Area,full,Flight Controller,APP / RC / PC,"binary RE: outer dispatcher @ vaddr 0x1144c; type-0 sub-handler @ vaddr 0x112b8 (type-1 @ 0x1115c, type-2 @ 0x11114, type-3 @ 0x11104)",21,0:1:uint8:operation_type | 1:4:uint32:area_id_lo | 5:4:uint32:area_id_hi | 9:4:uint32:secondary_id_lo | 13:4:uint32:secondary_id_hi | 17:4:uint32:revision_or_level | 21:1:uint8:zone_subtype_byte | 22:4:uint32:duration_component_a | 26:4:uint32:duration_component_b | 30:4:int32:latitude_raw | 34:4:int32:longitude_raw | 38:4:int32:radius_mm | 54:2:uint16:shape_or_zone_type | 58:4:uint32:begin_time_unix | 62:4:uint32:end_time_unix | 66:4:uint32:aux_field_c | 70:4:uint32:aux_field_d | 74:4:uint32:aux_field_e | 78:1:uint8 (bit0):enabled_flag | 82:1:uint8 (enum):zone_class | 83:4:uint32:trailing_field
 0x03,Flight Control,0xce,206,Push Forbid Data Infos,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xcf,207,New Nofly Area Get,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xd4,212,Additional Info Get,none,Flight Controller,APP / RC / PC,,0,
