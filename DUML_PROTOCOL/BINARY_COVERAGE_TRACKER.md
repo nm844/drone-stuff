@@ -499,9 +499,31 @@ several previously-uncatalogued cmd_ids (0x07/0x41-0x61 range; 0x0a/0xDD,
 independent (18+ groups across two waves now) reconfirmation of the
 `dji_flight` dispatch-table correction (43 rows, `0xae040`) against a
 single straggler group in this wave still citing the old figure — see
-doc 21's bundle section for the per-cmd_set detail. This closes out all
-three originally-launched fourth/fifth-wave efforts except Camera (cmd_set
-0x02, 190 commands), which remains in progress.
+doc 21's bundle section for the per-cmd_set detail. Sixth and final
+wave of this round, Camera (cmd_set 0x02, 190 commands) — resumed once
+after an in-flight 5-hour usage-limit wall (64/178 agents initially
+errored on the adversarial-reverify stage; the resume replayed the 114
+cached results and re-ran the 64 cleanly, 0 errors on the retry): 39
+decoded and merged (registry 192→231 full), 14 explicitly refuted on
+adversarial reverify, 136 `insufficient_evidence`/`no_payload`. Headline
+result: resolved a long-open question from `16_EXHAUSTIVE_SWEEP_
+FINDINGS.md` ("where does cmd_set 0x02's ~206-entry command jump table
+live?") — there is no single table; it's two separate named-handler
+libraries (`libdcam_cs_duss_proxy.so`'s ~180 `_cs_cam_duss_proxy_on_*`
+handlers, `libdcam_camera_service_server.so`'s 209 `cam_event_handler_
+{set,get}_*` functions) both reached through a runtime plugin config,
+`/system/etc/plugins.conf`, confirmed absent from this firmware
+extraction — the same missing-runtime-config shape as Flight Control's
+`dji.json` blocker. Also recovered a reusable generic event-envelope
+layout (every handler's payload starts at `ev+0x14`) and confirmed
+`.gnu_debugdata` minidebuginfo extraction as the single biggest
+force-multiplier technique for the stripped E2/AArch64 camera plugin
+tree. Caught and fixed a second merge-tooling note-accuracy bug (5
+commands with a real-but-caveated/unverified decode were getting the
+generic "no decoder found" tail instead of saying what was actually
+found) — see doc 21's cmd_set 0x02 section for detail. This closes out
+all six waves of the "744 undecoded commands" payload-breakdown effort;
+every previously-undecoded command has now been attempted at least once.
 
 **Process notes:** `make -j4`/`make` alone does NOT rebuild
 `duml_c`'s test binaries (only `make test` does) — running stale

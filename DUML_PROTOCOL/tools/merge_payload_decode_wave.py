@@ -57,6 +57,31 @@ def build_note(cmd, was_refuted_decode=False):
         tail = (f"Handler correctly identified ({handler}), but the proposed field-layout "
                 f"(offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, "
                 f"not just unfound. {NOTE_DOC_REF}")
+    elif status.startswith('decoded'):
+        # A command can be "decoded" in substance (real handler found, a field
+        # layout proposed) without qualifying for a full-decode merge -- either
+        # its own status string carries a self-flagged caveat (e.g. "decoded
+        # (medium confidence; cmd_id binding ambiguous)"), it was never run
+        # through adversarial reverify (not in the wave's verified/refuted
+        # lists -- a pipeline-budget gap, not a researcher error), or `fields`
+        # came back empty despite a confirmed handler. Any of these previously
+        # fell through to the generic "No aircraft-side decoder found despite
+        # exhaustive search" tail below, which is simply false and discards
+        # real research -- caught during the Camera-wave (cmd_set 0x02)
+        # digestion (5 commands: 0xA7/0xAC/0xAF/0xB0/0xC4). Say what actually
+        # happened instead.
+        handler = cmd.get('handler_function') or cmd.get('handler_binary')
+        caveat = status[len('decoded'):].strip(' ()') or None
+        if handler and cmd.get('fields'):
+            detail = f"handler identified ({handler}) and a field layout proposed"
+        elif handler:
+            detail = f"handler identified ({handler}) but no byte-level field layout recovered"
+        else:
+            detail = "a decode was proposed"
+        if caveat:
+            detail += f" -- {caveat}"
+        tail = (f"Decoded but not promoted to a full registry entry: {detail}, and this "
+                f"was not confirmed by 3-way adversarial reverify. {NOTE_DOC_REF}")
     else:
         tail = f"No aircraft-side decoder found despite exhaustive search. {NOTE_DOC_REF}"
     if scenario:

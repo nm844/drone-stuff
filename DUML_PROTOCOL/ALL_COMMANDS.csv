@@ -96,8 +96,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x01,Special,0x21,33,SDK Ctrl Camera Start Video Ctrl,none,Flight Controller,APP / PC,,0,
 0x01,Special,0x22,34,SDK Ctrl Camera Stop Video Ctrl,none,Flight Controller,APP / PC,,0,
 0x01,Special,0xff,255,UAV Loopback,none,Flight Controller,APP / PC,,0,
-0x02,Camera,0x01,1,Do Capture Photo,none,Camera,APP / RC,,0,
-0x02,Camera,0x02,2,Do Record,none,Camera,APP / RC,,0,
+0x02,Camera,0x01,1,Do Capture Photo,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_capture,1,0:1:uint8 (boolean-tested):trigger_flag
+0x02,Camera,0x02,2,Do Record,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_record,1,"0:1:uint8 (bitfield: bits[1:0]=action, bits[5:3]=range-checked submode, bits 2/6/7 unused by this logic):record_ctrl"
 0x02,Camera,0x03,3,HeartBeat,none,Camera,APP / RC,,0,
 0x02,Camera,0x04,4,Set Usb Switch,none,Camera,APP / RC,,0,
 0x02,Camera,0x05,5,Virtual Key Send,none,Camera,APP / RC,,0,
@@ -106,24 +106,24 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x11,17,Camera Work Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x12,18,Photo Format Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x13,19,Photo Format Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x14,20,Photo Quality Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x15,21,Photo Quality Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x14,20,Photo Quality Set,full,Camera,APP / RC,binary RE: camdev_apply_p_quality,1,0:1:uint8 (enum):quality
+0x02,Camera,0x15,21,Photo Quality Get,full,Camera,APP / RC,binary RE: camdev_apply_p_quality (write side); no dedicated per-parameter read function was found -- reads of 'p_quality' appear to go through the generic camdev_get_user_setting primitive rather than a named per-parameter getter,1,0:1:uint8 (enum):quality
 0x02,Camera,0x16,22,Photo Storage Fmt Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x17,23,Photo Storage Fmt Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x18,24,Video Format Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x17,23,Photo Storage Fmt Get,full,Camera,APP / RC,"binary RE: camdev_apply_p_storage_format (write side); Get served generically, same caveat as 0x15",1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x18,24,Video Format Set,full,Camera,APP / RC,"binary RE: _camdev_set_v_format (top-level, full struct) and camdev_apply_v_format (sub-step validating just the fps sub-field)",9,0:1:uint8 (enum):resolution_profile_id | 1:1:uint8 (enum):fps_id | 2:1:uint8:unk_field_2 | 4:1:uint8:unk_field_4 | 5:1:uint8:unk_field_5 | 6:1:uint8:unk_field_6 | 7:1:uint8:unk_field_7 | 8:2:uint16:unk_field_8 | 10:1:uint8:unk_field_10
 0x02,Camera,0x19,25,Video Format Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1a,26,Video Quality Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1b,27,Video Quality Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1c,28,Video Storage Fmt Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1d,29,Video Storage Fmt Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1e,30,Exposure Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1f,31,Exposure Mode Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x1a,26,Video Quality Set,full,Camera,APP / RC,binary RE: _camdev_apply_v_quality,1,"0:1:uint8 (enum, inferred):quality"
+0x02,Camera,0x1b,27,Video Quality Get,full,Camera,APP / RC,binary RE: _camdev_apply_v_quality (write side); Get served generically,1,"0:1:uint8 (enum, inferred):quality"
+0x02,Camera,0x1c,28,Video Storage Fmt Set,full,Camera,APP / RC,binary RE: camdev_apply_v_storage_format,1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x1d,29,Video Storage Fmt Get,full,Camera,APP / RC,binary RE: camdev_apply_v_storage_format (write side); Get served generically,1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x1e,30,Exposure Mode Set,full,Camera,APP / RC,binary RE: af_v1_camera_api_switch_exposure_mode (vaddr 0x0003017c in at_v1trigger.so); corroborated by gc_v1_camera_api_set_camera_expo_mode (vaddr 0x000157e4 in at_gimbalcali.so),2,0:1:uint8 (enum):exposure_mode | 1:1:uint8:exposure_mode_param2
+0x02,Camera,0x1f,31,Exposure Mode Get,full,Camera,APP / RC,"binary RE: No cmd-0x1f-specific function found. Pattern borrowed from two directly-disassembled sibling Get functions in this exact library: af_v1_camera_api_get_focus_mode (0x0002fe5c, binds cmd_id 0x25) and af_v1_camera_api_query_camera_mode (0x0002f97c, binds cmd_id 0x11) - both empty-request / [ret_code:u8][value:u8]-response.",3,0:0:none:(no request fields) | 0:1:uint8:ret_code | 1:1:uint8 (enum):exposure_mode
 0x02,Camera,0x20,32,Scene Mode Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x21,33,Scene Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x22,34,AE Meter Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x23,35,AE Meter Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x24,36,Focus Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x25,37,Focus Mode Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x24,36,Focus Mode Set,full,Camera,APP / RC,"binary RE: gc_v1_camera_api_set_camera_focus_mode (vaddr 0x00015334, at_gimbalcali.so) and af_v1_camera_api_set_focus_mode (vaddr 0x0002ff74, at_v1trigger.so)",1,0:1:uint8 (enum):focus_mode
+0x02,Camera,0x25,37,Focus Mode Get,full,Camera,APP / RC,binary RE: af_v1_camera_api_get_focus_mode (vaddr 0x0002fe5c),3,0:0:none:(no request fields) | 0:1:uint8:ret_code | 1:1:uint8 (enum):focus_mode
 0x02,Camera,0x26,38,Aperture Size Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x27,39,Aperture Size Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x28,40,Shutter Speed Set,none,Camera,APP / RC,,0,
@@ -136,8 +136,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x2f,47,Exposition Bias Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x30,48,Focus Region Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x31,49,Focus Region Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x32,50,AE Meter Region Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x33,51,AE Meter Region Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x32,50,AE Meter Region Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AE_AeMeterRegion @ 0x8c008 (376 bytes) — set/notify path. Cross-confirmed by the paired Query_AeMeterRegionFunc @ 0x7a5c8 (Get path: memcpy(out_buf, ctx+0x198, 0x88) — same 136-byte size).",9,0:4:int32/enum:region_type | 4:1:uint8:rect_index | 5:1:uint8:reserved_1 | 6:2:uint16:rect_count | 8:4:float32:region_0_x_label | 12:4:float32:region_0_y_label | 16:4:float32:region_0_x_len | 20:4:float32:region_0_y_len | 24:112:array[7] of {float32 x_label; float32 y_label; float32 x_len; float32 y_len}:regions_1_to_7
+0x02,Camera,0x33,51,AE Meter Region Get,full,Camera,APP / RC,binary RE: Query_AeMeterRegionFunc @ 0x7a5c8 (304 bytes),9,0:4:int32/enum:region_type | 4:1:uint8:rect_index | 5:1:uint8:reserved_1 | 6:2:uint16:rect_count | 8:4:float32:region_0_x_label | 12:4:float32:region_0_y_label | 16:4:float32:region_0_x_len | 20:4:float32:region_0_y_len | 24:112:array[7] of {float32 x_label; float32 y_label; float32 x_len; float32 y_len}:regions_1_to_7
 0x02,Camera,0x34,52,Zoom Param Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x35,53,Zoom Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x36,54,Flash Mode Set,none,Camera,APP / RC,,0,
@@ -146,7 +146,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x39,57,Sharpeness Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x3a,58,Contrast Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x3b,59,Contrast Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x3c,60,Saturation Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x3c,60,Saturation Set,full,Camera,APP / RC,"binary RE: UsCtrl_Map_CmdId (vaddr 0x44330) -> 126-entry {internal_cmd_id, usctrl_index} table at vaddr 0x205698 (.rodata) -> usctrl_index 37 -> UsCtrl_Query_TagSize/UsCtrl_Query_TagType (vaddr 0x7b0b8 / 0x7b320) -> 82+-entry {type_tag, size, handler_ptr} table at vaddr 0x2b1b68 (.data), entry 37",1,0:4:int32:saturation_level
 0x02,Camera,0x3d,61,Saturation Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x3e,62,Hue Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x3f,63,Hue Get,none,Camera,APP / RC,,0,
@@ -156,13 +156,13 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x43,67,Digital Effect Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x44,68,Digital Denoise Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x45,69,Digital Denoise Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x46,70,Anti Flicker Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x47,71,Anti Flicker Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x48,72,Multi Cap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x49,73,Multi Cap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x4a,74,Conti Cap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x4b,75,Conti Cap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x4c,76,Hdmi Output Param Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x46,70,Anti Flicker Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_anti_flicker (vaddr 0x92fb0, 660 bytes)",1,0:1:uint8:anti_flicker_mode
+0x02,Camera,0x47,71,Anti Flicker Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_anti_flicker (vaddr 0xa2c68, 556 bytes)",1,0:1:uint8:anti_flicker_mode
+0x02,Camera,0x48,72,Multi Cap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_multicap_param (vaddr 0x91bc8, 780 bytes)",1,0:4:uint32:multicap_count
+0x02,Camera,0x49,73,Multi Cap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_multicap_param (vaddr 0xa1e40, 672 bytes)",1,0:4:uint32:multicap_count
+0x02,Camera,0x4a,74,Conti Cap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_conticap_param (vaddr 0x91848, 892 bytes)",4,0:4:uint32:conticap_type | 4:4:uint32:conticap_count | 8:2:uint16:conticap_interval | 10:2:uint16:conticap_param4
+0x02,Camera,0x4b,75,Conti Cap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_conticap_param (vaddr 0xa1bb8, 648 bytes)",4,0:4:uint32:conticap_type | 4:4:uint32:conticap_count | 8:2:uint16:conticap_interval | 10:2:uint16:conticap_param4
+0x02,Camera,0x4c,76,Hdmi Output Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_hdmi_output_mode (0x9f6d0, 656B), cam_event_handler_set_hdmi_output_fmt (0x9f960, 1044B), cam_event_handler_set_hdmi_output_area (0x9fd78, 652B)",6,0:4:uint32:hdmi_output_mode | 4:4:uint32:hdmi_output_fmt_1 | 8:4:uint32:hdmi_output_fmt_2 | 12:4:uint32:hdmi_output_fmt_3 | 16:4:uint32:hdmi_output_fmt_4 | 20:4:uint32:hdmi_output_area
 0x02,Camera,0x4d,77,Hdmi Output Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x4e,78,Quickview Param Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x4f,79,Quickview Param Get,none,Camera,APP / RC,,0,
@@ -178,14 +178,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x59,89,Camera GPS Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x5a,90,Discon State Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x5b,91,Discon State Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x5c,92,File Index Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x5d,93,File Index Mode Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x5e,94,AE bCap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x5f,95,AE bCap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x60,96,Histogram Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x61,97,Histogram Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x62,98,Video Subtitles Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x63,99,Video Subtitles Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x5c,92,File Index Mode Set,full,Camera,APP / RC,"binary RE: cs_storage_manager_set_file_index_mode (vaddr 0x1cb10, 24-byte thunk)",1,0:1:uint8:file_index_mode
+0x02,Camera,0x5d,93,File Index Mode Get,full,Camera,APP / RC,"binary RE: cs_storage_manager_get_file_index_mode (vaddr 0x1cb28, 24-byte thunk)",1,0:1:uint8:file_index_mode
+0x02,Camera,0x5e,94,AE bCap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_aeb_param (vaddr 0x91520, 804 bytes); internal type dji::CameraAEBParams / struct camera_aeb_param",2,0:1:uint8:expo_offset | 1:1:uint8:count
+0x02,Camera,0x5f,95,AE bCap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_aeb_param (vaddr 0xa1988, 556 bytes)",2,0:1:uint8:expo_offset | 1:1:uint8:count
+0x02,Camera,0x60,96,Histogram Set,full,Camera,APP / RC,binary RE: _histogram_set_histogram_op / _get_histogram_op (libdcam_histogram_filter.so); _cs_cam_duss_proxy_on_set_histogram_op / _on_get_histogram_op (libdcam_cs_duss_proxy.so),1,0:1:uint8:histogram_op
+0x02,Camera,0x61,97,Histogram Get,full,Camera,APP / RC,binary RE: _get_histogram_op (libdcam_histogram_filter.so); _cs_cam_duss_proxy_on_get_histogram_op (libdcam_cs_duss_proxy.so),1,0:1:uint8:histogram_op
+0x02,Camera,0x62,98,Video Subtitles Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_v_subtitles (tag string referenced from the proxy's generic per-key event dispatcher); underlying field consumed by cs_cam_pusher_monitor_push_msg's debug dump and by _camdev_apply_v_subtitles (libdcam_camdev.so),7,0:1:bitfield:subtitle_src_camera | 0:1:bitfield:subtitle_src_mc | 0:1:bitfield:subtitle_src_gimbal | 0:1:bitfield:subtitle_src_hdvt | 0:1:bitfield:subtitle_src_dm368 | 0:1:bitfield:subtitle_reserved | 0:1:bitfield:subtitle_op
+0x02,Camera,0x63,99,Video Subtitles Get,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_get_v_subtitles,7,0:1:bitfield:subtitle_src_camera | 0:1:bitfield:subtitle_src_mc | 0:1:bitfield:subtitle_src_gimbal | 0:1:bitfield:subtitle_src_hdvt | 0:1:bitfield:subtitle_src_dm368 | 0:1:bitfield:subtitle_reserved | 0:1:bitfield:subtitle_op
 0x02,Camera,0x64,100,Video Subtitles Log Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x65,101,Mgear Shutter Speed Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x66,102,Video Standard Set,none,Camera,APP / RC,,0,
@@ -230,7 +230,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x91,145,Sensor Calibrate Complete,none,Camera,APP / RC,,0,
 0x02,Camera,0x92,146,Video Clip Info Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x93,147,TransCode Control,none,Camera,APP / RC,,0,
-0x02,Camera,0x94,148,Focus Range Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x94,148,Focus Range Get,full,Camera,APP / RC,"binary RE: dji_af_get_output (libaaa.so, thin wrapper @0x2b738) called from librcam.so's debug_tool_app.c 'af get_ret' handler (disassembled at file vaddr ~0x9da30-0x9db80)",8,0:4:int32:reserved_or_status | 4:4:int32:cur_focusing_state | 8:4:int32:focus_range | 12:4:int32:cur_focus_pos | 16:4:int32:inf_pos | 20:4:int32:mod_pos | 24:8:bytes:unknown_gap | 32:4:int32:distance_mm
 0x02,Camera,0x95,149,Focus Stroke Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x96,150,Focus Stroke Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x98,152,FileSystem Info Get,none,Camera,APP / RC,,0,
@@ -238,12 +238,12 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x9a,154,Focus Aid Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x9b,155,Video Adaptive Gamma Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x9c,156,Video Adaptive Gamma Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x9d,157,Awb Meter Region Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x9d,157,Awb Meter Region Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AWB_SpotAwbRegion (vaddr 0x90a58) / Query_SpotAwbRegionFunc (vaddr 0x7ae48); internal id confirmed by .rodata string ""UsCtrlId_Set_SpotAwbRegion"" (also seen in a debug log string ""[rcam]: ...DebugTool UserSetting, UsId:SpotAwbRegion, Num:%d"")",7,0:1:uint8:awb_region_mode | 1:1:uint8:awb_region_type | 2:2:uint16:awb_region_count | 4:4:float32:awb_region_x | 8:4:float32:awb_region_y | 12:4:float32:awb_region_w | 16:4:float32:awb_region_h
 0x02,Camera,0x9e,158,Awb Meter Region Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x9f,159,Audio Param Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x9f,159,Audio Param Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_audio_params (vaddr 0x36660),6,"0:2:uint16 (bitfield):audio_channel_config | 2:1:uint8:audio_channel_select | 3:5:bytes:audio_reserved | 8:1:uint8 (enum, masked 0x0E):audio_gain_level | 9:4:uint32:audio_flags | 13:1:uint8:audio_format_sub"
 0x02,Camera,0xa0,160,Audio Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xa1,161,Format Raw SSD,none,Camera,APP / RC,,0,
-0x02,Camera,0xa2,162,Focus Distance Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xa2,162,Focus Distance Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AF_FocusObjDist (vaddr 0x8f300); internal id string ""UsCtrlId_Set_FocusObjDist"" (exact match for 'Focus [Object] Distance Set')",1,0:2:uint16:focus_obj_distance
 0x02,Camera,0xa3,163,Calibration Control Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa4,164,Focus Window Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa5,165,Tracking Region Get,none,Camera,APP / RC,,0,
@@ -252,7 +252,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0xa8,168,AE Unlock Mode Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa9,169,AE Unlock Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xaa,170,Pano File Params Get,none,Camera,APP / RC,,0,
-0x02,Camera,0xab,171,Video Encode Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xab,171,Video Encode Set,full,Camera,APP / RC,"binary RE: topmode_on_event_codec_type_set (vaddr 0x5978, 1036 bytes)",2,0:1:uint8:primary_video_encode_type | 1:1:uint8:secondary_video_encode_type
 0x02,Camera,0xac,172,Video Encode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xad,173,MCTF Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xae,174,MCTF Get,none,Camera,APP / RC,,0,
@@ -278,8 +278,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0xc2,194,Param Name Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xc3,195,Param Name Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xc4,196,Camera Tap Zoom Set,none,Camera,APP / RC,,0,
-0x02,Camera,0xc5,197,Camera Tap Zoom Get,none,Camera,APP / RC,,0,
-0x02,Camera,0xc6,198,Camera Tap Zoom Target Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xc5,197,Camera Tap Zoom Get,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_get_tap_zoom (name string at file offset 0x8c582; code at file offset 0x3ab48 / vaddr 0x3cb48),3,0:0:none:request_payload | 0:1:uint8:byte0 | 1:1:uint8:byte1
+0x02,Camera,0xc6,198,Camera Tap Zoom Target Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_tap_zoom_target (name string at file offset 0x8c5a5; code at file offset 0x3ad10 / vaddr 0x3cd10),2,0:4:float32 (inferred):target_x | 4:4:float32 (inferred):target_y
 0x02,Camera,0xc7,199,Camera Tap Zoom State Info,full,Camera,APP / RC,camera_camera_tap_zoom_state_info_dissector,3,0:1:uint8:camera_camera_tap_zoom_state_info_working_state | 1:1:uint8:camera_camera_tap_zoom_state_info_gimbal_state | 2:1:uint8:camera_camera_tap_zoom_state_info_multiplier
 0x02,Camera,0xc8,200,Defog Enabled Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xc9,201,Defog Enabled Get,none,Camera,APP / RC,,0,

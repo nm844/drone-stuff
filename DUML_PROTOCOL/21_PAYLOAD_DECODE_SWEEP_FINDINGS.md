@@ -831,3 +831,168 @@ wave above (**43 rows, rooted at `0xae040`**, via the same relocation
 cross-check). The corrected figure is treated as authoritative here —
 it is now independently reproduced by a combined 18+ investigating
 groups across two separate waves, against the uncorrected figure's 1.
+
+## cmd_set 0x02 (Camera, 190 commands)
+
+**Result: 39 of 190 decoded and verified**, 14 decoded-but-refuted, 1
+`no_payload`, 136 `insufficient_evidence`. This wave's single biggest
+result resolves a question `16_EXHAUSTIVE_SWEEP_FINDINGS.md` had left
+explicitly open for a long time: where does cmd_set 0x02's "~206-entry
+Camera command jump table" actually live?
+
+**The answer: there is no single table — it's two separate, large,
+named-handler surfaces, both reached through a runtime plugin config
+this firmware extraction is missing.** `dji_camera3` (E2/AArch64 only;
+confirmed absent from E1E) is a thin ~70KB generic plugin host — its own
+import table has zero `duss_event_*`/`duss_mb_*`/`duss_dsh_*`/`cs_cam_*`
+symbols. Its own strings name the file it loads its feature-plugin list
+from at startup: `/system/etc/plugins.conf` — **confirmed absent from
+this firmware extraction**, the same structural shape as the Flight
+Control wave's `/system/etc/dji.json` blocker. Through that missing
+config, two real plugin libraries actually carry the dispatch:
+
+- `lib64/camera/plugins/proxy/libdcam_cs_duss_proxy.so` (783KB,
+  E2-only) — registers a DUSS client `cam_duss_proxy` on the shared
+  `camera_service` route table (confirmed via two embedded compile-time
+  source paths: `hardware/dji/service/camera/cam_seal/service/dev/
+  proxy/duss_proxy/cs_cam_base_duss_proxy.c` for the generic logic,
+  `.../cam_drone/eagle2_wm260_native/plugin/service_plugin/
+  eagle2_wm260_duss_proxy.c` for the WM260/"eagle2" product override).
+  Its recovered `.gnu_debugdata` minidebuginfo symbol table (325 local
+  names) contains over 180 cleanly-named handlers of the shape
+  `_cs_cam_duss_proxy_on_{get,set}_<param>`, matching almost every
+  standard ISP-style cmd_set-0x02 Set/Get pair already in this project's
+  catalog.
+- `lib64/libdcam_camera_service_server.so` (856KB, E2-only) — loaded by
+  `libdcam_cs_cbb.so`'s camdev/proxy-manager/storage-manager init
+  framework. Exports exactly **209** functions named
+  `cam_event_handler_{set,get}_<feature>` — extremely close to doc 16's
+  own "~206" estimate, and this is almost certainly the table doc 16
+  was describing, now resolved to real named functions rather than a
+  numeric table doc 16 expected to find.
+
+**Dead ends explicitly ruled out, so future passes don't re-trace them:**
+`librcam.so` itself (doc 16's original lead) imports no DUML
+command-registration primitive of any kind — only `duss_mb_create_route_
+table` + `duss_event_create_client*` (mechanism #2, an empty route, same
+as `app_echo`'s existing precedent); `dji_sys` is ruled out for cmd_set
+0x02 on both architectures (its literal-immediate registrations only
+cover cmd_sets `{0x00, 0x04, 0x06, 0x22}`); `libdcam_cs_cbb.so`'s one
+call to `cam_event_client_pool_register` (wrapping `duss_event_register_
+dynamic_command_table_with_user_data`) registers a Health-Management-
+System debug client (slot `0xef`), not a camera command table — the only
+other importer of that registration family firmware-wide is
+`libdcam_event_client_pool.so` itself (the generic wrapper) and
+`dji_sys`.
+
+**A reusable generic event envelope, confirmed across 6+ independently
+disassembled handlers in `libdcam_cs_duss_proxy.so`/`libdcam_cs_cbb.so`:**
+relative to the incoming `ev` struct pointer every handler receives:
+`ev+0x00` = a packed 32-bit internal event-type/cmd-tag pair (not the
+literal wire `cmd_set`/`cmd_id` bytes); `ev+0x0C` = a u16 sender/session
+tag; `ev+0x10` = u32 payload length (bounds-checked before the body is
+read — every handler errors via `duss_event_resp_err` on overflow);
+`ev+0x14` = the first byte of the **raw DUML wire payload**. Every field
+table's "offset 0" in this cmd_set's decodes should be read as `ev+0x14`
+in the raw disassembly — this convention is recorded here once rather
+than repeated in every command's note.
+
+**The single biggest force-multiplier technique for this wave, worth
+promoting for any future pass on the E2/AArch64 camera subsystem:**
+recovering real local symbol names from `.gnu_debugdata` minidebuginfo —
+a `PROGBITS` section (`sh_addr=0`) holding an `xz`-compressed mini-ELF
+whose `.symtab`/`.strtab` give full names at the same virtual addresses
+as the real, stripped binary's own `.text`/`.rodata`. Three lines of
+Python (`pyelftools` to grab the section, `lzma.decompress`, then
+`readelf -sW`/`nm` the result) restored full symbol names on the large
+majority of the camera plugin tree (`librcam.so` — ~5400 symbols
+recovered — plus `libdcam_base.so`, `libdcam_cs_cbb.so`,
+`libdcam_event_client_pool.so`, `libdcam_topmode_comm.so`,
+`libdcam_cs_camera_state.so`, `libdcam_camdev.so`,
+`libdcam_cs_topmode_pano_still.so`, `libdcam_container.so`,
+`libdcam_fcali.so`, `libdcam_iq_module.so`, and
+`libdcam_camera_service_server.so`/`libdcam_cs_duss_proxy.so` above) —
+instruction bytes still come from the real, un-stripped-of-bytes `.so`
+at the same vaddr; only the symbol names come from the mini-ELF.
+
+**A red herring explicitly disproven, not left dangling:** `dji_camera3`'s
+own `.data` section contains a literal, fully-dumped 105-row table
+(vaddr `0x20020`–`0x206b0`, confirmed self-consistent against a header
+count field of `0x69`=105 immediately before it) that looks, at a
+glance, exactly like the hoped-for wire dispatch table. It is not: its
+row IDs are a `(category_byte << 24) | sequential_index` **user-setting
+schema** numbering (recovered name list includes `topmode`, `camdev`,
+`p_quality`, `v_format`, `ae_meter_region`, etc.), and the same five
+video-related concepts in this table (`format`/`storage_format`/
+`quality` at ids `0x12`/`0x13`/`0x14`) sit in a different relative order
+than this project's own established wire `cmd_id` ordering for those
+same concepts (`0x18`/`0x1A`/`0x1C`) — proof these are two independent
+numbering spaces that happen to share small integers, not the same
+table.
+
+**A cross-subsystem confirmation, not newly discovered but newly tied
+to a second daemon:** `librcam.so`'s `UsCtrl_Map_CmdId`/`_Remap_CmdId`
+functions linear-search a 126-row table of `{internal_cmd_id,
+usctrl_index}` pairs whose `internal_cmd_id` values fall in the same
+~1000–2013 decimal range this project's doc 08
+(`08_E1E_FLIGHT_AUTOMATION_DAEMONS_FINDINGS.md`) already documented as
+`dji_navigation`'s private internal event-type numbering — confirming
+that convention is shared camera-service-wide, not flight-automation-
+specific.
+
+**Another instance of the `dji_flight` dispatch-table-bounds
+discrepancy, same as the bundle wave above:** one investigating group in
+this wave independently re-derived the array and reported it as "44
+rows, rooted at `0xae038`" (the pre-correction figure) while
+cross-validating its `cmd_word` byte-packing (low byte = `cmd_set`, high
+byte = `cmd_id`) against doc 21's own published cmd_set-0x22 rows. The
+packing decode is correct and consistent with the corrected table; the
+row-count/base-address figure is not — the Flight Control wave's **43
+rows at `0xae040`** remains authoritative.
+
+**The 39 verified decodes** span mostly standard ISP-style Set/Get
+pairs, each a short enum-or-scalar payload, decoded from
+`libdcam_cs_duss_proxy.so`'s `_cs_cam_duss_proxy_on_*` handlers: photo/
+video quality, format, and storage-format Set/Get (`0x14/0x15`,
+`0x17–0x1D`), exposure and focus mode (`0x1e/0x1f`, `0x24/0x25`), AE
+meter region and AWB meter region (`0x32/0x33`, `0x9d`), saturation and
+anti-flicker (`0x3c`, `0x46/0x47`), multi/continuous-capture params
+(`0x48–0x4B`), HDMI output param set (`0x4C`), file-index mode
+(`0x5c/0x5d`), AE bracket-capture params (`0x5e/0x5f`), histogram and
+subtitle toggles (`0x60–0x63`), focus range/distance (`0x94`, `0xa2`),
+audio param set (`0x9f`), video encode set (`0xAB`), and tap-zoom
+get/target-set (`0xc5/0xc6`). Two are notably different from the rest:
+`0x01` Do Capture Photo and `0x02` Do Record, both in
+`libdcam_cs_duss_proxy.so` but reached as genuine per-command dispatch
+targets (zero direct callers elsewhere in the `.so`, consistent with
+table-driven registration) rather than the generic Set/Get shape — both
+gate a wake-from-low-power-and-wait-for-3A-convergence sequence behind a
+single payload byte before calling a shared camera-action-trigger
+function pointer.
+
+**14 refuted on adversarial reverify** (`0x16`, `0x19`, `0x3d`, `0x44`,
+`0x45`, `0x4D`, `0x7a`, `0x9e`, `0xa0`, `0xa1`, `0xa3`, `0xa4`, `0xbf`,
+`0xF1`) — handlers correctly identified in every case; the specific
+field-offset/size/type claims didn't survive 3-way review. `0x1` `no_
+payload`-confirmed command and 136 `insufficient_evidence` round out the
+190, mostly commands whose real handler plugin was identified by name
+match against the two large handler-name lists above but whose specific
+byte layout wasn't independently disassembled within this wave's budget
+— a large, concrete set of leads for a future, more targeted pass.
+
+**A merge-tooling bug caught and fixed during this digestion, same class
+as the General-wave `scenario_description` fix mentioned earlier in this
+doc:** 5 commands (`0xA7` Iris Set, `0xAC` Video Encode Get, `0xAF`/
+`0xB0` SSD Video Format Set/Get, `0xC4` Camera Tap Zoom Set) came back
+with a real handler identified and, for 4 of the 5, a proposed field
+layout — but each had either a self-flagged confidence caveat in its own
+status string (e.g. "decoded (medium confidence; cmd_id binding ... not
+independently confirmed)") or an empty `fields` array, so none qualified
+for a full-decode merge. `merge_payload_decode_wave.py`'s note-builder
+didn't previously distinguish this from a genuine "nothing found"
+result and wrote the generic, false "No aircraft-side decoder found
+despite exhaustive search" tail for all five. Fixed in the tool itself
+(now reports what was actually found and why it wasn't promoted —
+unverified/caveated handler identification vs. a true negative result)
+and the 5 affected notes in `commands.json` were hand-corrected for this
+wave.
