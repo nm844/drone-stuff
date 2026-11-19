@@ -351,12 +351,65 @@ transfer, matching the existing catalog dissector exactly.
 |---|---|---|
 | `0x01` | `0x78` | Found via a clean literal-immediate descriptor build in `libupgrade_upgrade.so` before an `upgrade_send_directly` call. 2 of 3 skeptics refuted: the claim mischaracterized the handler as an "unexported static helper" when it is in fact the exported symbol `upgrade_coldreboot_devices_and_notify` (a cold-reboot/notify routine, not a generic status push as originally proposed), and — more substantively — no skeptic could independently confirm that struct offsets `0x14`/`0x15` specifically represent a `cmd_set`/`cmd_id` pair rather than some other internal field (the one skeptic who traced one layer deeper, into `libupgrade_communication.so`'s packet-build routine, found the fields are copied into the outgoing bus-event structure but never named `cmd_set`/`cmd_id` by any log string — only "method"/"msg_id_index" are named). This is exactly the kind of struct-offset/DUML-cmd-id conflation this project's own doc 10 and docs 14/00 had already flagged as a known risk for this exact 4-library upgrade plugin chain. **Not added to the registry.** |
 
-**Found but NOT adversarially verified — a pipeline gap, flagged rather
-than silently resolved either way:**
+**Resolved by a targeted follow-up pass (2026-11-17):** `0x18`/`0x3D` was
+re-derived from scratch rather than trusted from the original circumstantial
+match, using the fixed pipeline (the `already_known` filter bug above is
+corrected in the saved template). **Added to the registry** as the 901st
+entry — `cmd_set 0x18` ("LTE/Dongle Diagnostic", a previously-uncatalogued
+cmd_set — known sets had stopped at `0x11` before jumping to `0x22`) /
+`cmd_id 0x3D` ("Upgrade/Downgrade Test Trigger") — but with its scope kept
+deliberately narrow, reflecting a real 2-of-3 adversarial split rather than
+a clean pass:
 
-| cmd_set | cmd_id | Proposed name | Why it wasn't verified |
-|---|---|---|---|
-| `0x18` | `0x3D` | LTE Dongle Full-Upgrade Test Trigger (upgrade/downgrade) | Found in `dongle_upgrade_test.sh`, which invokes `dji_mb_ctrl -S test -R diag -g 08 -t 06 -s 18 -c 3d <payload>` in a loop (payload `0x01`=upgrade / `0x03`=downgrade + 16 filler bytes, 360s between iterations, up to 1000 times) — cmd_set `0x18` does not appear anywhere in this project's catalog (known cmd_sets stop at `0x11` before jumping to `0x22`/`0x23`/`0x51`), so this would be new territory. The reporting agent's own evidence is medium-confidence and circumstantial: neither of its two literal assigned targets (`Quectel_upgrade_tool`, `quectel-qmi-proxy`) registers this command (both contain zero DUML symbols), and the only candidate handler — `dji_lte`, which links `libduml_frwk.so` and has a literal `'test enable[%d]'` string matching the test script's upgrade/downgrade(1/3) semantics — was not disassembled to confirm cmd_id `0x3D` maps to a specific function pointer in `dji_lte`'s own route table. **This candidate never reached this sweep's adversarial-verify phase at all**, because the reporting agent's JSON omitted the `already_known` field this pipeline's post-processing filters on (`new_command_candidates.filter(c => c.already_known === false)`) — an `undefined` value is not `=== false`, so the candidate silently fell out of the `newCmdCandidates` list before the verify stage ever ran. This is a genuine defect in this round's own tooling, not a judgment call, and it means this candidate's status is **neither confirmed nor refuted** — it is an unverified lead. **Not added to the registry.** Recommended follow-up: a small, targeted workflow re-run (or a direct disassembly pass on `dji_lte`'s route table, since it's already named as the likely handler) to actually resolve it, rather than trusting the circumstantial match. |
+- **Independently reproduced, byte-exact, by all three reviewers:** the
+  *sender* side. `dji_mb_ctrl`'s own `getopt` jump table was decoded
+  straight from the raw ELF bytes (not trusted from its usage string) and
+  confirmed to pack `-s`/`-c` into a literal `cmd_id | (cmd_set << 16)`
+  word, handed to `duss_event_send_sync_v2`; `-g 08 -t 06` pack into
+  destination word `0x0806` (device-type `8` / index `6`). Device-type `8`
+  is this project's own already-catalogued `DeviceType.DM36X_AIR` /
+  firmware string `"ve_air"` (`duml_py/duml/enums.py`,
+  `02_DEVICE_ADDRESSING_EXTENDED.md`) — an independent cross-check the
+  original lead never had. `/etc/dji.json`, extracted read-only from both
+  images via `debugfs`, confirms `dji_lte` is the only service whose
+  message-bus identity resolves to that exact `(type=8, idx=6)` pair, and
+  its registered callback (resolved via its own `R_AARCH64_RELATIVE`
+  relocation, not guessed) opens with `cmp w8,#0x806; b.ne <bail>` — an
+  exact match to the sender's own destination packing.
+- **Where the three reviewers actually split:** one of three independently
+  and fully disassembled the function the claim named as `dji_lte`'s
+  handler (vaddr `0xb108`) and found it contains **no branch on `cmd_set`
+  or `cmd_id` anywhere** — it's a generic DUML-frame-field logger reused for
+  every message addressed to that identity, not a command-specific
+  handler, and therefore doesn't by itself support the proposed name
+  "Upgrade/Downgrade Test Trigger" as a description of what `0x3D`
+  *does*. The other two reviewers agreed this specific point was never
+  pinned down (the candidate's own confidence field already said so) and
+  weighed the claim's honest hedging plus independently-reproduced
+  plumbing more heavily; one of them additionally found fresh,
+  uncited corroboration — the literal `dji_mb_ctrl -c 3d 01616161...`
+  ("start upgrade") / `-c 3d 03616161...` ("start downgrade") invocations
+  inside `dongle_upgrade_test.sh` itself — which does support the *name*
+  even though it doesn't resolve the *dispatch-site* question. Per this
+  project's reverify rule (`refuted` only if ≥2 of 3 skeptics refute), the
+  candidate survives 2-of-3.
+- **What this means for the registry entry:** the `(cmd_set, cmd_id)` pair
+  and its sender/addressing mechanism are confirmed to the same standard
+  as every other entry in this catalog. The *name* describes the sender
+  tool's own stated intent, not a confirmed receiver-side function — no
+  reviewer, including the two who didn't refute, found where (or whether)
+  `dji_lte` actually branches on `0x3D` specifically versus any other
+  command addressed to the same identity. This is recorded here rather
+  than silently smoothed over in the registry's own terse `name` field,
+  which has no confidence column.
+- A separate, previously-conflated lead is now resolved as unrelated:
+  `dji_lte`'s `'test enable[%d]'` strings (what the original pass thought
+  might be this command's handler) actually belong to the Android sysprop
+  `lte.dev.update` (set by this same shell script's own
+  `setprop lte.dev.update test` line) gating a distinct "skip firmware-list
+  re-pull" bypass flag in `dji_lte`'s upgrade state machine — unrelated to
+  the `0x18`/`0x3D` DUML send, and not itself re-examined for reachability
+  here (out of scope, flagged for any future pass that wants it).
 
 **One further open question, explicitly left unresolved rather than
 asserted either way:** `test_upgrade`'s `check_get_device_version`
@@ -374,13 +427,14 @@ correctly. Flagged for a future pass, not resolved here.
 ## Completeness statement
 
 Of this round's 14 investigation units (20 binary/library files across
-both architectures): **1 new DUML command confirmed and added** (900th
-registry entry, `0x00`/`0x5B`), **5 previously-unresolved command IDs
+both architectures), plus a targeted follow-up pass on 2026-11-17: **2 new
+DUML commands confirmed and added** (900th registry entry, `0x00`/`0x5B`;
+901st, `0x18`/`0x3D`, added with its sender-side-only confirmation scope
+explicitly documented above), **5 previously-unresolved command IDs
 confirmed live from the sender side** (`0x07`/`0x08`/`0x09`/`0x0A`/
-`0x41`), **1 candidate found and explicitly refuted** (`0x01`/`0x78`),
-**1 candidate found but left unverified due to an identified pipeline
-defect** (`0x18`/`0x3D`), and **1 open semantic question left
-unresolved** (`0x0B`/`0x0C` in `test_upgrade`). The A/B-OTA architectural
+`0x41`), **1 candidate found and explicitly refuted** (`0x01`/`0x78`), and
+**1 open semantic question left unresolved** (`0x0B`/`0x0C` in
+`test_upgrade`). The A/B-OTA architectural
 question is definitively resolved (genuinely wired up, fully traced).
 Three of the four binaries pulled out of round 3's 50-binary tail
 bucket are now closed (`libupgrade_common.so`, `Quectel_upgrade_tool`,

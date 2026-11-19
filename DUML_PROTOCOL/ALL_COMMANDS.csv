@@ -1,15 +1,15 @@
 cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiver,typical_request_sender,dissector_fn,num_fields,payload_fields (offset:size:type:name[branch])
-0x00,General,0x00,0,Ping,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x00,0,Ping,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: duss_event_ping (vaddr 0x87d08, E1E/ARM32 build)",1,0:0:bytes:echo_payload
 0x00,General,0x01,1,Version Inquiry,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_version_inquiry_dissector,1,0:1:uint8:general_version_inquiry_rq_unknown0 [if (payload:len() >= 1) then]
 0x00,General,0x02,2,Push Param Set,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x03,3,Push Param Get,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x04,4,Push Param Start,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x05,5,Multi Param Set,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x06,6,Multi Param Get,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x07,7,Enter Loader,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_enter_loader_dissector,0,
-0x00,General,0x08,8,Update Confirm,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_confirm_dissector,0,
+0x00,General,0x07,7,Enter Loader,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_entry (sender-side, vaddr 0x2d04); receiving dji_sys-side parser not independently located (same gap this project's own prior docs -- cmdset_00_General.md / 14_FOLLOWUP_DEEPDIVE_FINDINGS.md Track E / 20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md -- already flagged for 0x07-0x0A)",1,0:9:bytes:reserved0_8
+0x00,General,0x08,8,Update Confirm,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_start (sender-side, vaddr 0x2e4c); receiving dji_sys-side parser not independently located (same gap already flagged in this project's prior docs for 0x07-0x0A)",5,0:1:uint8:reserved0 | 1:4:uint32:file_size | 5:6:bytes:reserved5_10 | 11:1:uint8:format_flag | 12:1:uint8:image_type
 0x00,General,0x09,9,Update Transmit,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_transmit_dissector,0,
-0x00,General,0x0a,10,Update Finish,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_update_finish_dissector,0,
+0x00,General,0x0a,10,Update Finish,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: check_fw_finish (sender-side, vaddr 0x347c); receiving dji_sys-side parser not independently located (same gap already flagged in this project's prior docs for 0x07-0x0A)",2,0:1:uint8:reserved0 | 1:16:bytes:md5_digest
 0x00,General,0x0b,11,Reboot Chip,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_reboot_chip_dissector,3,0:2:uint16:general_reboot_chip_unknown0 [if (payload:len() >= 6) then] | 2:4:uint32:general_reboot_chip_sleep_time [if (payload:len() >= 6) then] | 0:1:uint8:general_reboot_chip_response [elseif (payload:len() >= 1) then]
 0x00,General,0x0c,12,Get Device State,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_get_device_state_dissector,3,0:1:uint8:general_get_device_state_status [else] | 1:1:uint8:general_get_device_state_unknown1 [else] | 2:4:uint32:general_get_device_state_state [else]
 0x00,General,0x0d,13,Set Device Version,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_set_device_version_dissector,8,0:1:uint8:general_set_device_version_unknown0 [if pack_type == 0 then] | 1:4:bytes:general_set_device_version_hw_ver [if pack_type == 0 then] | 5:4:bytes:general_set_device_version_ldr_ver [if pack_type == 0 then] | 9:4:bytes:general_set_device_version_app_ver [if pack_type == 0 then] | 13:4:bytes:general_set_device_version_unk4_ver [if pack_type == 0 then] | 0:1:uint8:general_set_device_version_status [else] | 1:1:uint8:general_set_device_version_flags1 [else] | 2:16:bytes:general_set_device_version_unknown2 [else]
@@ -39,14 +39,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x00,General,0x46,70,Shutdown Notification,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x47,71,Power State,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_power_state_dissector,2,0:1:uint8:general_power_state_a | 1:2:uint16:general_power_state_b
 0x00,General,0x48,72,LED Control,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4a,74,Set Date/Time,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4b,75,Get Date/Time,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x4c,76,Get Module Sys Status,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x4a,74,Set Date/Time,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)","binary RE: sys_event_set_date (request handler, builds/validates a struct tm and calls mktime()); sys_event_set_date_ack (logs the 1-byte ack payload when dji_sys itself receives a response)",7,0:2:uint16:year | 2:1:uint8:month | 3:1:uint8:day | 4:1:uint8:hour | 5:1:uint8:minute | 6:1:uint8:second | 7:2:int16:tz_offset_min
+0x00,General,0x4b,75,Get Date/Time,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_rtc_get_date (builds and sends the response from the live system clock); sys_event_get_date_ack (logs the response if dji_sys itself is the one receiving an ack),7,0:1:uint8:hour | 1:1:uint8:minute | 2:1:uint8:second | 3:1:uint8:year_low | 4:1:uint8:year_high | 5:1:uint8:month | 6:1:uint8:day
+0x00,General,0x4c,76,Get Module Sys Status,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_report_status,2,0:1:uint8:module_id | 0:1:uint8:query_index
 0x00,General,0x4d,77,Set RT,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x4e,78,Get RT,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x4f,79,Get Cfg File,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x50,80,Set Serial Number,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0x51,81,Get Serial Number,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0x51,81,Get Serial Number,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_get_serial_number (vaddr 0x3fb00),1,0:1:uint8 (enum):serial_type
 0x00,General,0x52,82,Set Gps Push Config,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_set_gps_push_config_dissector,2,0:1:uint8:general_set_gps_push_config_is_start | 1:4:uint32:general_set_gps_push_config_get_push_interval
 0x00,General,0x53,83,Push Gps Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0x54,84,Get Temperature Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
@@ -78,12 +78,12 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x00,General,0xf6,246,Test Query Result,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xf7,247,Push Test Result,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xf8,248,Get Metadata,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0xfa,250,Log Control,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
+0x00,General,0xfa,250,Log Control,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: duss_event_log_control,2,"0:1:uint8:module | 1:1:uint8 (module 0) / uint16 little-endian (module 6, 2 bytes) / absent (modules 1,2,5,7,9):level"
 0x00,General,0xfb,251,Selftest State,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfc,252,Selftest State Count,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfd,253,Dump Frame Buffer,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
 0x00,General,0xfe,254,Self Define,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",,0,
-0x00,General,0xff,255,Query Device Info,none,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",general_query_device_info_dissector,0,
+0x00,General,0xff,255,Query Device Info,full,Any (varies by target chip),"APP / PC / RC (general housekeeping, varies)",binary RE: sys_event_query_device_info,1,"0:26:string (ASCII, NOT NUL-terminated on the wire -- length is passed explicitly as strlen()):device_info_string"
 0x01,Special,0x00,0,Sdk Ctrl Mode Open/Close Nav,none,Flight Controller,APP / PC,,0,
 0x01,Special,0x01,1,Old Special App Control,full,Flight Controller,APP / PC,special_old_special_app_control_dissector,9,0:1:uint8:special_old_special_app_control_unknown0 [if pack_type == 0 then] | 1:1:uint8:special_old_special_app_control_unknown1 [if pack_type == 0 then] | 2:2:uint8:special_old_special_app_control_unknown2 [if pack_type == 0 then] | 4:1:uint8:special_old_special_app_control_unknown4 [if pack_type == 0 then] | 5:1:uint8:special_old_special_app_control_unknown5 [if pack_type == 0 then] | 6:1:uint8:special_old_special_app_control_unknown6 [if pack_type == 0 then] | 7:2:uint8:special_old_special_app_control_unknown7 [if pack_type == 0 then] | 9:1:uint8:special_old_special_app_control_checksum [if pack_type == 0 then] | 0:1:uint8:special_old_special_app_control_status [else]
 0x01,Special,0x02,2,Old Special Remote Control,none,Flight Controller,APP / PC,,0,
@@ -96,8 +96,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x01,Special,0x21,33,SDK Ctrl Camera Start Video Ctrl,none,Flight Controller,APP / PC,,0,
 0x01,Special,0x22,34,SDK Ctrl Camera Stop Video Ctrl,none,Flight Controller,APP / PC,,0,
 0x01,Special,0xff,255,UAV Loopback,none,Flight Controller,APP / PC,,0,
-0x02,Camera,0x01,1,Do Capture Photo,none,Camera,APP / RC,,0,
-0x02,Camera,0x02,2,Do Record,none,Camera,APP / RC,,0,
+0x02,Camera,0x01,1,Do Capture Photo,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_capture,1,0:1:uint8 (boolean-tested):trigger_flag
+0x02,Camera,0x02,2,Do Record,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_record,1,"0:1:uint8 (bitfield: bits[1:0]=action, bits[5:3]=range-checked submode, bits 2/6/7 unused by this logic):record_ctrl"
 0x02,Camera,0x03,3,HeartBeat,none,Camera,APP / RC,,0,
 0x02,Camera,0x04,4,Set Usb Switch,none,Camera,APP / RC,,0,
 0x02,Camera,0x05,5,Virtual Key Send,none,Camera,APP / RC,,0,
@@ -106,24 +106,24 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x11,17,Camera Work Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x12,18,Photo Format Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x13,19,Photo Format Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x14,20,Photo Quality Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x15,21,Photo Quality Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x14,20,Photo Quality Set,full,Camera,APP / RC,binary RE: camdev_apply_p_quality,1,0:1:uint8 (enum):quality
+0x02,Camera,0x15,21,Photo Quality Get,full,Camera,APP / RC,binary RE: camdev_apply_p_quality (write side); no dedicated per-parameter read function was found -- reads of 'p_quality' appear to go through the generic camdev_get_user_setting primitive rather than a named per-parameter getter,1,0:1:uint8 (enum):quality
 0x02,Camera,0x16,22,Photo Storage Fmt Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x17,23,Photo Storage Fmt Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x18,24,Video Format Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x17,23,Photo Storage Fmt Get,full,Camera,APP / RC,"binary RE: camdev_apply_p_storage_format (write side); Get served generically, same caveat as 0x15",1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x18,24,Video Format Set,full,Camera,APP / RC,"binary RE: _camdev_set_v_format (top-level, full struct) and camdev_apply_v_format (sub-step validating just the fps sub-field)",9,0:1:uint8 (enum):resolution_profile_id | 1:1:uint8 (enum):fps_id | 2:1:uint8:unk_field_2 | 4:1:uint8:unk_field_4 | 5:1:uint8:unk_field_5 | 6:1:uint8:unk_field_6 | 7:1:uint8:unk_field_7 | 8:2:uint16:unk_field_8 | 10:1:uint8:unk_field_10
 0x02,Camera,0x19,25,Video Format Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1a,26,Video Quality Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1b,27,Video Quality Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1c,28,Video Storage Fmt Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1d,29,Video Storage Fmt Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x1e,30,Exposure Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x1f,31,Exposure Mode Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x1a,26,Video Quality Set,full,Camera,APP / RC,binary RE: _camdev_apply_v_quality,1,"0:1:uint8 (enum, inferred):quality"
+0x02,Camera,0x1b,27,Video Quality Get,full,Camera,APP / RC,binary RE: _camdev_apply_v_quality (write side); Get served generically,1,"0:1:uint8 (enum, inferred):quality"
+0x02,Camera,0x1c,28,Video Storage Fmt Set,full,Camera,APP / RC,binary RE: camdev_apply_v_storage_format,1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x1d,29,Video Storage Fmt Get,full,Camera,APP / RC,binary RE: camdev_apply_v_storage_format (write side); Get served generically,1,0:1:uint8 (enum):storage_format
+0x02,Camera,0x1e,30,Exposure Mode Set,full,Camera,APP / RC,binary RE: af_v1_camera_api_switch_exposure_mode (vaddr 0x0003017c in at_v1trigger.so); corroborated by gc_v1_camera_api_set_camera_expo_mode (vaddr 0x000157e4 in at_gimbalcali.so),2,0:1:uint8 (enum):exposure_mode | 1:1:uint8:exposure_mode_param2
+0x02,Camera,0x1f,31,Exposure Mode Get,full,Camera,APP / RC,"binary RE: No cmd-0x1f-specific function found. Pattern borrowed from two directly-disassembled sibling Get functions in this exact library: af_v1_camera_api_get_focus_mode (0x0002fe5c, binds cmd_id 0x25) and af_v1_camera_api_query_camera_mode (0x0002f97c, binds cmd_id 0x11) - both empty-request / [ret_code:u8][value:u8]-response.",3,0:0:none:(no request fields) | 0:1:uint8:ret_code | 1:1:uint8 (enum):exposure_mode
 0x02,Camera,0x20,32,Scene Mode Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x21,33,Scene Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x22,34,AE Meter Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x23,35,AE Meter Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x24,36,Focus Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x25,37,Focus Mode Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x24,36,Focus Mode Set,full,Camera,APP / RC,"binary RE: gc_v1_camera_api_set_camera_focus_mode (vaddr 0x00015334, at_gimbalcali.so) and af_v1_camera_api_set_focus_mode (vaddr 0x0002ff74, at_v1trigger.so)",1,0:1:uint8 (enum):focus_mode
+0x02,Camera,0x25,37,Focus Mode Get,full,Camera,APP / RC,binary RE: af_v1_camera_api_get_focus_mode (vaddr 0x0002fe5c),3,0:0:none:(no request fields) | 0:1:uint8:ret_code | 1:1:uint8 (enum):focus_mode
 0x02,Camera,0x26,38,Aperture Size Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x27,39,Aperture Size Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x28,40,Shutter Speed Set,none,Camera,APP / RC,,0,
@@ -136,8 +136,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x2f,47,Exposition Bias Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x30,48,Focus Region Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x31,49,Focus Region Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x32,50,AE Meter Region Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x33,51,AE Meter Region Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x32,50,AE Meter Region Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AE_AeMeterRegion @ 0x8c008 (376 bytes) — set/notify path. Cross-confirmed by the paired Query_AeMeterRegionFunc @ 0x7a5c8 (Get path: memcpy(out_buf, ctx+0x198, 0x88) — same 136-byte size).",9,0:4:int32/enum:region_type | 4:1:uint8:rect_index | 5:1:uint8:reserved_1 | 6:2:uint16:rect_count | 8:4:float32:region_0_x_label | 12:4:float32:region_0_y_label | 16:4:float32:region_0_x_len | 20:4:float32:region_0_y_len | 24:112:array[7] of {float32 x_label; float32 y_label; float32 x_len; float32 y_len}:regions_1_to_7
+0x02,Camera,0x33,51,AE Meter Region Get,full,Camera,APP / RC,binary RE: Query_AeMeterRegionFunc @ 0x7a5c8 (304 bytes),9,0:4:int32/enum:region_type | 4:1:uint8:rect_index | 5:1:uint8:reserved_1 | 6:2:uint16:rect_count | 8:4:float32:region_0_x_label | 12:4:float32:region_0_y_label | 16:4:float32:region_0_x_len | 20:4:float32:region_0_y_len | 24:112:array[7] of {float32 x_label; float32 y_label; float32 x_len; float32 y_len}:regions_1_to_7
 0x02,Camera,0x34,52,Zoom Param Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x35,53,Zoom Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x36,54,Flash Mode Set,none,Camera,APP / RC,,0,
@@ -146,7 +146,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x39,57,Sharpeness Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x3a,58,Contrast Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x3b,59,Contrast Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x3c,60,Saturation Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x3c,60,Saturation Set,full,Camera,APP / RC,"binary RE: UsCtrl_Map_CmdId (vaddr 0x44330) -> 126-entry {internal_cmd_id, usctrl_index} table at vaddr 0x205698 (.rodata) -> usctrl_index 37 -> UsCtrl_Query_TagSize/UsCtrl_Query_TagType (vaddr 0x7b0b8 / 0x7b320) -> 82+-entry {type_tag, size, handler_ptr} table at vaddr 0x2b1b68 (.data), entry 37",1,0:4:int32:saturation_level
 0x02,Camera,0x3d,61,Saturation Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x3e,62,Hue Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x3f,63,Hue Get,none,Camera,APP / RC,,0,
@@ -156,13 +156,13 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x43,67,Digital Effect Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x44,68,Digital Denoise Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x45,69,Digital Denoise Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x46,70,Anti Flicker Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x47,71,Anti Flicker Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x48,72,Multi Cap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x49,73,Multi Cap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x4a,74,Conti Cap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x4b,75,Conti Cap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x4c,76,Hdmi Output Param Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x46,70,Anti Flicker Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_anti_flicker (vaddr 0x92fb0, 660 bytes)",1,0:1:uint8:anti_flicker_mode
+0x02,Camera,0x47,71,Anti Flicker Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_anti_flicker (vaddr 0xa2c68, 556 bytes)",1,0:1:uint8:anti_flicker_mode
+0x02,Camera,0x48,72,Multi Cap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_multicap_param (vaddr 0x91bc8, 780 bytes)",1,0:4:uint32:multicap_count
+0x02,Camera,0x49,73,Multi Cap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_multicap_param (vaddr 0xa1e40, 672 bytes)",1,0:4:uint32:multicap_count
+0x02,Camera,0x4a,74,Conti Cap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_conticap_param (vaddr 0x91848, 892 bytes)",4,0:4:uint32:conticap_type | 4:4:uint32:conticap_count | 8:2:uint16:conticap_interval | 10:2:uint16:conticap_param4
+0x02,Camera,0x4b,75,Conti Cap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_conticap_param (vaddr 0xa1bb8, 648 bytes)",4,0:4:uint32:conticap_type | 4:4:uint32:conticap_count | 8:2:uint16:conticap_interval | 10:2:uint16:conticap_param4
+0x02,Camera,0x4c,76,Hdmi Output Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_hdmi_output_mode (0x9f6d0, 656B), cam_event_handler_set_hdmi_output_fmt (0x9f960, 1044B), cam_event_handler_set_hdmi_output_area (0x9fd78, 652B)",6,0:4:uint32:hdmi_output_mode | 4:4:uint32:hdmi_output_fmt_1 | 8:4:uint32:hdmi_output_fmt_2 | 12:4:uint32:hdmi_output_fmt_3 | 16:4:uint32:hdmi_output_fmt_4 | 20:4:uint32:hdmi_output_area
 0x02,Camera,0x4d,77,Hdmi Output Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x4e,78,Quickview Param Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x4f,79,Quickview Param Get,none,Camera,APP / RC,,0,
@@ -178,14 +178,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x59,89,Camera GPS Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x5a,90,Discon State Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x5b,91,Discon State Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x5c,92,File Index Mode Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x5d,93,File Index Mode Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x5e,94,AE bCap Param Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x5f,95,AE bCap Param Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x60,96,Histogram Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x61,97,Histogram Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x62,98,Video Subtitles Set,none,Camera,APP / RC,,0,
-0x02,Camera,0x63,99,Video Subtitles Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x5c,92,File Index Mode Set,full,Camera,APP / RC,"binary RE: cs_storage_manager_set_file_index_mode (vaddr 0x1cb10, 24-byte thunk)",1,0:1:uint8:file_index_mode
+0x02,Camera,0x5d,93,File Index Mode Get,full,Camera,APP / RC,"binary RE: cs_storage_manager_get_file_index_mode (vaddr 0x1cb28, 24-byte thunk)",1,0:1:uint8:file_index_mode
+0x02,Camera,0x5e,94,AE bCap Param Set,full,Camera,APP / RC,"binary RE: cam_event_handler_set_capture_aeb_param (vaddr 0x91520, 804 bytes); internal type dji::CameraAEBParams / struct camera_aeb_param",2,0:1:uint8:expo_offset | 1:1:uint8:count
+0x02,Camera,0x5f,95,AE bCap Param Get,full,Camera,APP / RC,"binary RE: cam_event_handler_get_capture_aeb_param (vaddr 0xa1988, 556 bytes)",2,0:1:uint8:expo_offset | 1:1:uint8:count
+0x02,Camera,0x60,96,Histogram Set,full,Camera,APP / RC,binary RE: _histogram_set_histogram_op / _get_histogram_op (libdcam_histogram_filter.so); _cs_cam_duss_proxy_on_set_histogram_op / _on_get_histogram_op (libdcam_cs_duss_proxy.so),1,0:1:uint8:histogram_op
+0x02,Camera,0x61,97,Histogram Get,full,Camera,APP / RC,binary RE: _get_histogram_op (libdcam_histogram_filter.so); _cs_cam_duss_proxy_on_get_histogram_op (libdcam_cs_duss_proxy.so),1,0:1:uint8:histogram_op
+0x02,Camera,0x62,98,Video Subtitles Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_v_subtitles (tag string referenced from the proxy's generic per-key event dispatcher); underlying field consumed by cs_cam_pusher_monitor_push_msg's debug dump and by _camdev_apply_v_subtitles (libdcam_camdev.so),7,0:1:bitfield:subtitle_src_camera | 0:1:bitfield:subtitle_src_mc | 0:1:bitfield:subtitle_src_gimbal | 0:1:bitfield:subtitle_src_hdvt | 0:1:bitfield:subtitle_src_dm368 | 0:1:bitfield:subtitle_reserved | 0:1:bitfield:subtitle_op
+0x02,Camera,0x63,99,Video Subtitles Get,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_get_v_subtitles,7,0:1:bitfield:subtitle_src_camera | 0:1:bitfield:subtitle_src_mc | 0:1:bitfield:subtitle_src_gimbal | 0:1:bitfield:subtitle_src_hdvt | 0:1:bitfield:subtitle_src_dm368 | 0:1:bitfield:subtitle_reserved | 0:1:bitfield:subtitle_op
 0x02,Camera,0x64,100,Video Subtitles Log Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x65,101,Mgear Shutter Speed Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x66,102,Video Standard Set,none,Camera,APP / RC,,0,
@@ -230,7 +230,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x91,145,Sensor Calibrate Complete,none,Camera,APP / RC,,0,
 0x02,Camera,0x92,146,Video Clip Info Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x93,147,TransCode Control,none,Camera,APP / RC,,0,
-0x02,Camera,0x94,148,Focus Range Get,none,Camera,APP / RC,,0,
+0x02,Camera,0x94,148,Focus Range Get,full,Camera,APP / RC,"binary RE: dji_af_get_output (libaaa.so, thin wrapper @0x2b738) called from librcam.so's debug_tool_app.c 'af get_ret' handler (disassembled at file vaddr ~0x9da30-0x9db80)",8,0:4:int32:reserved_or_status | 4:4:int32:cur_focusing_state | 8:4:int32:focus_range | 12:4:int32:cur_focus_pos | 16:4:int32:inf_pos | 20:4:int32:mod_pos | 24:8:bytes:unknown_gap | 32:4:int32:distance_mm
 0x02,Camera,0x95,149,Focus Stroke Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x96,150,Focus Stroke Get,none,Camera,APP / RC,,0,
 0x02,Camera,0x98,152,FileSystem Info Get,none,Camera,APP / RC,,0,
@@ -238,12 +238,12 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0x9a,154,Focus Aid Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x9b,155,Video Adaptive Gamma Set,none,Camera,APP / RC,,0,
 0x02,Camera,0x9c,156,Video Adaptive Gamma Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x9d,157,Awb Meter Region Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x9d,157,Awb Meter Region Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AWB_SpotAwbRegion (vaddr 0x90a58) / Query_SpotAwbRegionFunc (vaddr 0x7ae48); internal id confirmed by .rodata string ""UsCtrlId_Set_SpotAwbRegion"" (also seen in a debug log string ""[rcam]: ...DebugTool UserSetting, UsId:SpotAwbRegion, Num:%d"")",7,0:1:uint8:awb_region_mode | 1:1:uint8:awb_region_type | 2:2:uint16:awb_region_count | 4:4:float32:awb_region_x | 8:4:float32:awb_region_y | 12:4:float32:awb_region_w | 16:4:float32:awb_region_h
 0x02,Camera,0x9e,158,Awb Meter Region Get,none,Camera,APP / RC,,0,
-0x02,Camera,0x9f,159,Audio Param Set,none,Camera,APP / RC,,0,
+0x02,Camera,0x9f,159,Audio Param Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_audio_params (vaddr 0x36660),6,"0:2:uint16 (bitfield):audio_channel_config | 2:1:uint8:audio_channel_select | 3:5:bytes:audio_reserved | 8:1:uint8 (enum, masked 0x0E):audio_gain_level | 9:4:uint32:audio_flags | 13:1:uint8:audio_format_sub"
 0x02,Camera,0xa0,160,Audio Param Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xa1,161,Format Raw SSD,none,Camera,APP / RC,,0,
-0x02,Camera,0xa2,162,Focus Distance Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xa2,162,Focus Distance Set,full,Camera,APP / RC,"binary RE: _DjiAAA_CmdMgr_AF_FocusObjDist (vaddr 0x8f300); internal id string ""UsCtrlId_Set_FocusObjDist"" (exact match for 'Focus [Object] Distance Set')",1,0:2:uint16:focus_obj_distance
 0x02,Camera,0xa3,163,Calibration Control Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa4,164,Focus Window Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa5,165,Tracking Region Get,none,Camera,APP / RC,,0,
@@ -252,7 +252,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0xa8,168,AE Unlock Mode Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xa9,169,AE Unlock Mode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xaa,170,Pano File Params Get,none,Camera,APP / RC,,0,
-0x02,Camera,0xab,171,Video Encode Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xab,171,Video Encode Set,full,Camera,APP / RC,"binary RE: topmode_on_event_codec_type_set (vaddr 0x5978, 1036 bytes)",2,0:1:uint8:primary_video_encode_type | 1:1:uint8:secondary_video_encode_type
 0x02,Camera,0xac,172,Video Encode Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xad,173,MCTF Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xae,174,MCTF Get,none,Camera,APP / RC,,0,
@@ -278,8 +278,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x02,Camera,0xc2,194,Param Name Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xc3,195,Param Name Get,none,Camera,APP / RC,,0,
 0x02,Camera,0xc4,196,Camera Tap Zoom Set,none,Camera,APP / RC,,0,
-0x02,Camera,0xc5,197,Camera Tap Zoom Get,none,Camera,APP / RC,,0,
-0x02,Camera,0xc6,198,Camera Tap Zoom Target Set,none,Camera,APP / RC,,0,
+0x02,Camera,0xc5,197,Camera Tap Zoom Get,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_get_tap_zoom (name string at file offset 0x8c582; code at file offset 0x3ab48 / vaddr 0x3cb48),3,0:0:none:request_payload | 0:1:uint8:byte0 | 1:1:uint8:byte1
+0x02,Camera,0xc6,198,Camera Tap Zoom Target Set,full,Camera,APP / RC,binary RE: _cs_cam_duss_proxy_on_set_tap_zoom_target (name string at file offset 0x8c5a5; code at file offset 0x3ad10 / vaddr 0x3cd10),2,0:4:float32 (inferred):target_x | 4:4:float32 (inferred):target_y
 0x02,Camera,0xc7,199,Camera Tap Zoom State Info,full,Camera,APP / RC,camera_camera_tap_zoom_state_info_dissector,3,0:1:uint8:camera_camera_tap_zoom_state_info_working_state | 1:1:uint8:camera_camera_tap_zoom_state_info_gimbal_state | 2:1:uint8:camera_camera_tap_zoom_state_info_multiplier
 0x02,Camera,0xc8,200,Defog Enabled Set,none,Camera,APP / RC,,0,
 0x02,Camera,0xc9,201,Defog Enabled Get,none,Camera,APP / RC,,0,
@@ -342,7 +342,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0x2e,46,Limit Params Get,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x2f,47,Battery Voltage Alarm Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x30,48,Battery Voltage Alarm Get,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0x31,49,UAV Home Point Set,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0x31,49,UAV Home Point Set,full,Flight Controller,APP / RC / PC,"binary RE: nav_v1_flight_api_set_homepoint (name recovered from its own embedded debug string, not a surviving symbol)",6,0:1:uint8:set_homepoint_mode | 1:4:float32:set_homepoint_param_a_f32 | 5:4:float32:set_homepoint_param_b_f32 | 9:4:float32:set_homepoint_param_c_f32 | 13:4:float32:set_homepoint_param_d_f32 | 17:1:uint8:set_homepoint_flag
 0x03,Flight Control,0x32,50,FlyC Deform Status Get,full,Flight Controller,APP / RC / PC,flyc_flyc_deform_status_dissector,4,0:1:uint8:flyc_flyc_deform_status_masked00 | 0:1:uint8:flyc_flyc_deform_status_deform_protected | 0:1:uint8:flyc_flyc_deform_status_deform_status | 0:1:uint8:flyc_flyc_deform_status_deform_mode
 0x03,Flight Control,0x33,51,UAV User String Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0x34,52,UAV User String Get,none,Flight Controller,APP / RC / PC,,0,
@@ -434,7 +434,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0xa2,162,Race Drone OSD Push,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xa3,163,Miss. WP: Get BreakPoint Info,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xa4,164,Miss. WP: Return To Cur Line,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0xa5,165,App Ctrl Fly Sweep Ctrl,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0xa5,165,App Ctrl Fly Sweep Ctrl,full,Flight Controller,APP / RC / PC,"binary RE: nav_v1_afqt_sweep_req (internal symbol-like string, vaddr 0xc6328), at code address 0x463fc-0x46528 in dji_autoflight; invoked (via a tail-call thunk at 0x4dc84) from the 'case_afqt_sweep' AFQT (AutoFlight Quality Test / factory tuning test) state machine starting at 0x2fbd0, whose config is loaded from a cJSON object with keys start_freq/end_freq/duration/amp (floats, offsets 0/4/8/12 of an 18-byte config struct) and inj_point/inj_loop (bytes, offsets 16/17) -- function at 0x2fb28, xref-resolved from the 'sweep config %.2f' and case_afqt_sweep debug strings.",8,0:1:uint8:sweep_msg_tag_a | 1:1:uint8:sweep_msg_tag_b | 2:1:uint8:sweep_mode | 3:2:uint16:sweep_param_a_x10 | 5:2:uint16:sweep_param_b_x10 | 7:2:uint16:sweep_param_c_x10 | 9:1:uint8:sweep_param_d | 10:1:uint8:sweep_flags_packed
 0x03,Flight Control,0xa6,166,Set RKT Homepoint,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xaa,170,Sbus Packet,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xab,171,Ctrl Attitude Data Send,none,Flight Controller,APP / RC / PC,,0,
@@ -455,7 +455,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x03,Flight Control,0xbe,190,Open Led Action Status Set,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xbf,191,Flight Push,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xc6,198,Shell Test,none,Flight Controller,APP / RC / PC,,0,
-0x03,Flight Control,0xcd,205,Update Nofly Area,none,Flight Controller,APP / RC / PC,,0,
+0x03,Flight Control,0xcd,205,Update Nofly Area,full,Flight Controller,APP / RC / PC,"binary RE: outer dispatcher @ vaddr 0x1144c; type-0 sub-handler @ vaddr 0x112b8 (type-1 @ 0x1115c, type-2 @ 0x11114, type-3 @ 0x11104)",21,0:1:uint8:operation_type | 1:4:uint32:area_id_lo | 5:4:uint32:area_id_hi | 9:4:uint32:secondary_id_lo | 13:4:uint32:secondary_id_hi | 17:4:uint32:revision_or_level | 21:1:uint8:zone_subtype_byte | 22:4:uint32:duration_component_a | 26:4:uint32:duration_component_b | 30:4:int32:latitude_raw | 34:4:int32:longitude_raw | 38:4:int32:radius_mm | 54:2:uint16:shape_or_zone_type | 58:4:uint32:begin_time_unix | 62:4:uint32:end_time_unix | 66:4:uint32:aux_field_c | 70:4:uint32:aux_field_d | 74:4:uint32:aux_field_e | 78:1:uint8 (bit0):enabled_flag | 82:1:uint8 (enum):zone_class | 83:4:uint32:trailing_field
 0x03,Flight Control,0xce,206,Push Forbid Data Infos,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xcf,207,New Nofly Area Get,none,Flight Controller,APP / RC / PC,,0,
 0x03,Flight Control,0xd4,212,Additional Info Get,none,Flight Controller,APP / RC / PC,,0,
@@ -536,14 +536,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x04,Gimbal,0x45,69,Gimbal Get Temp,none,Gimbal,APP / RC,gimbal_get_temp_dissector,0,
 0x04,Gimbal,0x47,71,Gimbal TBD 47,none,Gimbal,APP / RC,gimbal_tbd_47_dissector,0,
 0x04,Gimbal,0x4c,76,Gimbal Reset And Set Mode,full,Gimbal,APP / RC,gimbal_set_mode_dissector,2,0:1:uint8:gimbal_set_mode_mode | 1:1:uint8:gimbal_set_mode_cmd
-0x04,Gimbal,0x51,81,Gimbal Calibration Result Query,none,Gimbal,"at_gimbalcali.so (factory calibration test plugin -- binary-confirmed via imss_link_v1_send, not from a public dissector)",,0,
+0x04,Gimbal,0x51,81,Gimbal Calibration Result Query,none,Gimbal,APP / RC,,0,
 0x04,Gimbal,0x56,86,Gimbal NotiFy Camera Id,none,Gimbal,APP / RC,gimbal_notify_camera_id_dissector,0,
 0x04,Gimbal,0x57,87,Handheld Stick State Get/Push,none,Gimbal,APP / RC,gimbal_handheld_stick_state_get_dissector,0,
 0x04,Gimbal,0x58,88,Handheld Stick Control Set,none,Gimbal,APP / RC,gimbal_handheld_stick_control_set_dissector,0,
-0x04,Gimbal,0x69,105,Event Input Report,none,Gimbal,APP / RC,,0,
+0x04,Gimbal,0x69,105,Event Input Report,full,Gimbal,APP / RC,binary RE: sys_event_input_report,9,0:2:bytes:reserved_header | 2:2:uint16 (LE enum):report_type | 4:1:uint8:key_value | 5:1:uint8 (enum):touch_phase | 6:1:uint8:tracking_id | 7:2:uint16 (LE):pos_x | 9:2:uint16 (LE):pos_y | 11:1:uint8:width_major | 12:1:uint8:touch_major
 0x05,Center Board,0x00,0,Center Open/Close Virtual RC,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x01,1,Center Virtual RC Data,none,Center Board,internal (FC/PMU),,0,
-0x05,Center Board,0x02,2,Center Push Batt Dynamic Info,none,Center Board,internal (FC/PMU),,0,
+0x05,Center Board,0x02,2,Center Push Batt Dynamic Info,full,Center Board,internal (FC/PMU),"binary RE: sys_battery_get_dynamic_info (generic request handler) -> per-board-model callback at offset +0xb0 of a device-context struct -> duss_event_resp_data (confirmed real PLT import, resolved by name) sends the 32-byte result back",3,0:20:bytes:reserved_0 | 20:1:uint8:remaining_capacity_percent | 21:11:bytes:reserved_1
 0x05,Center Board,0x03,3,Center Control Uav Status Led,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x04,4,Center Transform Control,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x05,5,Center Req Push Bat Normal Data,none,Center Board,internal (FC/PMU),,0,
@@ -552,8 +552,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x05,Center Board,0x08,8,Center Query Bat Hisoty Status,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x09,9,Center Bat SelfDischarge Days,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x0a,10,Center Bat Storage Info,none,Center Board,internal (FC/PMU),,0,
-0x05,Center Board,0x21,33,Center Req Bat Static Data,none,Center Board,internal (FC/PMU),,0,
-0x05,Center Board,0x22,34,Center Req Bat Dynamic Data,none,Center Board,internal (FC/PMU),,0,
+0x05,Center Board,0x21,33,Center Req Bat Static Data,full,Center Board,internal (FC/PMU),"binary RE: parse_bat_static_data (0x25090), called from phm_bat_data_upload (0x243b8)",11,0:32:string:sn | 32:2:uint16:active_time_year | 34:1:uint8:active_time_month | 35:1:uint8:active_time_day | 36:1:uint8:active_time_hour | 37:1:uint8:active_time_min | 38:1:uint8:active_time_sec | 40:4:uint32:product_time | 44:4:uint32:design_voltage | 48:4:uint32:design_capacity | 52:-1:string:factory_info
+0x05,Center Board,0x22,34,Center Req Bat Dynamic Data,full,Center Board,internal (FC/PMU),binary RE: phm_bat_data_upload (0x243b8),37,0:4:int32:current | 4:2:uint16:voltage | 6:2:int16:mcu_temp | 8:2:int16:mos_temp | 10:2:int16:conn_temp_0 | 12:2:int16:conn_temp_1 | 14:2:uint16:fcc | 16:2:uint16:rm | 18:1:uint8:soc | 19:1:uint8:soc_dji | 20:2:uint16:mos_state | 22:1:uint8:fsm_state | 23:2:uint16:status_flags | 25:2:uint16:vol_pack | 27:2:uint16:cycle | 29:2:uint16:protect_flag | 31:1:uint8:bms_mode | 32:2:uint16:no_sleep_flag | 34:1:uint8:sdsg_fsm | 35:1:uint8:host_state | 36:4:bytes:app_ver | 40:2:uint16:hw_ver | 42:2:uint16:algo_ver | 44:2:uint16:algo_state | 46:4:int32:avg_curr | 50:1:uint8:sohc_fsm | 51:4:int32:passedq | 55:2:uint16:qbat | 57:1:uint8:qcell_max | 58:1:uint8:qcell_min | 59:1:uint8:soc1_0 | 60:1:uint8:soc1_1 | 61:1:uint8:soc2_0 | 62:1:uint8:soc2_1 | 63:2:uint16:sop_avg | 63:2:uint16:sop_pulse | 67:2:uint16:kf_res_max
 0x05,Center Board,0x23,35,Center Req Bat Auth Data,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x24,36,Center Req Bat Auth Result,none,Center Board,internal (FC/PMU),,0,
 0x05,Center Board,0x31,49,Center Req Bat SelfDischarge Time,none,Center Board,internal (FC/PMU),,0,
@@ -596,7 +596,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x06,Remote Control,0x23,35,RC Gimbal Ctr Permission Ack,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x24,36,RC Simulate Flight Mode Set,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x25,37,RC Simulate Flight Mode Get,none,Remote Control,APP / PC,,0,
-0x06,Remote Control,0x26,38,RC AETR Value Push,none,Remote Control,APP / PC,,0,
+0x06,Remote Control,0x26,38,RC AETR Value Push,full,Remote Control,APP / PC,"binary RE, inferred by cross-reference (no disassembled cmd_id-0x26-specific parser found): matches sibling cmd_id 0x05 ""RC Parameter Get/Push""'s exact field layout/order, backed by DJI's own internal ""dji_flightsystem_msgs"" struct schema (int16 aileron/elevator/throttle/rudder, this exact order) embedded verbatim in dji_perception, and dji_navigation's nav_rc_get_stick_value/nav_rc_update_stick_value plus its 4-value ""PANO_MOIVE: stick_value"" debug string. See doc 21.",4,0:2:int16:rc_aetr_push_aileron | 2:2:int16:rc_aetr_push_elevator | 4:2:int16:rc_aetr_push_throttle | 6:2:int16:rc_aetr_push_rudder
 0x06,Remote Control,0x27,39,RC Detection Info Get,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x28,40,RC Gimbal Control Access Right Get,none,Remote Control,APP / PC,,0,
 0x06,Remote Control,0x29,41,RC Slave Control Mode Set,none,Remote Control,APP / PC,,0,
@@ -646,20 +646,20 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x00,0,WiFi Reserved,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x01,1,WiFi Ap Scan Results Push,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x02,2,WiFi Ap Channel SNR Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x03,3,WiFi Ap Channel Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x04,4,WiFi Ap Channel Get,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x03,3,WiFi Ap Channel Set,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xfae8 (self-logs as __func__ 'v1_proc_set_chan' at 0xfb14/0xfb8c), called via direct `bl` from a per-command wrapper at vaddr 0x7010",1,0:2:uint16:wifi_ap_set_channel_channel
+0x07,Wi-Fi,0x04,4,WiFi Ap Channel Get,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xfc10 (self-logs as __func__ 'v1_proc_get_chan' at 0xfc60/0xfc98), called via direct `bl` from a per-command wrapper at vaddr 0x71f8",2,0:1:uint8:wifi_ap_get_channel_status | 1:1:uint8:wifi_ap_get_channel_channel
 0x07,Wi-Fi,0x05,5,WiFi Ap Tx Pwr Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x06,6,WiFi Ap Tx Pwr Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x07,7,WiFi Ap SSID Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x08,8,WiFi Ap SSID Set,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x07,7,WiFi Ap SSID Get,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xf148 (self-logged by its own wrapper chain as 'wms_evt_get_ssid'), called via direct `bl` from a per-command wrapper starting at vaddr 0x56e0-ish (confirmed call site 0x573c -> bl #0xf148)",3,0:1:uint8:wifi_ap_get_ssid_status | 1:1:uint8:wifi_ap_get_ssid_len | 2:-1:string:wifi_ap_get_ssid_ssid
+0x07,Wi-Fi,0x08,8,WiFi Ap SSID Set,full,Wi-Fi (air),APP / PC,"binary RE: inner handler at vaddr 0xf1f8 (self-logs as __func__ 'v1_proc_set_ssid' at 0xf22c/0xf288/0xf300/0xf368), called via direct `bl` from a per-command wrapper starting at vaddr 0x59cc (confirmed call site 0x5a90 -> bl #0xf1f8)",2,0:1:uint8:wifi_ap_set_ssid_len | 1:-1:string:wifi_ap_set_ssid_ssid
 0x07,Wi-Fi,0x09,9,WiFi Ap RSSI Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_rssi_dissector,1,0:1:uint8:wifi_ap_push_rssi_signal
 0x07,Wi-Fi,0x0a,10,WiFi Ap Ant RSSI Get,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x0b,11,WiFi Ap Mac Addr Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x0c,12,WiFi Ap Mac Addr Get,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x0c,12,WiFi Ap Mac Addr Get,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_get_mac @0x5fc8 -> v1_proc_get_macaddr @0xf558 -> wifi_mgmt_get_mac @0xaf18,1,0:6:ether:wifi_ap_mac_addr_get_mac
 0x07,Wi-Fi,0x0d,13,WiFi Ap Passphrase Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x0e,14,WiFi Ap Passphrase Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x0f,15,WiFi Ap Factory Reset,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x10,16,WiFi Ap Band Set,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x0f,15,WiFi Ap Factory Reset,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_restore_default @0x6690 -> v1_proc_restore_default @0xf998 (v1_interface/v1_proc.c) -> either wifi_mgmt_restore_default @0xb078 or _run_sys_cmd @0xb718,1,0:1:uint8:wifi_ap_factory_reset_sub_id
+0x07,Wi-Fi,0x10,16,WiFi Ap Band Set,full,Wi-Fi (air),APP / PC,binary RE: wms_evt_set_band @0x6790 -> v1_proc_set_band @0xffd0 (validation only) -> wifi_mgmt_set_band @0xb178 -> set_band_config @0xd638 / device_set_band @0x160c0,1,0:1:uint8:wifi_ap_band_set_band
 0x07,Wi-Fi,0x11,17,WiFi Ap Sta MAC Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_sta_mac_dissector,1,0:6:ether:wifi_ap_push_sta_mac_mac
 0x07,Wi-Fi,0x12,18,WiFi Ap Phy Param Get,full,Wi-Fi (air),APP / PC,wifi_ap_get_phy_param_dissector,1,0:1:uint8:wifi_ap_get_phy_param_signal_status
 0x07,Wi-Fi,0x13,19,WiFi Ap Power Mode Set,none,Wi-Fi (air),APP / PC,,0,
@@ -683,14 +683,14 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x25,37,WiFi Ap 25,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x26,38,WiFi Ap Realtime Acs,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x27,39,WiFi Ap Manual Switch SDR,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x28,40,WiFi Ap Channel List Get/Push,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x28,40,WiFi Ap Channel List Get/Push,full,Wi-Fi (air),APP / PC,"binary RE: net_evt_push_channel_list, entry at file/vaddr 0x00008608",8,0:4:uint32:total_len | 4:1:uint8:current_channel | 5:4:uint32:band_mode | 9:4:bytes:reserved_9_c | 13:1:uint8:count_2g | 14:3:bytes:reserved_e_10 | 17:-1:uint16[count_2g]:channel_2g | -1:-1:struct (conditional):band5_block
 0x07,Wi-Fi,0x29,41,WiFi Ap Channel Noise/SNR Req,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x2a,42,WiFi Ap Channel Noise/SNR Push,full,Wi-Fi (air),APP / PC,wifi_ap_push_chan_noise_dissector,1,0:4:uint32:wifi_ap_push_chan_noise_total
-0x07,Wi-Fi,0x2b,43,WiFi Ap Set Hw Mode,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x2b,43,WiFi Ap Set Hw Mode,full,Wi-Fi (air),APP / PC,"binary RE: net_evt_set_hw_mode, entry at file/vaddr 0x000092f8",2,0:1:bytes:reserved_or_unused_0 | 1:2:uint16:hw_mode
 0x07,Wi-Fi,0x2c,44,Wifi Ap Code Rate Set,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x2d,45,Wifi Ap Cur Code Rate Get,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x2e,46,WiFi Ap Set Usr Pref,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x2f,47,WiFi Ap Get Usr Pref,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x2e,46,WiFi Ap Set Usr Pref,full,Wi-Fi (air),APP / PC,binary RE: net_evt_set_user_pref,1,0:1:uint8:wifi_user_pref
+0x07,Wi-Fi,0x2f,47,WiFi Ap Get Usr Pref,full,Wi-Fi (air),APP / PC,binary RE: net_evt_get_user_pref,1,0:1:uint8:wifi_user_pref
 0x07,Wi-Fi,0x30,48,WiFi Ap Set Country Code,full,Wi-Fi (air),APP / PC,wifi_ap_set_country_code_dissector,3,0:4:string:wifi_set_country_code_str1 | 4:4:string:wifi_set_country_code_str2 | 8:2:uint16:wifi_set_country_code_unkn8
 0x07,Wi-Fi,0x31,49,WiFi Ap Reset Freq,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x32,50,WiFi Ap Del Country Code,none,Wi-Fi (air),APP / PC,,0,
@@ -705,8 +705,8 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x07,Wi-Fi,0x85,133,WiFi Connect Master With Id AuthCode,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x89,137,WiFi AuthCode Get,none,Wi-Fi (air),APP / PC,,0,
 0x07,Wi-Fi,0x8b,139,WiFi MS Error Info Get/Push,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x91,145,WiFi Rc Info Set,none,Wi-Fi (air),APP / PC,,0,
-0x07,Wi-Fi,0x92,146,WiFi Update Sw State,none,Wi-Fi (air),APP / PC,,0,
+0x07,Wi-Fi,0x91,145,WiFi Rc Info Set,full,Wi-Fi (air),APP / PC,binary RE: net_evt_set_rc_info @ 0x7ad0,5,0:1:uint8:reserved_or_subtype | 1:1:uint8:ssid_len | 2:12:ascii_string:rc_wifi_ssid | 14:1:uint8:password_len | 15:11:ascii_string:rc_wifi_password
+0x07,Wi-Fi,0x92,146,WiFi Update Sw State,full,Wi-Fi (air),APP / PC,binary RE: net_evt_update_sw_state @ 0x9dfe (ARM32/e1e); wms_evt_update_sw_state @ 0x8f1c (AArch64/e2),1,0:1:uint8:sw_state
 0x08,DM36x,0x00,0,DM36x Reserved,none,DM36x (air),internal (air link),,0,
 0x08,DM36x,0x01,1,DM36x Gnd Ctrl Info Send,full,DM36x (air),internal (air link),dm36x_send_gnd_ctrl_info_dissector,3,0:1:uint8:dm36x_gnd_ctrl_info_param_id | 1:1:uint8:dm36x_gnd_ctrl_info_param_len | 2:1:uint8:dm36x_gnd_ctrl_info_param_val8
 0x08,DM36x,0x02,2,DM36x Gnd Ctrl Info Recv,full,DM36x (air),internal (air link),dm36x_recv_gnd_ctrl_info_dissector,1,0:1:uint8:dm36x_gnd_ctrl_info_param_id
@@ -790,7 +790,7 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x09,HD Link,0x71,113,HDLnk Main Camera Bandwidth Percent Set,none,HD-Link MCU (air),internal (air link),,0,
 0x09,HD Link,0x72,114,HDLnk Main Camera Bandwidth Percent Get,none,HD-Link MCU (air),internal (air link),,0,
 0x09,HD Link,0xa9,169,Liveview Pigeon State Heartbeat,none,HD-Link MCU (air),internal (air link),,0,
-0x09,HD Link,0xaa,170,MIPI/HDVT Liveview Param Set,none,HD-Link MCU (air),internal (air link),,0,
+0x09,HD Link,0xaa,170,MIPI/HDVT Liveview Param Set,full,HD-Link MCU (air),internal (air link),"binary RE: _ZN3dji26hu_hdvt_set_liveview_paramEP17duss_event_clientP10duss_eventPv (dji::hu_hdvt_set_liveview_param), registered at vaddr 0x296c inside dji::MipiHsRecvV1::initEventClientCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xAA [movs r2,#170], handler=&hu_hdvt_set_liveview_param, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple, same registering function name).",6,0:1:uint8:mipi_lv_param_reserved0 | 1:2:uint16:mipi_lv_param_width | 3:2:uint16:mipi_lv_param_height | 5:2:uint16:mipi_lv_param_dim3 | 7:1:uint8:mipi_lv_param_color_fmt | 8:13:bytes:mipi_lv_param_unused_tail
 0x0a,Mono/Binocular (Vision),0x01,1,Eye Bino Info,none,Mono/Binocular (Vision),Flight Controller,mbino_bino_info_dissector,0,
 0x0a,Mono/Binocular (Vision),0x02,2,Eye Mono Info,none,Mono/Binocular (Vision),Flight Controller,,0,
 0x0a,Mono/Binocular (Vision),0x03,3,Eye Ultrasonic Info,none,Mono/Binocular (Vision),Flight Controller,,0,
@@ -890,12 +890,13 @@ cmd_set_hex,cmd_set_name,cmd_id_hex,cmd_id_dec,name,decode_status,typical_receiv
 0x11,ADSB,0x15,21,User Id Set,none,Any,Flight Controller,,0,
 0x11,ADSB,0x16,22,Key Version Get,none,Any,Flight Controller,,0,
 0x11,ADSB,0x17,23,Push Avoidance Action Get ,none,Any,Flight Controller,,0,
+0x18,LTE/Dongle Diagnostic,0x3d,61,Upgrade/Downgrade Test Trigger,full,unknown,unknown,"binary RE: Sender: dji_mb_ctrl's getopt-driven CLI packs -s 18/-c 3d into the cmd word and the trailing hex string into the payload, calling duss_event_send_sync_v2 to device word 0x0806 (type 8/idx 6) -- independently re-confirmed in this pass (readelf -sW/-rW + disassembly) as already established in DUML_PROTOCOL/20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md. Receiver: dji_lte's registered bus callback at vaddr 0xb5f0 gates on the destination word (ldrh [x21,#8] == 0x806) and calls a GENERIC frame-field logger at vaddr 0xb108 for every message addressed to that identity -- I disassembled both functions in full in this pass and independently confirmed, by direct inspection, that neither contains any branch on cmd_set/cmd_id anywhere, and neither calls any of dji_lte's own imported duss_event_resp_data / duss_event_resp_data_without_retcode / duss_event_resp_ok / duss_event_resp_err response-construction routines (grep-confirmed against the full disassembly listing). So there is no cmd-0x3D-specific handler logic to be found here beyond what the sender itself already establishes -- the name and byte layout describe the sender tool's intent, not a resolved receiver-side function, exactly as doc 20 already flagged.",2,0:1:uint8 (enum):operation | 1:15:uint8[15]:filler
 0x22,Demo Mode,0x06,6,Set Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x07,7,Get Global Cruise Vel,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x08,8,Pause Recovery,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
 0x22,Demo Mode,0x44,68,Break Restore Waypoint Fly,none,"dji_flight (binary-confirmed via an R_ARM_RELATIVE-backed .data array at vaddr 0xae0f8, not a public dissector)",internal/unresolved (registration-table entry confirmed; no caller or wire trigger path traced),,0,
-0x22,Demo Mode,0x60,96,Demo Mode Handle,none,"Any (dji_sys, multiple board variants -- binary-confirmed, not from a public dissector)","internal (dji_sys, factory/demo-unit use suspected)",,0,
+0x22,Demo Mode,0x60,96,Demo Mode Handle,full,"Any (dji_sys, multiple board variants -- binary-confirmed, not from a public dissector)","internal (dji_sys, factory/demo-unit use suspected)",binary RE: sys_wm260_demo_mode_handle,1,0:1:uint8:demo_mode_action
 0x23,Smart,0x20,32,Register As Smart Owner,none,"Any (camera-pipeline DSP-arbitration participants -- ss_dsp_manager, libhyperlapse_eis.so -- binary-confirmed, not from a public dissector)",internal (camera-pipeline peer process arbitrating DSP ownership),,0,
 0x23,Smart,0x21,33,Calling For Smart Owner,none,"Any (camera-pipeline DSP-arbitration participants -- ss_dsp_manager, libhyperlapse_eis.so -- binary-confirmed, not from a public dissector)",internal (camera-pipeline peer process arbitrating DSP ownership),,0,
 0x23,Smart,0x22,34,Finish Working On Smart,none,"Any (camera-pipeline DSP-arbitration participants -- ss_dsp_manager, libhyperlapse_eis.so -- binary-confirmed, not from a public dissector)",internal (camera-pipeline peer process arbitrating DSP ownership),,0,
-0x51,Route Switch,0x05,5,Route Switch,none,"Any (framework built-in, libduml_frwk.so -- binary-confirmed, not from a public dissector)",internal (framework/system),,0,
+0x51,Route Switch,0x05,5,Route Switch,full,"Any (framework built-in, libduml_frwk.so -- binary-confirmed, not from a public dissector)",internal (framework/system),binary RE: duss_event_route_switch,7,"0:1:uint8 (enum):operation | 1:1:uint8 (boolean-like flag):inverted | 2:1:uint8:old_link_mode | 3:1:uint8:new_link_mode | 4:1:uint8:type | 5:1:uint8:host_id_count | 6:2:uint16[] (little-endian, 2 bytes per element, repeated host_id_count times):host_id_list"

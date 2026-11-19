@@ -17,7 +17,7 @@ already-decoded payload tables was out of scope for this specific pass.
 
 ## 0x00 — Gimbal Reserved
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Name-only placeholder opcode; no description anywhere in this project's sources or the public dissector beyond the bare label "Gimbal Reserved". No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x01 — Gimbal Control
 
@@ -327,7 +327,7 @@ Payload decoder: `gimbal_degree_info_subscription_dissector`
 
 ## 0x1E — Gimbal Degree Info Subscription
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ By name, a request to subscribe to/configure periodic push updates of gimbal angle ('degree') telemetry -- conceptually a sibling of the push-style commands this project has already decoded elsewhere in this cmd_set (e.g. 0x05 Gimbal Params Get / Push Position). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x20 — Gimbal TBD 20
 
@@ -505,7 +505,7 @@ Payload decoder: `gimbal_lock_dissector`
 
 ## 0x3A — Gimbal Rotate Camera X Axis
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ cmdset_04_Gimbal.md already flags this cmd_id as a documentation-renderer artifact (two un-deduplicated '## 0x3A' headings, both describing the same command): one 'no byte-level payload decoder' heading and one naming gimbal_rotate_camera_x_axis_dissector, neither with a field table. Same exhaustive check as the other batch members (full method/address list in the 0x36 entry): the fully-decoded dji_flight dispatch table (44 rows, vaddr 0xae038-0xae190) has only cmd_id 0x1c/0xf1 under cmd_set 0x04; all 23 literal dji_sys duss_event_register_dynamic_command call sites (11 e1e + 12 e2, individually disassembled on both ISAs) register only the already-known 0x69 under cmd_set 0x04; the _with_user_data and _table_with_user_data variants (libMipiHandshake.so, libdcam_event_client_pool.so) don't match either; no dedicated gimbal daemon ELF exists in either image. A direct camera-pan axis-rotation command is squarely in the real-time actuator-command class this project's doc 21 already attributes to the un-disassembled flight-controller RTOS blob (rtos_dec_RTOS.bin) rather than any Android-side DUML daemon. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x3A — (name unknown)
 
@@ -568,8 +568,26 @@ Payload decoder: `gimbal_handheld_stick_control_set_dissector`
 
 ## 0x69 — Event Input Report
 
-_No byte-level payload decoder in source dissector (name-only / unparsed
-payload) — but independently binary-confirmed live on this firmware._
+Payload decoder (binary RE, this project's own disassembly — not from the public dissector): `binary RE: sys_event_input_report`
+
+  | Off | Size | Field | Type | Notes |
+  |---|---|---|---|---|
+  | 0 | 2 | `reserved_header` (Reserved/Unused Header) | bytes | Always present at the start of the payload (struct offset 0x14-0x15) but never read by either disassembled code path (report_type==2 key-event or report_type==4 touch-event) on either architecture. Generic name used because the handler genuinely never consumes it, so no real semantic name could be recovered -- flagged as such rather than guessed; it may be a sub-device index or padding reserved for other report_type values this firmware's handler doesn't implement. |
+  | 2 | 2 | `report_type` (Input Report Type) | uint16 (LE enum) | Top-level discriminator, built in the handler from two separate byte loads (struct offsets 0x16/0x17) bit-field-combined into one 16-bit value and compared against literal 2 and 4. Any value other than 2 or 4 is a silent no-op: the handler returns success (0) without reading any further payload bytes and without emitting any uinput event. |
+  | 4 | 1 | `key_value` (Key/Button Value) | uint8 | Present only when report_type==2. Read at struct offset 0x18 and used verbatim as the 'value' field of a synthesized Linux struct input_event with type=EV_KEY(1) and code=2 (the code is hardcoded by the handler to the same constant 2 that selected this branch -- it is NOT itself taken from the payload). By EV_KEY convention this is typically 0=release, 1=press, 2=autorepeat, though no explicit range check was observed in the disassembled code. Total payload length for this variant: 5 bytes (offsets 0-4). |
+  | 5 | 1 | `touch_phase` (Touch Event Sub-type) | uint8 (enum) | Present only when report_type==4. Read at struct offset 0x19. Selects which of two touch-writer sub-functions runs; values other than 1/2/3 cause neither sub-function to run (no ABS_MT_* events emitted), but the handler still unconditionally emits one final EV_SYN(0,0,0) sync event afterward regardless of this value. |
+  | 6 | 1 | `tracking_id` (Multitouch Tracking ID) | uint8 | Present only when report_type==4 and touch_phase is 1 or 2 (the touch-up/release sub-function never reads this byte at all, even though it is still part of the fixed payload layout). Read at struct offset 0x1a (= data_ptr+0) and emitted verbatim as a Linux EV_ABS/ABS_MT_TRACKING_ID (type=3, code=0x39) event -- the standard Linux multitouch Type-B slot/contact identifier. |
+  | 7 | 2 | `pos_x` (Touch X Position) | uint16 (LE) | Present whenever report_type==4 (read and used by touch_phase 1, 2, AND 3). Read at struct offset 0x1b (data_ptr+1, a 16-bit unaligned load) and emitted as EV_ABS/ABS_MT_POSITION_X (type=3, code=0x35). |
+  | 9 | 2 | `pos_y` (Touch Y Position) | uint16 (LE) | Present whenever report_type==4 (read and used by touch_phase 1, 2, AND 3). Read at struct offset 0x1d (data_ptr+3) and emitted as EV_ABS/ABS_MT_POSITION_Y (type=3, code=0x36). |
+  | 11 | 1 | `width_major` (Touch Contact Width) | uint8 | Present only when report_type==4 and touch_phase is 1 or 2 (ignored/not read for touch_phase==3, which instead sends a hardcoded 0 for this field). Read at struct offset 0x1f (data_ptr+5) and emitted as EV_ABS/ABS_MT_WIDTH_MAJOR (type=3, code=0x32). |
+  | 12 | 1 | `touch_major` (Touch Contact Size) | uint8 | Present only when report_type==4 and touch_phase is 1 or 2 (ignored/not read for touch_phase==3, which instead sends a hardcoded 0 for this field). Read at struct offset 0x20 (data_ptr+6) and emitted as EV_ABS/ABS_MT_TOUCH_MAJOR (type=3, code=0x30). Total payload length for the touch_phase 1/2 variant: 13 bytes (offsets 0-12); the touch_phase==3 (release) variant only reads offsets 0-10 (11 bytes), though a sender may still pad the wire payload to the full 13 bytes. |
+
+**Worked example:**
+
+- Request payload: `00 00 04 00 00 01 00 84 03 58 02 14 14`
+  A touch-down event (report_type=4, touch_phase=1) reported to dji_sys on the RC: reserved_header=0x0000; report_type=4 (04 00 LE); byte at offset 4 unused/padding (00, not read for this report_type); touch_phase=1 (down); tracking_id=0 (first touch slot); pos_x=0x0384=900 (84 03 LE); pos_y=0x0258=600 (58 02 LE); width_major=20 (0x14); touch_major=20 (0x14). dji_sys's sys_event_input_report handler turns this into 6 synthesized Linux uinput events -- EV_ABS/ABS_MT_TRACKING_ID=0, ABS_MT_POSITION_X=900, ABS_MT_POSITION_Y=600, ABS_MT_WIDTH_MAJOR=20, ABS_MT_TOUCH_MAJOR=20, ABS_MT_PRESSURE=1 (constant) -- followed by an EV_SYN/SYN_REPORT sync, as if a finger had just touched down on the RC's own screen at (900,600). (A second, much simpler variant exists for report_type=2: payload `00 00 02 00 01` synthesizes a single EV_KEY(code=2, value=1) 'button pressed' event plus its sync, with no touch fields at all.)
+- Response payload: `ack-only, no application payload`
+  The handler builds no application-level response payload in either code path on either architecture (no call to duss_event_resp_data or any similar payload-builder was found in sys_event_input_report or any of its three sub-functions). It simply returns an int status code from its own function return value (0 = success; negative values such as -1001/-1003 on internal open/write/ioctl failure), which the generic dji_sys/duml_frwk dispatch wrapper is expected to surface as a plain framework-level ACK/NACK with no DUML-level payload bytes -- i.e. this command is effectively ack-only from the wire-protocol's point of view.
 
 - **Handler:** `sys_event_input_report`
 - **Purpose:** reports some form of input event. **Confidence caveat:**

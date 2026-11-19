@@ -234,6 +234,52 @@ on both sides:
    `cmd_id 0`, not a high-confidence literal match like every other row
    in the table.
 
+## Follow-up (2026-11-17): the 6 unnamed-but-live command IDs, characterized
+
+Two separate follow-up attempts at characterizing `0x14`/`0x15`/`0x16`/
+`0x1d`/`0x24`/`0x25` were each independently declined by the agent
+assigned them, on the same authorization-verification reasoning as the
+decliners above (see `BINARY_COVERAGE_TRACKER.md`'s "Authorization
+change" section for the full account, including the orchestrating
+session's direct verification of the underlying exchange against this
+session's own raw transcript, not just its prior written account of it).
+The project owner then explicitly said to proceed ("Push through"). What
+follows was done directly by the orchestrating session itself — not
+delegated to a fresh agent with no memory of the authorization question —
+using the same static-analysis-only method as everywhere else in this
+document: `pyelftools`/`capstone` disassembly of the already-decrypted TA
+ELF, no execution, no packet, no key/MAC computed or forged.
+
+**The jump table itself was re-derived from scratch** (reading the raw
+`tbh` table bytes at TA vaddr `0x57c2`, immediately following the bounds
+check and `tbh` instruction at `0x57b8`-`0x57be`, rather than trusted from
+this document's own earlier table) and matches every previously-published
+entry exactly, including all five dead/reserved slots (`0x04`, `0x0b`,
+`0x2b`, `0x2c`, `0x3c` → the shared default handler at `0x7bc6`) and the
+six live-but-unnamed targets (`0x5d94`, `0x5f58`, `0x5f66`, `0x6a70`,
+`0x6dee`, `0x6dfc` respectively) — a second, independent confirmation of
+the table beyond the original two-sided (CA+TA) cross-check.
+
+| `cmd_id` | What the handler actually does | Confidence |
+|---|---|---|
+| `0x14` | **Structurally a MAC/signature verify function**, not a simple getter. Validates a caller-supplied input buffer against three separate size checks (two fixed-size checks and one variable-length check against a length byte read from inside the buffer itself, each with its own distinct logged error code), then processes the buffer's contents through two further internal helpers before comparing a trailing 32-byte field in the buffer against a locally-computed 32-byte value — the exact "verify a MAC/signature over an attacker-controlled message" shape already seen in this table's named `check_onetime_auth_msg`/`dji_verify_active_mac_msg`/`djicare_verify_binding_mac_msg` entries. The buffer layout itself is fully recoverable statically: a 57-byte fixed header, a 1-byte length field at offset `0x39`, a variable-length payload immediately after it, and a fixed 32-byte trailer (header + length-byte value + 32 == the buffer's required total size, confirmed by the size-check arithmetic itself). **No attempt was made to determine the MAC algorithm, derive or compute a matching trailer, or otherwise interact with the comparison** — only the buffer shape and control flow were documented, exactly as doc 13/14's existing findings do for the other three TAs' crypto-adjacent functions. | High (buffer layout and control-flow shape, read directly from disassembly); the functional label "MAC/signature verify" is an architectural inference from that shape, not confirmed by any string or symbol. |
+| `0x15` | A thin, single-instruction forwarder (`mov r0,param_types; mov r1,params_ptr; bl <callee>; return`) into a larger shared helper that takes **three** memref parameters (this TA's other named commands mostly use one or two), zero-initializes three 32-byte scratch buffers, and copies a fixed 18-byte literal string into one of them before further processing not traced in this pass. The "copy a fixed context string into a scratch buffer" step matches the shape of this TA's already-named `amt_get_derive_log_key`/`amt_get_derive_adsb_key` functions closely enough to suggest `0x15` is a sibling key-derivation-style utility, though no derived value, algorithm, or key material was examined. | Medium — the forwarder shape and 3-memref/3-buffer signature are confirmed by disassembly; the "key-derivation sibling" characterization is a structural inference, not a name match. |
+| `0x16` | Same thin single-call-forwarder shape as `0x15`, and — notably — placed by the compiler/linker in the exact same small code cluster as the already-named `amt_get_randombuffer` (`0x0c`), `amt_get_derive_log_key` (`0x0d`), and `amt_get_derive_adsb_key` (`0x10`), all of which are simple "get/derive one value" utility functions of near-identical forwarder size. This address-level clustering (functions of similar shape and size tend to be grouped by the toolchain) is suggestive that `0x16` belongs to the same "simple getter/derive" family as its immediate neighbors, though its own callee's specific purpose wasn't traced. | Medium — the forwarder shape and address-level clustering with named siblings are confirmed; which specific value it gets/derives was not determined. |
+| `0x1d` | A small helper requiring exactly one 32-byte memref input (a strict `param_types == 5` and `size == 0x20` check, both confirmed in disassembly), which copies a fixed literal string and increments an embedded 16-bit field within a local buffer by a fixed literal offset. It sits, by address, directly between the already-named `dji_verify_internal_inactive_msg` (`0x1c`) and `dec_calibration_file` (`0x1e`) — immediately adjacent to the "internal inactive message" pair this table already documents, which together suggest `0x1d` is a related step in that same internal-deactivation/inactive-message flow (e.g. a counter-advance or follow-up step), though it was not confirmed to call into the same crypto primitives as `0x1c`/`0x1b` or to be part of the same logical transaction. | Medium-low — the single-32-byte-input signature and counter-increment pattern are confirmed; the relationship to the neighboring "inactive message" pair is positional/structural, not confirmed by a shared call target. |
+| `0x24` | Thin forwarder into a callee that allocates a large stack frame and zero-initializes **multiple 256-byte buffers** (256 bytes = 2048 bits, an RSA-2048-shaped buffer size) — a materially different, larger buffer footprint than any of this document's other "simple getter" functions use. By address it sits in the same compiler-grouped cluster of thin forwarder stubs as the already-named `sec_debug_state`/`sec_debug_generate_internal_msg`/`sec_debug_verify_internal_msg`/`enc_fc_dtcm` (`0x20`-`0x22`, `0x1f`), but its callee's 256-byte buffers more closely resemble the RSA/PKCS12-shaped operations this table already names at `0x18`-`0x1a` (`pkcs12_parse`/`https_client_sign`/`https_check_private_key`) than they resemble its own address-adjacent neighbors — an honest tension this pass leaves unresolved rather than forcing into either family. | Medium — the 256-byte buffer sizing is confirmed by disassembly; which named family (if either) it actually belongs to was not resolved. |
+| `0x25` | Same shape and the same observation as `0x24`: a thin forwarder into a callee allocating multiple large (256-byte-class) buffers, address-clustered with the `sec_debug_*`/`enc_fc_dtcm` group but buffer-sized like the RSA/PKCS12 group. Not further distinguished from `0x24` in this pass — whether the two serve distinct roles within the same larger operation (e.g. two halves of one RSA operation) or are unrelated was not determined. | Medium — same basis and same caveat as `0x24`. |
+
+**What this does and doesn't establish:** none of the six command IDs
+were determined to be a security weakness — an undocumented-but-live
+command surface is an architecture/audit-completeness finding (already
+recorded as such above), not a vulnerability in itself, and nothing in
+this follow-up changes that assessment. This pass adds real structural
+detail (buffer layouts, parameter counts, family groupings) in place of
+"live, unknown" for five of the six, and a specific, well-supported
+functional characterization (MAC/signature verify) for the sixth
+(`0x14`). It does not identify the specific algorithm, key material, or
+message semantics for any of them, and makes no attempt to.
+
 ## `dji_amt`: a second DUML-bus consumer of this chain, and 2 more of doc 05's unmapped bytes resolved
 
 `dji_amt` (distinct binary from `dji_sec` — different file, different
@@ -390,9 +436,17 @@ wire-protocol commands were found — this pass's entire yield sits one
 layer below the DUML bus (the TEE command-ID space, and the internal
 route-tag-addressed `"amt_service"` layer), and nothing here was added to
 the registry. Six TA command IDs (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/
-`0x25`) are confirmed live but have no named CA export and no determined
-function — the one genuinely open technical gap this pass leaves behind,
-alongside the outer-DUML-to-inner-route forwarding hop noted above. No
-exploit code, crafted packet, forged token/MAC/signature, or
-cryptanalysis of any live cryptographic mechanism was produced or
-attempted anywhere in this pass.
+`0x25`) are confirmed live but have no named CA export; the 2026-11-17
+follow-up above re-derived the dispatch table from scratch and
+characterized all six structurally (one — `0x14` — as a well-supported
+MAC/signature-verify shape; the other five by buffer layout, parameter
+count, and address-level family clustering), after two further delegated
+attempts at that same characterization were independently declined on
+authorization grounds and the project owner then explicitly directed the
+work to proceed. None of the six was determined to implement a specific
+named function, algorithm, or key — that remains the one genuinely open
+technical gap this document leaves behind, alongside the outer-DUML-to-
+inner-route forwarding hop noted above. No exploit code, crafted packet,
+forged token/MAC/signature, or cryptanalysis of any live cryptographic
+mechanism was produced or attempted anywhere in this pass, including the
+2026-11-17 follow-up.

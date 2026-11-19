@@ -135,15 +135,15 @@ Payload decoder: `flyc_osd_home_point_dissector`
 
 ## 0x03 — HDLnk Baseband State Get/Push
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. Checked all binaries importing duss_event_register_dynamic_command (dji_sdrs_agent, test_rtos_raw, dji_sys ARM32+AArch64) for a literal cmd_set=0x09 registration -- none exists (the only literal sites found anywhere were cmd_set 0x22/id 0x60 x3, cmd_set 0x00/id 0xa3 x2, cmd_set 0x06/id 0x3a x2, cmd_set 0x04/id 0x69 x1). Grepped both firmware trees for 'baseband' -- the only hit in a DUML-relevant binary (bin/dji_sys) is the string 'baseband_1090' in an ADS-B 1090MHz-receiver status message, unrelated to the OcuSync radio baseband. ALL_COMMANDS.csv (this project's own import of the public dissector) tags this cmd_set's typical_receiver as 'HD-Link MCU (air)' for essentially every row, consistent with this command being handled entirely on the separate air-unit radio MCU, outside this Linux filesystem extraction. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x04 — HDLnk FPGA Write
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. Grepped both firmware trees for 'fpga' (case-insensitive): hits are bin/dji_perception, lib_test_cases.sh, test_mdev, test_dsp/test_dsp_e1e, lib/modules/vmipi_acc.ko, lib/modules/vision_acc.ko, lib/libOmxCore.so, lib/libLLVM.so, lib/libdsp_frwk.so, lib/libimss.so, lib/libduml_frwk.so -- all generic DSP/video-codec/GPU FPGA-acceleration references (camera/vision pipeline), none naming the OcuSync radio FPGA or carrying a cmd_set-0x09 registration. Same negative result as 0x03 for every known DUML-registration mechanism in this firmware. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x05 — HDLnk FPGA Read
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Same disposition and same search as 0x04 (FPGA Write) -- no native Linux-side implementation found, 'fpga' string hits are all unrelated vision/DSP-pipeline code, no cmd_set=0x09 registration anywhere. Given 0x04/0x05 are almost certainly a matched write/read pair implemented identically to the already-decoded 0x06/0x07 'TCX Hardware Reg Write/Read' pair (register addr + value, per the public dissector's hd_link_write_hardware_reg_dissector/hd_link_read_hardware_reg_dissector), the most defensible inference is that they target a different chip (the radio-link FPGA rather than the AD9363 TCX) via the same request/response shape, but this is an architectural analogy, not a byte-level finding confirmed by disassembly of a real handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x06 — HDLnk TCX Hardware Reg Write
 
@@ -189,7 +189,7 @@ Payload decoder: `hd_link_push_vt_signal_quality_dissector`
 
 ## 0x09 — HDLnk Sweep Frequency Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. The sibling PUSH/GET direction (0x0A 'HDLnk Sweep Frequency Get/Push') already has a public-dissector decode but only as 32 raw unparsed bytes (hd_link_push_freq_energy_dissector, field name 'unknown0') -- i.e. even the public community RE effort never resolved this family's byte layout. The SDR-era sweep commands in the same cmd_set (0x20 'SDR Downward Sweep Frequency', 0x29 'SDR Upward Sweep Frequency') are likewise undecoded by the public dissector and had no Linux-side owner found either during this pass. No binary in either firmware image registers cmd_set=0x09/cmd_id=0x09. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x0A — HDLnk Sweep Frequency Get/Push
 
@@ -227,19 +227,19 @@ Payload decoder: `hd_link_get_vt_config_info_dissector`
 
 ## 0x0D — HDLnk VT Config Info Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. The sibling GET/PUSH direction (0x0C 'HDLnk VT Config Info Get/Push') has a real public-dissector byte layout (16-byte struct: channel u8@0, unknown u8@1, is_auto u8@2, is_master u8@3, 5 unknown bytes@4, mcs u8@9, single_or_double u8@10, bandwidth_percent u8@11, 3 unknown bytes@12, working_freq u8@15), which is strong structural evidence for what the SET direction's request payload likely mirrors (a SET typically carries the same fields the GET/PUSH reports back), but this project found no native Linux handler for either 0x0C or 0x0D to confirm that inference against real code, and 'VT' commands throughout this cmd_set are consistently HD-Link-MCU-side per ALL_COMMANDS.csv. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x0E — HDLnk USB Iface Change
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Got further than most of this batch on a real lead that ultimately did not close: bin/dji_sys (e1e, ARM32) imports init_libusb and usbsocket_init from lib/libduml_hal.so, called from a function at vaddr 0x52114 that does nothing but log + init_libusb() + usbsocket_init() (a USB-socket bring-up, no DUML dispatch visible inside it). That function's identity was confirmed via a {flags, name_ptr, fn_ptr} thread-descriptor table found in dji_sys's own .data.rel.ro (entry at file/vaddr 0xa26b8): the name string at 0x79267 is literally 'sys_platform_zv900_init', one of three mutually-exclusive hardware-platform bring-up threads (siblings 'sys_platform_wm169_init' at 0xa269c/0x79233 and 'sys_platform_e1e_wm162_init' at 0xa26a8/0x7924b). 'zv900' is therefore the hardware-platform codename that uses a USB-attached Cy68013 bridge chip for the HD-Link radio. However, no register_dynamic_command call (literal or data-driven) was found anywhere near this code, so there is no confirmed link from DUML cmd_id 0x0e specifically to any USB-interface-switch logic in this thread or elsewhere -- it may simply never surface as a distinct Linux-visible command (the interface change could be entirely internal to the MCU/bridge firmware). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x0F — HDLnk Reset Cy68013
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Strongest circumstantial lead in this batch, still unconfirmed. lib/libduml_hal.so exports a real function literally named Reset_68013 (vaddr 0x23600/128 bytes) that is fully disassembled and semantically exact for this command's name: duss_log_gen_head/print('reset 68013'), sleep(2), then two system() calls with the literal shell commands 'devgpio -n 60 -w 0' then 'devgpio -n 60 -w 1' -- i.e. a GPIO-60 reset pulse (drive low, then high) to the Cy68013 (Cypress EZ-USB FX2) chip. It takes no arguments (pure trigger, consistent with this command needing no payload). However, exhaustive search (every direct branch target in the whole libduml_hal.so disassembly, plus a raw 4-byte-aligned byte scan of the entire file for both the Thumb-bit-set and plain forms of its address) found zero callers anywhere in the file, and no external binary in either firmware image imports Reset_68013 via dynamic relocation (checked across every file in both trees). So the function exists and is semantically on-point, but its link to the DUML cmd_set=0x09/cmd_id=0x0f dispatch path could not be statically confirmed -- it may be reached only via a runtime-populated dispatch table (as seen elsewhere in this cmd_set's investigation) or may be dead/vestigial code. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x10 — HDLnk Upgrade Tip Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. Checked the firmware-upgrade orchestration chain this project already catalogued (12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md Sec.7 dji_upgrade; 20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md's A/B-OTA tracks): dji_upgrade is a JSON-config-driven orchestrator (/system/etc/upgrade.json, fallback dji.json) that dlopen()s product-specific plugins and drives a fixed register_init/.../post_init sequence -- a config/orchestration client, not a DUML command registrar (consistent with doc12's own characterization). No register_dynamic_command site for cmd_set 0x09 exists in dji_upgrade or any libupgrade_*.so (none of those import duss_event_register_dynamic_command at all). The name plausibly means 'tell the HD-Link MCU an upgrade is about to happen, show a UI tip/LED pattern' rather than carrying actual firmware bytes, but no Linux-side code implementing that was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x11 — HDLnk Wl Env Quality Get/Push
 
@@ -262,11 +262,11 @@ Payload decoder: `hd_link_set_factory_test_dissector`
 
 ## 0x13 — HDLnk Factory Test Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. The sibling SET direction (0x12 'HDLnk Factory Test Set') has a real public-dissector 4-byte layout naming an AD9363 TX-attenuation register plus 3 flag bytes, strongly implying this chip (AD9363, a Linux-invisible radio IC on the HD-Link board) is configured only from the MCU side. Searched both firmware trees for 'AD9363'/'atten' (case-insensitive): the only non-trivial hit, lib/libfactory_cali.so, is a false positive -- the matched substring 'atten' is inside an unrelated C++-mangled symbol ('...FlattenMembershipMap...'), and libfactory_cali.so is not linked by any binary in bin/ at all. No evidence of a Linux-side factory-test GET handler exists for this or the sibling SET command. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x14 — HDLnk Max Video Bandwidth Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No Linux-userspace handler found. The sibling GET/PUSH direction (0x15 'HDLnk Max Video Bandwidth Get/Push') has a public-dissector 1-byte layout (max_mcs u8@0), which is a plausible template for this SET command's request payload (a single MCS-index byte), but no native handler was found for either direction in this firmware to confirm it. No binary registers cmd_set=0x09/cmd_id=0x14 via any known mechanism. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x15 — HDLnk Max Video Bandwidth Get/Push
 
@@ -290,7 +290,7 @@ Payload decoder: `hd_link_push_sdr_dl_freq_energy_dissector`
 
 ## 0x21 — HDLnk SDR Vt Config Info Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ The already-decoded, non-SDR sibling 0x0C 'VT Config Info Get/Push' (hd_link_get_vt_config_info_dissector, a 16-byte struct: channel/is_auto/is_master/mcs/single_or_double/band_width_percent/working_freq) is a strong structural precedent for what 0x21's reply likely looks like, since 'SDR Vt Config Info Get' reads as the SDR-specific analogue of the already-documented non-SDR 0x0C. But no code in dji_sdrs_agent (or dji_sys, whose 11 literal registrations never touch cmd_set 0x09) implements or even references VT-config-like fields, and the same 'no separate SDR module firmware in this package' architectural gap applies here as for 0x20/0x29. Reusing 0x0C's layout for 0x21 without any firmware-side confirmation would be inventing a layout, not deriving one -- declined per the task's instructions. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x22 — HDLnk SDR Dl Auto Vt Info Get/Push
 
@@ -306,7 +306,7 @@ Payload decoder: `hd_link_push_sdr_dl_auto_vt_info_dissector`
 
 ## 0x23 — HDLnk SDR Rt Status Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Explicitly refuted lead, reported with the same rigor as a 'refuted' finding rather than left as a misleadingly-plausible one: the one function that looks exactly like a 'set a named status by name' handler is real and disassembled, but its only confirmed callers are unrelated local config-driven channel setup, not cmd_set 0x09 dispatch. No other candidate code, and no literal cmp against 0x23 in a dispatch-like context, was found anywhere in dji_sdrs_agent or dji_sys. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x24 — HDLnk SDR UAV Rt Status Get/Push
 
@@ -328,15 +328,15 @@ Payload decoder: `hd_link_push_sdr_rt_status_dissector`
 
 ## 0x26 — HDLnk SDR Debug/Assitant Read
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ The single strongest lead found in this whole investigation (concrete named function, concrete byte-level field semantics, strong name/behavior match), but the cmd_id/cmd_set binding -- and even basic reachability -- could not be confirmed on either architecture after an unusually thorough search. Per the task's instructions this is reported as insufficient_evidence with full detail rather than asserted as decoded. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x27 — HDLnk SDR Debug/Assitant Write
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Paired with 0x26: the read and write operations are two branches of the exact same function, gated on one mode byte, so whatever uncertainty applies to the cmd_id binding for 0x26 applies identically here. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x28 — HDLnk SDR Start Log Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ 'Start Log Set' most plausibly triggers logging on the physically separate SDR module itself (the module whose log bytes dji_sdrs_agent's sdrs_log subsystem subsequently captures over USB/UART), rather than being a DUML command this daemon parses and acts on directly -- consistent with the same 'generic relay, no per-cmd-id branching' pattern found for sa_relay*.c, and with the absence of any separate SDR-module firmware image anywhere in this firmware package. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x29 — HDLnk SDR Upward Sweep Frequency
 
@@ -353,23 +353,23 @@ Payload decoder: `hd_link_push_sdr_ul_auto_vt_info_dissector`
 
 ## 0x2B — HDLnk SDR Revert Role
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ 'Role' strongly suggests the OcuSync/HD-Link master-slave link-role model. This project's own prior work (12_WM260_EXHAUSTIVE_BINARY_SWEEP_FINDINGS.md §6) documents `dji_wlm` as the daemon with an explicit Master/Slave role model, and a later pass (21_PAYLOAD_DECODE_SWEEP_FINDINGS.md) already flagged two cmd_set-0x06 commands ('Quiry Role'/'Quiry Ms Link Status') as plausibly dji_wlm-owned but unresolved due to ARM32/Thumb2 tooling limits. 'Revert Role' (cmd_set 0x09) looks like a sibling of that same family, but on the SDR/HD-Link side rather than dji_wlm specifically -- dji_wlm itself was not re-disassembled in this pass (out of this batch's primary candidate, dji_sdrs_agent, which shows no trace of it). This is a concrete lead for a future pass with a dedicated dji_wlm deep-dive, not a resolved finding here. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x2C — HDLnk SDR Amt Process
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ 'Amt' plausibly refers to the same AMT (Activation Management Tool) subsystem this project's own doc 18 (18_ACTIVATION_TA_FINDINGS.md) already maps in detail via libamt_util.so and the e91c9402 TEE TA, which that doc independently notes is reached on the DUML bus under the route name/tag 'amt_service'/'AMT'. 'Amt Process' may be a trigger for an AMT-side processing/challenge step distinct from the NVRAM read/write pair (0x26/0x27), but dji_sdrs_agent's own sa_event_amt_nvram_rw has no confirmed caller (see 0x26/0x27), and libamt_util.so itself was not re-disassembled in this pass -- it is the clear next candidate for a future pass given doc 18's existing deep-dive into its activation/secure-debug command-ID table. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x2D — HDLnk SDR LBT Status Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ LBT (Listen-Before-Talk) is a radio-regulatory channel-occupancy-sensing feature intrinsic to the SDR/OcuSync PHY itself, reinforcing the same 'implemented on physically separate radio hardware, relayed opaquely by dji_sdrs_agent' conclusion documented for the sweep-frequency commands (0x20/0x29) and the firmware-package-level finding that no separate SDR/baseband module image exists anywhere in this download. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x2E — HDLnk SDR LBT Status Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ LBT = "Listen Before Talk", a regulatory transmit-gating requirement in several ISM-band jurisdictions (EU/Japan 5.8GHz rules in particular) that DJI's own public dissector metadata already names this cmd_id's Get counterpart (0x2d) for. 0x2e is almost certainly the paired Set: enabling/disabling (or configuring parameters of) LBT compliance mode on the OcuSync/SDR radio. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x2F — HDLnk SDR Link Test
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely a diagnostic trigger that runs a radio link self-test on the SDR module (possibly minimal/trigger-only payload, e.g. a single start/stop byte), analogous to other 'Factory Test'/'Link Test' style commands elsewhere in this cmd_set (0x12/0x13). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x30 — HDLnk SDR Wireless Env State
 
@@ -381,23 +381,23 @@ Payload decoder: `hd_link_sdr_wireless_env_dissector`
 
 ## 0x31 — HDLnk SDR Scan Freq Cfg
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely configures parameters (range/step/dwell) for the SDR's automatic frequency-scanning behavior, complementing the already-documented 0x20/0x29 sweep-frequency push commands and the 0x2A channel-selection command in this same cmd_set. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x32 — HDLnk SDR Factory Mode Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely enables/disables a factory or engineering test mode on the SDR radio module, conceptually adjacent to the already-documented 0x12/0x13 'Factory Test' Set/Get pair. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x33 — HDLnk Tracking State Ind
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ An 'Ind' (indication/push) rather than a Set/Get -- given its position between SDR Factory Mode Set (0x32) and SDR Liveview Mode Set/Get (0x34/0x35), and the fact every neighboring cmd_id in this stretch is an SDR-radio-internal control, this is most plausibly a push of the SDR link's own tracking/lock state (frequency or timing-lock acquired/lost on the demodulator), not a visual subject-tracking indicator from an unrelated vision subsystem -- though this is an inference from naming and position only, not confirmed by any disassembled handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x34 — HDLnk SDR Liveview Mode Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Sets the liveview (video) transmission mode over the SDR/OcuSync link (e.g. single- vs dual-channel transport, or a bandwidth-tier selector), paired with the Get at 0x35. This is the one cmd_id in the batch where the task hint's suspicion of a separate video-pipeline-daemon owner (by analogy with 0xa9/0xaa) seemed most plausible, so I specifically traced that possibility. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x35 — HDLnk SDR Liveview Mode Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ The Get counterpart of 0x34 (HDLnk SDR Liveview Mode Set) -- queries the SDR link's current liveview transmission mode. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x36 — HDLnk SDR Liveview Rate Ind
 
@@ -418,11 +418,11 @@ Payload decoder: `hd_link_abnormal_event_ind_dissector`
 
 ## 0x38 — HDLnk SDR Set Rate
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Likely sets a transmission rate / modulation-coding-scheme parameter for the SDR link, conceptually adjacent to the already-documented 0x36 'SDR Liveview Rate Ind' push (a float code-rate value) in this same cmd_set -- this Set is plausibly the command that drives that indication. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x39 — HDLnk Liveview Config Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ A broader liveview configuration command than 0x34's 'Mode' Set -- plausibly bundles multiple related fields (e.g. resolution/bitrate/channel-count) into one packed struct. Checked for a video-pipeline-daemon owner given the name, same as 0x34/0x35. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x3A — HDLnk Dl Freq Energy Push
 
@@ -452,31 +452,31 @@ Payload decoder: `hd_link_sdr_tip_interference_dissector`
 
 ## 0x3C — HDLnk SDR Upgrade Rf Power
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Plausibly tied to firmware-upgrade-time RF power control of the SDR module (e.g. forcing the radio to a safe/low-power RF state while the HD-Link MCU's own firmware is being reflashed) -- this would connect naturally to the USB-hotplug-triggered brload/fastboot flashing path dji_sdrs_agent's sa_bootctrl module already implements (doc 12 Sec.5), though no direct call-site link between that flashing logic and this specific cmd_id was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x3E — HDLnk Slave RT Status Push
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Searched for a direct literal-immediate registration (cmd_set=9 + cmd_id=0x3e) across every binary in both firmware trees that imports any duss_event_register_dynamic_command* variant (dji_sys e1e/e2, dji_sdrs_agent, test_rtos_raw, duml_googletest, libMipiHandshake.so, libWorkModeLiveview.so, libdcam_event_client_pool.so — confirmed to be the complete set via readelf -sW UND-symbol scan on both trees). None registers cmd_set=9 with this cmd_id via a literal immediate. The only remaining candidates are two confirmed-present but statically-unresolvable data-driven dispatch mechanisms inside dji_sdrs_agent and dji_sys (see shared_infrastructure_found) whose backing arrays could not be located despite brute-force branch-target scanning (validated against this project's own doc15 baseline for test_rtos_raw) and exhaustive literal-pointer scanning of every data section plus inline .text literal pools. dji_sdrs_agent exports a suggestively-named but unconfirmed candidate handler string, `sa_event_rt_control_by_name` (no direct cross-reference to a numeric cmd_id was found — the name match to "RT Status" is coincidental-strength only, not evidence). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x3F — HDLnk RC Conn Status Push
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Same exhaustive sweep as 0x3e (all 8 binaries importing the registration family checked; none has a literal cmd_set=9/cmd_id=0x3f call site). Also specifically checked dji_network (doc12 §4's 'Wi-Fi/SDR link-management daemon', the most plausible owner by name) for both the registration import and any 'rc_conn'/'conn_status' strings — it imports neither duss_event_register_dynamic_command nor duss_event_modify_dynamic_command at all, ruling it out as a direct DUML registrant for this or any new cmd_set-0x09 command (it must relay through a separate IPC path not examined here). dji_wlm was also checked and ruled out: it imports only duss_event_modify_dynamic_command, and its one confirmed literal call site overrides cmd_set 0x51/cmd_id 5 (already documented) — it registers nothing new. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x41 — HDLnk Racing Set Modem Info
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal registration found in the exhaustive 8-binary sweep. Independent architectural evidence makes this plausibly a pass-through to a physically separate SDR/modem coprocessor rather than a locally-parsed command: the on-device QA script `/system_files/bin/modem_info.sh` (hardware/dji/service/sdrs_agent tree) issues real `dji_mb_ctrl -g 9 -t 0 -s 9 -c 0x55 <payload>` DUML frames — confirmed cmd_set=9 (the `-s` flag, per dji_mb_ctrl's own usage string `-s cmd_set`) with payload bytes selecting a modem sub-operation (0000=reverse, 0001=reboot, 0002=cps/status-query) — and dji_sdrs_agent's own export strings include `sa_relay_reset_pigeon`, `sa_relay_shutdown_pigeon`, `sa_hold_modem_reset`, confirming it manages a USB-attached 'pigeon' modem/SDR chip whose own firmware is not present under system_files. cmd_id 0x55 itself is not even in this project's known 69-command list for cmd_set 0x09 (a new finding, out of this batch's scope but corroborating context). This does not prove 0x41 specifically routes the same way, but it is the strongest available lead and was not resolvable further with static analysis of the binaries actually present. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x42 — HDLnk Racing Get Modem Info
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Same search and same architectural reasoning as 0x41 (its paired Set/Get sibling). No literal registration found in the 8-binary sweep; no numeric cross-reference to 0x42 found in any string table, disassembly, or shell script on the filesystem. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x50 — HDLnk LED Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal cmd_set=9/cmd_id=0x50 registration found in the 8-binary sweep. A tempting-looking lead turned out to be a false match and was explicitly ruled out: `/system_files/bin/fc_led_ctrl.sh` and string hits for `fc_led_set_type`/`net_fc_led_set_action_id` (in libupgrade_product.so, dji_sys, dji_network) all belong to a *different*, already-distinguishable LED mechanism — the Flight Controller's own status-LED registration/action API, which runs on cmd_set 0x03 (FC) with cmd_ids 0xBC (register)/0xBD (unregister)/0xBE (set action), confirmed directly from the script's own `FC_CMDSET=3` / `REGISTER_LED_CMDID=0xbc` / `SET_LED_CMDID=0xbe` constants. That family is unrelated to cmd_set 0x09's own, presumably OcuSync-air-unit-or-RC-side, LED indicator. No alternative handler for the real cmd_set-0x09 LED Set was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x51 — HDLnk Power Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal cmd_set=9/cmd_id=0x51 registration found in the 8-binary sweep. Notably, this cmd_id's sibling Get/Push command, 0x52 'HDLnk Power Status Get/Push', already HAS a documented byte-level decode in cmdset_09_HD_Link.md (`hd_link_power_status_info_dissector`: offset0 u8 power_status, offset1 u8 get_is_power_off) sourced from the public Wireshark dissector — but that dissector has zero field data for 0x51 itself (name-only), and this pass's own binary search (registration-call-site scan across all 8 relevant binaries, plus the generic-loop/module-descriptor mechanisms in dji_sdrs_agent/dji_sys, both unresolved) could not independently recover 0x51's handler or payload layout either. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x52 — HDLnk Power Status Get/Push
 
@@ -489,7 +489,7 @@ Payload decoder: `hd_link_power_status_info_dissector`
 
 ## 0x53 — HDLnk SDR Cp Status Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal cmd_set=9/cmd_id=0x53 registration found in the 8-binary sweep. Strong architectural (but not numerically confirmed) evidence ties this family to dji_sdrs_agent's modem/'pigeon'-chip management role: the on-device QA script modem_info.sh's `cps` command (literally 'CP status', matching this cmd_id's name almost exactly) sends cmd_set=9/cmd_id=0x55 (NOT 0x53) with a 2-byte sub-opcode payload of 0x0002, and parses a 3-byte response: byte0=ret_code (hex, "00"=success), byte1=role (00=UAV,01=GND,02=GLASS), byte2=state (00=Idle,01=Pair,02=Connected,03=Loss,04=CPA7_ERR,05=DSP_ERR,06=AMT). cmd_id 0x55 is not itself in this project's known 69-entry command list for cmd_set 0x09, so it is evidently a distinct, closely-related sibling command (a generic multi-function 'modem control' op whose sub-function is chosen by payload) rather than 0x53 itself. Given the name 'Cp Status Get' (vs. 0x55's multi-purpose control-with-subop shape), 0x53 is plausibly a dedicated, payload-less or near-payload-less accessor that returns the same {role, state} shape directly — but this is architectural inference from a *sibling* command's live traffic, not a disassembly-confirmed decode of 0x53 itself, and is reported as such rather than as a found layout. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x54 — Osmo Calibration Push
 
@@ -502,11 +502,11 @@ Payload decoder: `hd_link_osmo_calibration_dissector`
 
 ## 0x57 — HDLnk Mic Gain Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal cmd_set=9/cmd_id=0x57 registration found in the 8-binary sweep. One lead was checked and found unconvincing: libdcam_audio_frwk.so (and its several linking consumers — stream-writer plugins, dji_pbt, dji_cht) contains a `main_mic_gain_ctl` struct field, but none of libdcam_audio_frwk.so's linking consumers is a DUML-bus registrant (none imports any duss_event_register_dynamic_command* symbol), and the naming/consumer set (camera stream writers, playback/camhal-test tools) points to the camera's own recording microphone, not the RC/air-unit intercom microphone cmd_set 0x09's 'HD Link' commands would plausibly cover — i.e. this is very likely a different 'mic' subsystem entirely, not confirmed as unrelated but not a positive match either. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x58 — HDLnk Mic Gain Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Same search and same inconclusive libdcam_audio_frwk.so lead as its Set sibling (0x57). No literal cmd_set=9/cmd_id=0x58 registration found anywhere in the 8-binary sweep. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x59 — HDLnk Mic Info Get/Push
 
@@ -520,26 +520,23 @@ Payload decoder: `hd_link_mic_info_dissector`
 
 ## 0x62 — HDLnk Mic Enable Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ No literal cmd_set=9/cmd_id=0x62 registration found in the 8-binary sweep. No distinct lead (beyond the same inconclusive libdcam_audio_frwk.so mic-gain struct noted for 0x57/0x58) was found specifically for the enable/disable toggle; its sibling 0x63 'HDLnk Mic Enable Set' and 0x59 'HDLnk Mic Info Get/Push' are both adjacent in the command space and 0x59 already has a real dissector-sourced decode (`hd_link_mic_info_dissector`: a single packed byte with a 1-bit mic_type field at mask 0x01 and a 7-bit mic_volume field at mask 0xfe) suggesting the whole 0x57-0x63 mic cluster is a coherent small family, but that existing decode covers 0x59 only, not 0x62, and this pass's binary search could not independently locate 0x62's own handler. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x63 — HDLnk Mic Enable Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Presumably toggles the HD-Link audio/mic-passthrough channel on or off (sibling of the already-documented 0x09/0x62 'Mic Enable Get' and 0x09/0x59 'Mic Info Get/Push'), but no handler could be located. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x71 — HDLnk Main Camera Bandwidth Percent Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Presumably sets what percentage of the total OcuSync/HD-Link video bitrate budget is allocated to the main (vs. auxiliary/FPV) camera stream — a natural sibling of libwlm.so's libwlm_share_liveview_bandwidth(_v2) exports and dji_wlm's multi-link bandwidth-fusion role, but no concrete (cmd_set,cmd_id)-to-handler binding was found. No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0x72 — HDLnk Main Camera Bandwidth Percent Get
 
-_No byte-level payload decoder in source dissector (name-only / unparsed payload)._
+_Not decoded._ Presumably the paired Get for 0x71 (reads back the current main-camera bandwidth-percent allocation). No aircraft-side decoder found despite exhaustive search. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 ## 0xA9 — Liveview Pigeon State Heartbeat
 
-_No byte-level payload decoder in source dissector (name-only / unparsed
-payload) — but independently binary-confirmed live on this firmware.
-Outside the public dissector's documented range for this cmd_set (which
-otherwise tops out at `0x72`)._
+_Not decoded._ A periodic push of SDR liveview resolution/rate parameters from the OcuSync 'Pigeon' video-link object into the receiving device's cached state, used to detect and react to a resolution/rate change. Handler correctly identified (_ZN3dji32_on_event_pigeon_state_heartbeatEP17duss_event_clientP10duss_eventPv (dji::_on_event_pigeon_state_heartbeat), registered at vaddr 0x8440 inside dji::LiveviewObjectPigeon::initEventCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xA9 [movs r2,#169], handler=&_on_event_pigeon_state_heartbeat, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple).), but the proposed field-layout (offsets/sizes/types) did not survive 3-way adversarial reverify -- refuted, not just unfound. See DUML_PROTOCOL/21_PAYLOAD_DECODE_SWEEP_FINDINGS.md for full search methodology.
 
 - **Handler:** `_ZN3dji32_on_event_pigeon_state_heartbeatEP17duss_event_clientP10duss_eventPv`
   (`dji::_on_event_pigeon_state_heartbeat`), registered by
@@ -561,9 +558,23 @@ otherwise tops out at `0x72`)._
 
 ## 0xAA — HDLnk MIPI/HDVT Live-View Parameter Set
 
-_No byte-level payload decoder in source dissector (name-only / unparsed
-payload) — but independently binary-confirmed live on this firmware.
-Outside the public dissector's documented range for this cmd_set._
+Payload decoder (binary RE, this project's own disassembly — not from the public dissector): `binary RE: _ZN3dji26hu_hdvt_set_liveview_paramEP17duss_event_clientP10duss_eventPv (dji::hu_hdvt_set_liveview_param), registered at vaddr 0x296c inside dji::MipiHsRecvV1::initEventClientCallback via duss_event_register_dynamic_command_with_user_data(client, cmd_set=9 [movs r1,#9], cmd_id=0xAA [movs r2,#170], handler=&hu_hdvt_set_liveview_param, user_data). Re-confirmed independently of the prior pass's finding (same (cmd_set,cmd_id,handler) triple, same registering function name).`
+
+  | Off | Size | Field | Type | Notes |
+  |---|---|---|---|---|
+  | 0 | 1 | `mipi_lv_param_reserved0` (Reserved/Header Byte) | uint8 | Copied into the validated buffer but never read by any instruction in this handler -- not used for any branch or forwarded field. Present purely because the wire format is a fixed 21-byte block. |
+  | 1 | 2 | `mipi_lv_param_width` (Liveview Width) | uint16 | Must be nonzero or the handler rejects the request (duss_event_resp_err, code 0xE6). Forwarded (after validation) into the MipiConfig struct passed to MipiHsRecvBase::sendNewConfigCmdToQueue. |
+  | 3 | 2 | `mipi_lv_param_height` (Liveview Height) | uint16 | Same nonzero validation and forwarding as width. |
+  | 5 | 2 | `mipi_lv_param_dim3` (Third Dimension Parameter (unit not confirmed; candidate: frame rate or stride)) | uint16 | Validated nonzero exactly like width/height and forwarded into the same MipiConfig struct, so it is clearly a third required dimension of the video configuration, but no instruction in this handler reveals its unit -- named conservatively per the task's own guidance to flag genuinely uncertain fields. |
+  | 7 | 1 | `mipi_lv_param_color_fmt` (Pixel/Color Format Code) | uint8 | Passed directly to the exported getOmxColor() helper to resolve an OMX_COLOR_FORMATTYPE value; that resolved value must be nonzero or the request is rejected (0xE6). Confirmed to be a color/pixel-format selector by this direct call, exact enum-value table not extracted (getOmxColor's own body was not disassembled). |
+  | 8 | 13 | `mipi_lv_param_unused_tail` (Unused Tail Bytes) | bytes | Part of the fixed 21-byte wire length this handler requires, copied into the local buffer, but never read by any instruction after the copy -- confirmed unused by this specific handler. |
+
+**Worked example:**
+
+- Request payload: `00 80 07 38 04 1E 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00`
+  21-byte payload: reserved byte 0x00; width=1920 (0x0780 LE = 80 07); height=1080 (0x0438 LE = 38 04); third dimension=30 (0x001E LE = 1E 00, illustrative placeholder since its unit is unconfirmed); color-format code=0x01 (an ordinary nonzero value that getOmxColor() must resolve to a valid OMX format for the request to succeed); 13 trailing bytes are present only to satisfy the 21-byte length gate and are not read by this handler.
+- Response payload: `00`
+  On success the handler calls duss_event_resp_ok(client, event) -- represented here as the conventional 1-byte 0x00 success retcode used elsewhere in this project's ack documentation. On any validation failure (length<21, width/height/dim3==0, unresolved color format, or a null context pointer) it instead calls duss_event_resp_err(client, event, 0xE6) -- i.e. the same ack slot would instead carry error code 0xE6.
 
 - **Handler:** `dji::hu_hdvt_set_liveview_param`, registered by
   `dji::MipiHsRecvV1::initEventClientCallback`.

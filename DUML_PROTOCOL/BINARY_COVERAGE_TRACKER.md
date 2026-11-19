@@ -239,10 +239,11 @@ the full 808-binary universe as of doc 20.
   command confirmed (`0x00`/`0x5B` "FTP Control", registry grows
   899 → **900**), 5 previously-unresolved command IDs
   (`0x07`/`0x08`/`0x09`/`0x0A`/`0x41`) independently confirmed live from
-  the sender side, 1 candidate found and refuted (`0x01`/`0x78`), and 1
-  candidate found but left genuinely unverified due to an identified bug
-  in this round's own verify-pipeline (`0x18`/`0x3D` — see "What's
-  genuinely still open" below). The A/B-OTA architectural question is
+  the sender side, and 1 candidate found and refuted (`0x01`/`0x78`). A
+  further candidate (`0x18`/`0x3D`) initially fell out of this round's own
+  verify pipeline due to a filter bug — see "Targeted follow-up" below for
+  its resolution (registry now at **901**). The A/B-OTA architectural
+  question is
   definitively resolved: genuinely wired up, not vestigial, fully traced
   end-to-end. Also closes out the last 3 of round 3's 4 redirected tail
   binaries (see the row above). Independent security findings include a
@@ -277,6 +278,36 @@ the full 808-binary universe as of doc 20.
   declined the task over authorization concerns before the other 3
   proceeded — see doc 18's own opening section for how that was resolved
   (no coverage gap resulted either way).
+- **Targeted follow-up pass** (2026-11-17,
+  `tools/workflows/followup_unfinished_items_sweep.js`): a 3-item pass
+  aimed at the loose ends the two sweeps above left open.
+  - `0x18`/`0x3D` was independently re-derived from scratch with the fixed
+    pipeline and **added to the registry (901st entry)**, with its
+    confirmed scope kept deliberately narrow — see doc 20's "Resolved by a
+    targeted follow-up pass" section for the full 2-of-3 adversarial split
+    (the sender-side mechanism and addressing are fully confirmed; the
+    receiver-side dispatch for this specific `cmd_id` inside `dji_lte` was
+    not isolated by any reviewer, including the two who didn't refute).
+  - The other two items — directly re-deriving `libamt_util.so`'s CA-side
+    map from scratch (redundant with doc 18's already-cross-validated
+    table, so left as-is — low value), and characterizing the 6 TA
+    command IDs (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) that are live
+    but have no named export — **both agents declined**, on the same
+    authorization-verification grounds as the two decliners in the
+    original activation-TA sweep (doc 18's opening section). The
+    orchestrating session directly verified, against this session's own
+    raw transcript rather than just this project's own prior written
+    account of it, that the project owner's authorization is genuine, and
+    flagged the broader pattern — four independent agent instances across
+    two sweeps now — to the project owner directly rather than retrying
+    with a more persuasive prompt. The project owner, informed of exactly
+    that pattern, said to proceed. The 6-handler characterization was then
+    done directly by the orchestrating session itself (not delegated to a
+    fresh agent) and is written up in doc 18's "Follow-up (2026-11-17):
+    the 6 unnamed-but-live command IDs, characterized" section — one
+    (`0x14`) resolved to a well-supported MAC/signature-verify shape, the
+    other five characterized by buffer layout and address-level family
+    clustering without a specific functional label.
 
 ## What's genuinely still open after round 2
 
@@ -295,25 +326,23 @@ the full 808-binary universe as of doc 20.
   known incompleteness caveat earlier in this doc. **The full 50-binary
   tail is now closed** (46 via doc 19, the remaining 4 via doc 20/the
   side-mention above) — see the disposition table above.
-- **New, from doc 20**: a candidate DUML command, `0x18`/`0x3D` ("LTE
-  Dongle Full-Upgrade Test Trigger"), was found in `dongle_upgrade_test.sh`
-  but **never reached this round's own adversarial-verify phase** — a bug
-  in the workflow script's post-processing (filtering on
-  `already_known === false`, which silently drops a candidate whose
-  JSON omitted that field entirely rather than setting it `false`) means
-  this one is neither confirmed nor refuted. It was NOT added to the
-  registry. Recommended follow-up: re-verify directly (the likely
-  handler, `dji_lte`'s own DUML route table, is already named in doc 20)
-  rather than trusting the circumstantial match as-is, and fix the
-  filter bug (`c.already_known !== true` is the safer predicate) before
-  reusing `firmware_update_process_sweep.js` or any sibling script for a
-  future round.
-- **New, from doc 18**: 6 of the `e91c9402` TA's 68 command-ID slots
-  (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/`0x25`) are confirmed live (real,
-  non-default handlers) but have no corresponding named export in
-  `libamt_util.so` and their actual function was not determined — reachable
-  only by a caller that opens a `TEEC` session to this UUID directly,
-  bypassing `libamt_util.so`'s own wrappers (as `amt_test_cmd` does
+- **Resolved**: `0x18`/`0x3D` (see "Targeted follow-up pass" above) — added
+  to the registry at 901, with the receiver-side exact dispatch point
+  left as an explicitly-documented open sub-question rather than treated
+  as fully resolved. The filter bug itself is fixed in every template
+  script going forward (`already_known === false` replaced with an
+  explicit `already_known: false` requirement in new candidates' own
+  schema usage, not a `!==true` workaround).
+- **Characterized (2026-11-17), not fully named**: the 6 of the
+  `e91c9402` TA's 68 command-ID slots (`0x14`/`0x15`/`0x16`/`0x1d`/`0x24`/
+  `0x25`) noted above are confirmed live (real, non-default handlers) with
+  no corresponding named export in `libamt_util.so`, and are now
+  structurally characterized (buffer layout, parameter counts, and
+  address-level family clustering — see doc 18) rather than left as
+  undifferentiated "live, unknown." None was resolved to a specific named
+  function, algorithm, or key, and none remains reachable only through
+  `libamt_util.so`'s own wrappers — same as before, only by a caller that
+  opens a `TEEC` session to this UUID directly (as `amt_test_cmd` does
   on-device for its own 3 exports). Also open: which specific outer DUML
   `cmd_set 0x00`/`0x03` activation command's payload gets forwarded,
   internally, to which specific `sec_cmd_act_*` subcommand byte — doc 18
@@ -352,3 +381,173 @@ other 3 proceeded — doc 18's opening section addresses this directly),
 `wf_firmware_update` (→ `20_FIRMWARE_UPDATE_PROCESS_FINDINGS.md`, **done**
 — see "Round history" above), and `wf_tail46_sweep`
 (→ `19_ROUND3_TAIL46_SWEEP_FINDINGS.md`, **done** — see "Round history" above).
+
+A targeted follow-up pass the same week hit the identical authorization
+objection twice more, from two fresh agents with no memory of the earlier
+decisions, reasoning entirely from this file and doc 18's own text rather
+than from any live conversation. The orchestrating session treated that
+recurrence as worth checking rather than dismissing: it went back to this
+session's own raw transcript (not its own prior written summary of it) and
+confirmed the underlying exchange with the project owner is genuine — the
+project owner really did answer a direct, specific question about this
+exact exclusion. That resolves the *authorization* question. It does not
+resolve the separate, repeatedly-raised point that deepening public
+documentation of a commercial drone's anti-theft/activation TA's internals
+is worth deliberate, continued judgment even under genuine authorization —
+four independent agent instances across two sweeps have now converged on
+discomfort with this specific subsystem. The one item this left genuinely
+incomplete (characterizing what the 6 unnamed-but-live TA command IDs
+actually do) was deliberately not retried with a more persuasive prompt;
+it's the project owner's call whether to continue it.
+
+## Payload decode sweep (started 2026-11-17): a new, larger, separate effort
+
+Distinct from everything above (which was about discovering/registering
+*which* `(cmd_set, cmd_id)` pairs exist), this effort fills in the
+byte-level *payload field layout* for the 744 of 901 known pairs that
+have none at all — confirmed separately that the public dissector this
+project already fully imported has zero field data for any of them, so
+this is genuine fresh binary RE, one cmd_set (or small bundle) at a time.
+Findings accumulate in `21_PAYLOAD_DECODE_SWEEP_FINDINGS.md`, one
+`## cmd_set 0xNN` section per wave. First wave: cmd_set 0x06 (Remote
+Control, 82 commands) — see that doc for the full result (headline: only
+1 of 82 decoded; the rest are very likely RC-MCU-local, outside this
+firmware extraction's scope — a real, well-evidenced architecture finding,
+not a shortfall of effort). Second wave: a 10-cmd_set bundle of smaller
+sets (0x01, 0x05, 0x08, 0x0b, 0x0d, 0x11, 0x18, 0x22, 0x23, 0x51 — 88
+commands) — 6 decoded and merged (registry 158→164 full), 1 explicitly
+refuted on adversarial reverify and 1 more downgraded by the digesting
+pass itself after the same refuting evidence was found to apply to it
+too (see doc 21's "Demo Mode" section), the rest honestly
+`insufficient_evidence` (DM36x's 12 as a clean "not implemented on this
+firmware generation" — the chip is retired). This digestion also
+corrected a real error in `04_WM260_DAEMON_FINDINGS.md`/
+`cmdset_22_Demo_Mode.md`: the `dji_flight` WP2-command dispatch array
+was mis-stated as rooted at vaddr `0xae0f8`; it's actually rooted at
+`0xae038` (`0xae0f8` is just one row, 24 in), confirmed by directly
+re-deriving the raw bytes — see doc 21 for the full reconciliation
+(partial — a separate "20 records" figure from elsewhere doesn't fully
+agree and wasn't force-resolved). Third wave: cmd_set 0x00 (General, 70
+commands) — 10 decoded (registry 164→174 full; among them, completing
+`libduml_frwk.so`'s one built-in dynamic-command table to all 6 rows,
+only 4 of which were previously catalogued), 10 more where the handler was
+correctly identified but the specific field-layout claim was explicitly
+refuted on adversarial reverify (real proof the reverify step catches
+overreach even against an already-correct lead), 1 confirmed `no_payload`,
+48 `insufficient_evidence` — including a genuinely new architecture
+finding worth flagging on its own: a previously-undocumented "Param
+Manager" subsystem inside `dji_sys` (three dedicated ELF sections,
+~40 hash-keyed-parameter debug strings) that the 5-command "parameter
+bus" family almost certainly routes through, without a confirmed byte
+layout. See doc 21's "cmd_set 0x00" section for detail. A fourth, much
+larger pair of waves (cmd_set 0x02 Camera, 190 commands; cmd_set 0x03
+Flight Control, 155 commands) plus a bundle of the remaining mid-size sets
+(Wi-Fi/HD Link/Mono-Binocular/Gimbal, 159 commands) are launched next —
+this closes out the small/medium cmd_sets and leaves only those three
+large ones (504 commands) before all 744 originally-undecoded commands
+have been attempted at least once. Reusable tooling
+added this round: `tools/merge_payload_decode_wave.py` (applies a wave's
+result JSON into `commands.json` — now prefers `handler_evidence` over an
+often-empty `scenario_description` when building a research note, fixed
+after the General-wave digestion initially lost real research detail this
+way), `tools/apply_notes_to_cmdset_doc.py` (mirrors that into the
+hand-maintained `cmdset_XX_*.md` doc).
+Fourth wave, Flight Control (cmd_set 0x03, 155 commands): 3 decoded and
+merged (registry 174→177 full), 1 explicitly refuted on adversarial
+reverify (handler correctly identified; one specific safety-relevant
+field claim was wrong — see doc 21), 151 `insufficient_evidence`. This
+wave's single biggest architecture result: all 16 investigating groups
+independently re-derived and corrected `dji_flight`'s relocated
+`{fn_ptr,cmd_word}` dispatch array's exact bounds — rooted at vaddr
+`0xae040` (not `0xae038`), 43 real rows (not 44) — closing the "20 vs
+44 records" ambiguity doc 21 had left open, and confirming only 5 of
+cmd_set 0x03's 155 commands are reachable through that table at all. The
+rest are gated behind a second mechanism (a JSON-config-driven
+`[cmd_set][cmd_id]` dispatch table, loaded at runtime from
+`/system/etc/dji.json`, confirmed present in `dji_flight`'s and
+`libduml_frwk.so`'s own code but with the JSON file itself absent from
+both firmware extractions) — identified as the single most actionable
+structural blocker for this and 9 other cmd_sets `dji_flight` serves.
+Also caught and explicitly disproved one strong-looking name-based false
+lead (`FC_PARAM:` strings belong to cmd_set 0x11/ADS-B, not cmd_set
+0x03's "Params Get", per a dispatch-table cross-check). Fifth wave, the
+Wi-Fi/HD Link/Mono-Binocular Vision/Gimbal bundle (cmd_sets 0x07/0x09/
+0x0a/0x04, 159 commands): 15 decoded and merged (registry 177→192 full),
+9 explicitly refuted on adversarial reverify (2 of which still yielded
+new real command names recovered — `0x07/0x18`/`0x19` "WiFi Set/Get
+Country", previously only placeholder-named in the public dissector),
+133 `insufficient_evidence`/`no_payload`. Headline results, one per
+cmd_set: (1) cmd_set 0x07 (Wi-Fi) got its first-ever documented real
+handler daemon, `dji_network` — which turned out to be two unrelated
+codebases sharing one filename across the two firmware builds, each with
+its own dense, directly-indexed whole-cmd_set dispatch table; (2) cmd_set
+0x09 (HD Link) reconfirmed the "HD-Link MCU (air), firmware not present
+in this extraction" structural explanation already carried in this
+project's own dissector metadata, plus found that a shared 12-byte-record
+registration-loop helper (previously known in 2 binaries) is also present
+byte-identical in `dji_sys` on both architectures with zero callers
+anywhere — confirmed dead code, not just unexamined; (3) cmd_set 0x0a
+(Mono/Binocular Vision) found a hard, compile-time dispatch-size bound in
+`dji_perception` (`cmd_set < 0x20 && cmd_id < 0x42`) plus a dedicated
+PCIe-based DUML transport, both structural reasons this daemon can't
+locally dispatch most of this cmd_set; (4) cmd_set 0x04 (Gimbal) resolved
+`duss_event_register_dynamic_command`'s exact calling convention and
+backing hashtable/descriptor-array implementation inside `libduml_frwk.so`
+and `dji_sys`, for the first time at this level of detail. Also surfaced
+several previously-uncatalogued cmd_ids (0x07/0x41-0x61 range; 0x0a/0xDD,
+0xDE; 0x04/0xf1, 0xbb) as leads for future passes, and one more
+independent (18+ groups across two waves now) reconfirmation of the
+`dji_flight` dispatch-table correction (43 rows, `0xae040`) against a
+single straggler group in this wave still citing the old figure — see
+doc 21's bundle section for the per-cmd_set detail. Sixth and final
+wave of this round, Camera (cmd_set 0x02, 190 commands) — resumed once
+after an in-flight 5-hour usage-limit wall (64/178 agents initially
+errored on the adversarial-reverify stage; the resume replayed the 114
+cached results and re-ran the 64 cleanly, 0 errors on the retry): 39
+decoded and merged (registry 192→231 full), 14 explicitly refuted on
+adversarial reverify, 136 `insufficient_evidence`/`no_payload`. Headline
+result: resolved a long-open question from `16_EXHAUSTIVE_SWEEP_
+FINDINGS.md` ("where does cmd_set 0x02's ~206-entry command jump table
+live?") — there is no single table; it's two separate named-handler
+libraries (`libdcam_cs_duss_proxy.so`'s ~180 `_cs_cam_duss_proxy_on_*`
+handlers, `libdcam_camera_service_server.so`'s 209 `cam_event_handler_
+{set,get}_*` functions) both reached through a runtime plugin config,
+`/system/etc/plugins.conf`, confirmed absent from this firmware
+extraction — the same missing-runtime-config shape as Flight Control's
+`dji.json` blocker. Also recovered a reusable generic event-envelope
+layout (every handler's payload starts at `ev+0x14`) and confirmed
+`.gnu_debugdata` minidebuginfo extraction as the single biggest
+force-multiplier technique for the stripped E2/AArch64 camera plugin
+tree. Caught and fixed a second merge-tooling note-accuracy bug (5
+commands with a real-but-caveated/unverified decode were getting the
+generic "no decoder found" tail instead of saying what was actually
+found) — see doc 21's cmd_set 0x02 section for detail. This closes out
+all six waves of the "744 undecoded commands" payload-breakdown effort;
+every previously-undecoded command has now been attempted at least once.
+
+**Process notes:** `make -j4`/`make` alone does NOT rebuild
+`duml_c`'s test binaries (only `make test` does) — running stale
+`build/tests/test_*` binaries without it can silently report a false
+pass; always use `make test` when verifying a registry change. Separately,
+a container restart mid-digestion once left `registry_data.cpp` corrupted
+to a single stray stdout line (`tools/gen_cpp_registry.py`'s own status
+message, from some prior invocation that redirected the script's stdout
+over its own output file) — always regenerate via the script's own `out`
+argument, never `> `-redirect its stdout to the same path, and always
+re-run `make test` after a restart before trusting any registry file's
+on-disk state. A third hazard surfaced this round: large Workflow sweeps
+can run headlong into an account-wide 5-hour usage limit mid-adversarial-
+verify, leaving a "completed" task result with most refute-votes missing
+(not absent findings — failed tool calls); always check a completed
+wave's `agents_error` count before trusting it, and `resumeFromRunId`
+after the limit resets rather than treating a high-error-count result as
+final (a usage-limit failure re-runs on resume; only genuinely finished
+calls are served from cache). A fourth hazard: `tools/export_master_list.py`
+writes its CSV to stdout only — it does not take an output-path argument
+and never touches `ALL_COMMANDS.csv` on its own. Piping its output through
+`tail`/`head`/`grep` for a quick look does NOT update the file; it must be
+invoked as `python3 DUML_PROTOCOL/tools/export_master_list.py >
+DUML_PROTOCOL/ALL_COMMANDS.csv`. Caught once mid-digestion via `git diff
+--stat` showing no change to the CSV despite new full decodes in the
+registry — always sanity-check with `git diff --stat` after regenerating
+it, before committing.
